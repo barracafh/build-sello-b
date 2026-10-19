@@ -1,0 +1,43 @@
+@import "tailwindcss";
+@import "../styles/tema.css";
+
+/* La base de Sol, como el layout de Reforma Digital: fondo blanco, Geist para
+   todo y la serif solo en h1 y h2. */
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-border);
+  }
+
+  body {
+    @apply bg-background font-sans text-base leading-[1.55] text-foreground antialiased;
+    font-synthesis: none;
+  }
+
+  h1,
+  h2 {
+    @apply font-heading font-normal;
+  }
+
+  :is(h1, h2, h3, h4, dt) {
+    text-wrap: balance;
+  }
+
+  :is(p, li, dd, figcaption, small) {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: var(--brand-yellow);
+    color: var(--foreground);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

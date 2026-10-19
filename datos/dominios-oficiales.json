@@ -1,0 +1,263 @@
+{
+  "version": "2026-10-18",
+  "notas": "Lista blanca de dominios oficiales para el Verificador de webs y mensajes. Se comprueba sobre el dominio registrable real (eTLD+1) o el subdominio exacto, nunca sobre una subcadena: 'sede.dgt.gob.es' es oficial; 'sede-dgt.gob.es.multas[.]top' o 'dgt-multas[.]com' NO lo son. La regla *.gob.es es la única con respaldo normativo de reserva (Orden ITC/1542/2005, apartado décimo d); muchos organismos oficiales usan .es normales (dgt.es, seg-social.es, correos.es, gva.es, valencia.es), por eso hace falta la lista de entidades. Que un dominio esté en la lista no garantiza que un enlace concreto sea seguro (p. ej. redirecciones abiertas), y los remitentes de SMS (alias como 'DGT' o 'AEAT') se pueden falsificar: el nombre del remitente nunca es prueba de autenticidad. 'verificado: true' significa que el dominio se confirmó en una página consultada o en un resultado de búsqueda que lo muestra con el título oficial de la entidad el 17/10/2026; los resultados de búsqueda se filtraron a veces por dominio, así que conviene una revisión humana antes de producción.",
+  "reglas": [
+    {
+      "patron": "*.gob.es",
+      "tipo": "reservado_por_norma",
+      "motivo": "El dominio .gob.es está reservado a las Administraciones Públicas españolas, sus entidades de Derecho Público dependientes y sus órganos o unidades; se verifican los requisitos antes de asignarlo (Orden ITC/1542/2005, Plan Nacional de Nombres de Dominio, apartados noveno.2 y décimo d). Red.es lo describe como 'reservado a Organismos Públicos e Instituciones gubernamentales'.",
+      "fuente": "https://www.granada.org/inet/wordenanz.nsf/xtod/1A1E4AFEFAF976ADC12570120022658C",
+      "fuente_adicional": "https://www.dominios.es/sites/dominios/files/2026-04/carta-de-servicio-dominios-26-29.pdf",
+      "verificado": true,
+      "advertencia": "La fuente principal es una copia del texto del BOE de 31/05/2005 alojada en granada.org; el PDF original del BOE (https://boe.gob.es/boe/dias/2005/05/31/pdfs/A18170-18175.pdf) devolvió una página de redirección y no se pudo leer."
+    },
+    {
+      "patron": "*.edu.es",
+      "tipo": "verificacion_previa",
+      "motivo": "El dominio .edu.es también tiene verificación previa de requisitos (entidades educativas). No identifica a la Administración: no basta para dar por oficial un mensaje de un organismo.",
+      "fuente": "https://www.granada.org/inet/wordenanz.nsf/xtod/1A1E4AFEFAF976ADC12570120022658C",
+      "verificado": true
+    },
+    {
+      "patron": "dominio que contiene 'gob.es' pero no termina en '.gob.es'",
+      "tipo": "senal_de_fraude",
+      "motivo": "Ejemplos: 'gob-es[.]com' o 'sede.agenciatributaria.gob.es.devolucion[.]top'. El dominio real es lo que va justo antes del primer '/' y hay que leerlo de derecha a izquierda.",
+      "fuente": null,
+      "verificado": false,
+      "advertencia": "Heurística de diseño, no normativa."
+    },
+    {
+      "patron": "TLD .top / .click en mensajes que dicen venir de la AEAT",
+      "tipo": "senal_de_fraude",
+      "motivo": "INCIBE indica que en la campaña de SMS que suplantaba a la AEAT (mayo de 2026) los enlaces terminaban en .top o .click, extensiones baratas que se usan mucho para webs fraudulentas temporales.",
+      "fuente": "https://www.incibe.es/ciudadania/avisos/la-agencia-tributaria-no-ha-emitido-ninguna-comunicacion-dirigida-usted",
+      "verificado": true
+    }
+  ],
+  "entidades": [
+    {
+      "entidad": "Agencia Tributaria (AEAT)",
+      "dominios": [
+        "agenciatributaria.gob.es",
+        "sede.agenciatributaria.gob.es",
+        "www2.agenciatributaria.gob.es",
+        "agenciatributaria.es"
+      ],
+      "web_oficial": "https://sede.agenciatributaria.gob.es",
+      "fuente": "https://sede.agenciatributaria.gob.es/Sede/ayuda/Phishing.html",
+      "fuente_adicional": "https://www.incibe.es/ciudadania/avisos/suplantacion-de-la-agencia-tributaria-sms-durante-el-periodo-de-presentacion-de",
+      "verificado": true,
+      "nota": "agenciatributaria.es redirige de forma permanente (301) a sede.agenciatributaria.gob.es, que enlaza páginas de www.agenciatributaria.es (18/10/2026). La AEAT afirma que 'nunca solicita por correo electrónico o SMS información confidencial, económica o personal'."
+    },
+    {
+      "entidad": "Dirección General de Tráfico (DGT)",
+      "dominios": ["dgt.es", "sede.dgt.gob.es", "revista.dgt.es"],
+      "web_oficial": "https://sede.dgt.gob.es",
+      "fuente": "https://www.dgt.es/nuestros-servicios/multas-y-sanciones/como-y-donde-quieres-que-te-notifiquemos-tus-multas/",
+      "fuente_adicional": "https://sede.dgt.gob.es/es/multas/direccion-electronica-vial",
+      "verificado": true,
+      "nota": "La DGT notifica por carta certificada o por la DEV (Dirección Electrónica Vial). 'La DGT NUNCA notifica sus multas a través de correo electrónico'. También tiene la app miDGT, que no se ha verificado en este kit."
+    },
+    {
+      "entidad": "Seguridad Social (INSS / TGSS)",
+      "dominios": [
+        "seg-social.es",
+        "sede.seg-social.gob.es",
+        "portal.seg-social.gob.es",
+        "prestaciones.seg-social.es",
+        "revista.seg-social.es"
+      ],
+      "web_oficial": "https://sede.seg-social.gob.es",
+      "fuente": "https://www.incibe.es/ciudadania/avisos/campana-de-smishing-suplantando-la-seguridad-social",
+      "verificado": true,
+      "nota": "portal.seg-social.gob.es es Importass, el portal de la TGSS. INCIBE: la Seguridad Social no pide el pago de deudas ni la actualización de datos mediante enlaces en SMS."
+    },
+    {
+      "entidad": "Ingreso Mínimo Vital (Seguridad Social)",
+      "dominios": ["imv.seg-social.es", "sede.seg-social.gob.es"],
+      "web_oficial": "https://imv.seg-social.es/",
+      "fuente": "https://imv.seg-social.es/",
+      "verificado": true,
+      "nota": "La página de seg-social.es sobre el IMV enlaza https://imv.seg-social.es/, titulada 'Ingreso Mínimo Vital' (18/10/2026)."
+    },
+    {
+      "entidad": "Servicio Público de Empleo Estatal (SEPE)",
+      "dominios": ["sepe.es", "sede.sepe.gob.es"],
+      "web_oficial": "https://sede.sepe.gob.es/portalSede",
+      "fuente": "https://sede.sepe.gob.es/portalSede/en/procedimientos-y-servicios/personas/proteccion-por-desempleo/cita",
+      "fuente_adicional": "https://www.incibe.es/ciudadania/avisos/suplantan-al-sepe-servicio-publico-de-empleo-estatal-para-infectar-con-el-malware",
+      "verificado": true,
+      "nota": "Teléfono oficial de atención: 060 (según una noticia de sepe.es en los resultados de búsqueda)."
+    },
+    {
+      "entidad": "Correos",
+      "dominios": ["correos.es", "correos.com"],
+      "dominios_remitente_email": ["correos.com"],
+      "web_oficial": "https://www.correos.es",
+      "fuente": "https://www.correos.es/es/es/actualidad/2026/confia-en-correos-rechaza-imitaciones",
+      "fuente_adicional": "https://www.correos.es/es/es/atencion-al-cliente/seguridad-de-la-informacion/phishing",
+      "verificado": true,
+      "nota": "Correos indica que sus comunicaciones oficiales por email llegan desde correos@correos.com e incluyen un código seguro en un recuadro amarillo, que se puede comprobar en su verificador de email en correos.es. 'Correos nunca solicita datos personales, bancarios o movimientos económicos por correo electrónico o mensaje de texto (SMS)'. correos.com es también el remitente de email y la web corporativa (www.correos.com, Grupo Correos, enlaza con www.correos.es, comprobado el 19/10/2026); los envíos y trámites están en correos.es."
+    },
+    {
+      "entidad": "INCIBE (Instituto Nacional de Ciberseguridad) y Línea de Ayuda 017",
+      "dominios": ["incibe.es"],
+      "telefonos": ["017"],
+      "web_oficial": "https://www.incibe.es/ciudadania",
+      "fuente": "https://www.incibe.es/incibe/sala-de-prensa/incibe-lanza-el-017-el-nuevo-numero-corto-ayuda-ciberseguridad",
+      "verificado": true,
+      "nota": "017 es el número corto gratuito de la Línea de Ayuda en Ciberseguridad (nota de prensa del 11/02/2020). Atiende de 8:00 a 23:00 los 365 días, también por WhatsApp (900 116 117) y Telegram (@INCIBE017), según https://www.incibe.es/linea-de-ayuda-en-ciberseguridad (consultado el 19/10/2026). INCIBE también ha sido suplantado (aviso del 10/07/2026)."
+    },
+    {
+      "entidad": "Punto de Acceso General (PAG)",
+      "dominios": ["administracion.gob.es", "sede.administracion.gob.es"],
+      "web_oficial": "https://administracion.gob.es",
+      "fuente": "https://sede.administracion.gob.es/PAG_Sede/LaSedePAG/IdentificacionDeLaSede.html",
+      "verificado": true
+    },
+    {
+      "entidad": "Mi Carpeta Ciudadana (Estado)",
+      "dominios": ["carpetaciudadana.gob.es"],
+      "web_oficial": "https://carpetaciudadana.gob.es/",
+      "fuente": "https://masinformacioncarpeta.carpetaciudadana.gob.es/infocc/en/preguntas-frecuentes/que-necesito-para-empezar",
+      "verificado": true
+    },
+    {
+      "entidad": "DEHú (Dirección Electrónica Habilitada única) – notificaciones",
+      "dominios": ["dehu.redsara.es"],
+      "web_oficial": "https://dehu.redsara.es/",
+      "fuente": "https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/notificaciones-electronicas-ayuda-tecnica/recibir-avisos-nuevas-notificaciones-comunicaciones-dehu.html",
+      "verificado": true,
+      "nota": "Dominio oficial que no termina en .gob.es (redsara.es es la red de la Administración). Validador de autenticidad de correos: https://dehu.redsara.es/es/check-security-email (se comprueba el correo y el código recibido); abierto el 18/10/2026."
+    },
+    {
+      "entidad": "Cl@ve (identificación electrónica)",
+      "dominios": ["clave.gob.es"],
+      "web_oficial": "https://clave.gob.es",
+      "fuente": "https://clave.gob.es/en/clave/que-es",
+      "verificado": true
+    },
+    {
+      "entidad": "DNI electrónico y cita previa DNI/Pasaporte (Policía Nacional)",
+      "dominios": ["dnielectronico.es", "citapreviadnie.es"],
+      "web_oficial": "https://www.citapreviadnie.es/citaPreviaDni/",
+      "fuente": "https://www.citapreviadnie.es/citaPreviaDni/doc/43CITAPREVIAnivelinternet.pdf",
+      "fuente_adicional": "https://www.interior.gob.es/opencms/es/servicios-al-ciudadano/tramites-y-gestiones/dni/como-obtener-su-dni/index.html",
+      "verificado": true,
+      "nota": "Confirmado en interior.gob.es (Ministerio del Interior), que remite a https://www.citapreviadnie.es y a dnielectronico.es; ambos dominios se enlazan entre sí (18/10/2026)."
+    },
+    {
+      "entidad": "Policía Nacional",
+      "dominios": ["policia.es"],
+      "web_oficial": "https://www.policia.es/",
+      "fuente": "https://www.policia.es/_es/dependencias_localizador_accesible.php",
+      "verificado": true,
+      "nota": "Suplantada junto con la Guardia Civil e INCIBE en notificaciones falsas (aviso de INCIBE del 10/07/2026)."
+    },
+    {
+      "entidad": "Guardia Civil",
+      "dominios": [
+        "guardiacivil.es",
+        "web.guardiacivil.es",
+        "sede.guardiacivil.gob.es"
+      ],
+      "web_oficial": "https://web.guardiacivil.es/es",
+      "fuente": "https://web.guardiacivil.es/es/tramites/denuncias/denuncia-electronica/",
+      "fuente_adicional": "https://sede.guardiacivil.gob.es/index/index/language/ca_ES",
+      "verificado": true
+    },
+    {
+      "entidad": "Boletín Oficial del Estado (BOE)",
+      "dominios": ["boe.es"],
+      "web_oficial": "https://www.boe.es",
+      "fuente": "https://www.boe.es/organismo/index.php?lang=en",
+      "verificado": true,
+      "nota": "En los resultados de búsqueda también aparece boe.gob.es sirviendo PDFs del BOE, pero el que se probó devolvió una redirección hacia www.boe.es."
+    },
+    {
+      "entidad": "Instituto Nacional de Estadística (INE)",
+      "dominios": ["ine.es", "iria.ine.es", "arce.ine.es"],
+      "web_oficial": "https://www.ine.es",
+      "fuente": "https://www.ine.es/dyngs/COL/index.htm?cid=456",
+      "verificado": true,
+      "nota": "Útil para comprobar encuestas a hogares: el INE tiene una sección para colaboradores en encuestas."
+    },
+    {
+      "entidad": "Junta Electoral Central",
+      "dominios": ["juntaelectoralcentral.es", "sede.juntaelectoralcentral.es"],
+      "web_oficial": "https://www.juntaelectoralcentral.es",
+      "fuente": "https://sede.juntaelectoralcentral.es/",
+      "verificado": true
+    },
+    {
+      "entidad": "Ministerio del Interior / Infoelectoral",
+      "dominios": ["interior.gob.es", "infoelectoral.interior.gob.es"],
+      "web_oficial": "https://www.interior.gob.es",
+      "fuente": "https://infoelectoral.interior.gob.es/es/elecciones-celebradas/resultados-electorales/",
+      "verificado": true
+    },
+    {
+      "entidad": "Generalitat Valenciana",
+      "dominios": [
+        "gva.es",
+        "sede.gva.es",
+        "tramita.gva.es",
+        "carpetaciudadana.gva.es"
+      ],
+      "web_oficial": "https://sede.gva.es",
+      "fuente": "https://sede.gva.es/en/que-es-la-seu",
+      "verificado": true,
+      "nota": "gva.es no es un dominio .gob.es; la regla *.gva.es se basa en que el dominio pertenece a la Generalitat, no en una reserva legal. También se vio sedejudicial.gva.es (Sede de la Administración de Justicia)."
+    },
+    {
+      "entidad": "Conselleria de Sanitat – GVA (cita previa sanitaria)",
+      "dominios": ["san.gva.es"],
+      "web_oficial": "https://www.san.gva.es/es/web/portal-del-paciente",
+      "fuente": "https://www.san.gva.es/es/web/portal-del-paciente/ayuda-solicitud-de-cita-en-atencion-primaria",
+      "fuente_adicional": "https://sede.gva.es/en/detall-tramit?id_proc=2888",
+      "verificado": true,
+      "nota": "La cita de atención primaria se pide con el número SIP y la fecha de nacimiento. Teléfono de información: 012. La app oficial es 'GVA + Salut' (https://www.san.gva.es/es/web/app-gva-mes-salut). En la fuente no se encontró información sobre SMS de recordatorio."
+    },
+    {
+      "entidad": "LABORA (Servei Valencià d'Ocupació i Formació)",
+      "dominios": ["labora.gva.es", "puntlabora.gva.es"],
+      "web_oficial": "https://labora.gva.es",
+      "fuente": "https://sede.gva.es/es/detall-tramit?id_proc=1684",
+      "verificado": true,
+      "nota": "Confirmado en la ficha 1684 de la sede de la GVA, que enlaza labora.gva.es y puntlabora.gva.es (18/10/2026)."
+    },
+    {
+      "entidad": "Ajuntament de València",
+      "dominios": ["valencia.es", "sede.valencia.es"],
+      "web_oficial": "https://www.valencia.es",
+      "fuente": "https://sede.valencia.es/sede/menuContent.xhtml/PREGUNTAS_FRECUENTES_FAQS?lang=1",
+      "fuente_adicional": "https://www.valencia.es/cas/tramites",
+      "verificado": true
+    },
+    {
+      "entidad": "Diputació de València",
+      "dominios": ["dival.es", "sede.dival.es", "sarc.dival.es"],
+      "web_oficial": "https://www.dival.es",
+      "fuente": "https://sarc.dival.es/es/esarc-tramites/sede-electronica/",
+      "fuente_adicional": "https://www.sede.dival.es/oficinatributaria",
+      "verificado": true,
+      "nota": "La oficina tributaria (recaudación de tributos locales) está en sede.dival.es."
+    },
+    {
+      "entidad": "Banco de España",
+      "dominios": ["bde.es", "clientebancario.bde.es"],
+      "web_oficial": "https://www.bde.es",
+      "fuente": "https://www.bde.es/wbe/es/punto-informacion/contenidos/advertencias-publico/correos-fraudulentos/",
+      "fuente_adicional": "https://clientebancario.bde.es/pcb/es/blog/suplantacion-de-sms-y-del-identificador-de-llamadas.html",
+      "verificado": true,
+      "nota": "La página «Correos fraudulentos en nombre del Banco de España» de bde.es enlaza clientebancario.bde.es; ambas abiertas el 18/10/2026."
+    },
+    {
+      "entidad": "Agencia Española de Protección de Datos (AEPD)",
+      "dominios": ["aepd.es", "sedeaepd.gob.es"],
+      "web_oficial": "https://www.aepd.es",
+      "fuente": "https://sedeaepd.gob.es/sede-electronica/",
+      "verificado": true
+    }
+  ]
+}
