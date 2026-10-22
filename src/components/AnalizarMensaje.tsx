@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type FormEvent,
+  type RefObject,
+} from "react";
 import { ShieldCheck, ShieldQuestion, ShieldX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ruta } from "@/config/sitio";
@@ -111,10 +118,13 @@ export function AnalizarMensaje() {
   const [respuesta, setRespuesta] = useState<Respuesta | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
-  const resultado = useRef<HTMLDivElement>(null);
+  // Lo que los lectores de pantalla oyen sin mover el foco: «comprobando» y
+  // el ejemplo cargado. El resultado se anuncia llevando el foco a su titular.
+  const [aviso, setAviso] = useState("");
+  const titular = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
-    if (respuesta) resultado.current?.focus();
+    if (respuesta) titular.current?.focus();
   }, [respuesta]);
 
   async function analizar(event: FormEvent<HTMLFormElement>) {
@@ -132,6 +142,7 @@ export function AnalizarMensaje() {
     }
     setError(null);
     setEnviando(true);
+    setAviso("Comprobando el mensaje…");
     try {
       const res = await fetch(ruta("/api/verificar"), {
         method: "POST",
@@ -143,13 +154,15 @@ export function AnalizarMensaje() {
       setError("No hemos podido comprobarlo. Inténtalo de nuevo.");
     } finally {
       setEnviando(false);
+      setAviso("");
     }
   }
 
-  function cargar(texto: string) {
+  function cargar(texto: string, anuncio: string) {
     setMensaje(texto);
     setRespuesta(null);
     setError(null);
+    setAviso(anuncio);
   }
 
   return (
@@ -176,6 +189,7 @@ export function AnalizarMensaje() {
             setMensaje(event.target.value);
             setRespuesta(null);
             setError(null);
+            setAviso("");
           }}
           rows={6}
           spellCheck={false}
@@ -216,13 +230,16 @@ export function AnalizarMensaje() {
             type="button"
             variant="outline"
             size="lg"
-            onClick={() => cargar("")}
+            onClick={() => cargar("", "Campo vaciado.")}
             className="h-11 px-5 text-base max-sm:w-full"
           >
             Borrar
           </Button>
         </div>
       </form>
+      <p role="status" className="sr-only">
+        {aviso}
+      </p>
 
       <section aria-labelledby={`${id}-ejemplos`}>
         <h2
@@ -237,26 +254,33 @@ export function AnalizarMensaje() {
               key={caso.id}
               type="button"
               variant="outline"
-              onClick={() => cargar(textoDeEjemplo(caso as Ejemplo))}
+              onClick={() =>
+                cargar(
+                  textoDeEjemplo(caso as Ejemplo),
+                  `Ejemplo ${caso.id} cargado en el campo.`,
+                )
+              }
               className="h-11 px-4 text-base"
             >
               {caso.id}
+              <span className="sr-only">, cargar ejemplo</span>
             </Button>
           ))}
         </div>
       </section>
 
-      <section aria-live="polite" aria-labelledby={`${id}-resultado`}>
-        {respuesta && (
-          <div
-            ref={resultado}
-            tabIndex={-1}
-            className="text-lg outline-none [&>*+*]:mt-8"
-          >
-            <Resultado respuesta={respuesta} titleId={`${id}-resultado`} />
-          </div>
-        )}
-      </section>
+      {respuesta && (
+        <section
+          aria-labelledby={`${id}-resultado`}
+          className="text-lg [&>*+*]:mt-8"
+        >
+          <Resultado
+            respuesta={respuesta}
+            titleId={`${id}-resultado`}
+            titleRef={titular}
+          />
+        </section>
+      )}
     </div>
   );
 }
@@ -264,9 +288,11 @@ export function AnalizarMensaje() {
 function Resultado({
   respuesta,
   titleId,
+  titleRef,
 }: {
   respuesta: Respuesta;
   titleId: string;
+  titleRef: RefObject<HTMLHeadingElement | null>;
 }) {
   const { veredicto, motivos, web_oficial, entidad, fuente } = respuesta;
   const Icono = iconos[veredicto];
@@ -309,8 +335,10 @@ function Resultado({
         </div>
         <h2
           id={titleId}
+          ref={titleRef}
+          tabIndex={-1}
           className={cn(
-            "mt-3 text-[clamp(30px,5vw,44px)] leading-[1.08] tracking-[-0.03em]",
+            "mt-3 text-[clamp(30px,5vw,44px)] leading-[1.08] tracking-[-0.03em] outline-none",
             veredicto === "no_oficial" && "text-destructive",
           )}
         >
