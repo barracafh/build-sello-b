@@ -2,15 +2,34 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { cn } from "@/lib/utils";
+import { ruta } from "@/config/sitio";
+import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Fuentes } from "@/components/Fuentes";
+import ejemplos from "../../datos/mensajes-ejemplo.json";
 
-// Primera iteración: solo la interfaz. El texto vive en el estado del
-// navegador, no se envía a ningún sitio ni se guarda. Mientras no haya
-// análisis, la respuesta es la de la duda: no_determinable.
+// El texto vive en el estado del navegador y se envía solo a /api/verificar,
+// que no lo guarda ni lo registra. Mientras no haya análisis, la respuesta es
+// la de la duda: no_determinable.
 const LIMITE = 2000;
+
+type Respuesta = {
+  veredicto: string;
+  motivo: string;
+  url_analizada: string | null;
+};
+
+type Ejemplo = (typeof ejemplos)[number] & {
+  url_defanged?: string | null;
+  url?: string;
+};
+
+const textoDeEjemplo = (caso: Ejemplo) => {
+  const url = caso.url_prueba_sintetica ?? caso.url_defanged ?? caso.url;
+  return url ? `${caso.texto} ${url}` : caso.texto;
+};
 
 const linea017 = {
   nombre: "Línea 017 de INCIBE",
@@ -24,25 +43,50 @@ const avisosIncibe = {
 export function AnalizarMensaje() {
   const id = useId();
   const [mensaje, setMensaje] = useState("");
-  const [analizado, setAnalizado] = useState(false);
-  const vacio = mensaje.trim().length === 0;
+  const [respuesta, setRespuesta] = useState<Respuesta | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
 
-  function analizar(event: FormEvent<HTMLFormElement>) {
+  async function analizar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (vacio) return;
-    setAnalizado(true);
+    setRespuesta(null);
+    if (mensaje.trim().length === 0) {
+      setError("Escribe o pega un mensaje antes de comprobar.");
+      return;
+    }
+    if (mensaje.length > LIMITE) {
+      setError(
+        `El mensaje es demasiado largo: ${mensaje.length} de ${LIMITE} caracteres como máximo.`,
+      );
+      return;
+    }
+    setError(null);
+    setEnviando(true);
+    try {
+      const res = await fetch(ruta("/api/verificar"), {
+        method: "POST",
+        body: JSON.stringify({ texto: mensaje }),
+      });
+      if (!res.ok) throw new Error();
+      setRespuesta((await res.json()) as Respuesta);
+    } catch {
+      setError("No hemos podido comprobarlo. Inténtalo de nuevo.");
+    } finally {
+      setEnviando(false);
+    }
   }
 
-  function borrar() {
-    setMensaje("");
-    setAnalizado(false);
+  function cargar(texto: string) {
+    setMensaje(texto);
+    setRespuesta(null);
+    setError(null);
   }
 
   return (
     <div className="[&>*+*]:mt-12">
       <form onSubmit={analizar} aria-describedby={`${id}-privacidad`}>
         <label htmlFor={`${id}-mensaje`} className="block font-medium">
-          Pega el SMS, el correo o la web que te ha llegado
+          Pega aquí el enlace, el SMS o el correo
         </label>
         <p id={`${id}-ayuda`} className="mt-1 text-(--text-secondary)">
           Incluye el remitente y el enlace tal como aparecen. No pulses el
@@ -51,13 +95,18 @@ export function AnalizarMensaje() {
         <Textarea
           id={`${id}-mensaje`}
           name="mensaje"
-          aria-describedby={`${id}-ayuda ${id}-contador`}
+          aria-describedby={cn(
+            `${id}-ayuda`,
+            `${id}-contador`,
+            error && `${id}-error`,
+          )}
+          aria-invalid={error ? true : undefined}
           value={mensaje}
           onChange={(event) => {
             setMensaje(event.target.value);
-            setAnalizado(false);
+            setRespuesta(null);
+            setError(null);
           }}
-          maxLength={LIMITE}
           rows={6}
           spellCheck={false}
           autoComplete="off"
@@ -72,22 +121,30 @@ export function AnalizarMensaje() {
             {mensaje.length}/{LIMITE}
           </p>
         </div>
+        {error && (
+          <p
+            id={`${id}-error`}
+            role="alert"
+            className="mt-2 font-medium text-destructive"
+          >
+            {error}
+          </p>
+        )}
         <div className="mt-6 flex flex-wrap gap-3">
           <Button
             type="submit"
             variant="sunset"
             size="lg"
-            disabled={vacio}
+            disabled={enviando}
             className="h-11 px-5 text-base max-sm:w-full"
           >
-            Analizar mensaje
+            Comprobar
           </Button>
           <Button
             type="button"
             variant="outline"
             size="lg"
-            onClick={borrar}
-            disabled={vacio}
+            onClick={() => cargar("")}
             className="h-11 px-5 text-base max-sm:w-full"
           >
             Borrar
@@ -95,13 +152,35 @@ export function AnalizarMensaje() {
         </div>
       </form>
 
+      <section aria-labelledby={`${id}-ejemplos`}>
+        <h2
+          id={`${id}-ejemplos`}
+          className="font-sans text-sm font-medium text-(--text-secondary)"
+        >
+          Ejemplos
+        </h2>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {ejemplos.map((caso) => (
+            <Button
+              key={caso.id}
+              type="button"
+              variant="outline"
+              onClick={() => cargar(textoDeEjemplo(caso as Ejemplo))}
+              className="h-11 px-4 text-base"
+            >
+              {caso.id}
+            </Button>
+          ))}
+        </div>
+      </section>
+
       <section aria-live="polite" aria-labelledby={`${id}-resultado`}>
-        {analizado && (
+        {respuesta && (
           <div className="text-lg [&>*+*]:mt-8">
             <div>
-              <p className="font-mono text-xs tracking-[0.06em] text-(--text-secondary) uppercase">
-                no_determinable
-              </p>
+              <Badge variant="outline" className="font-mono">
+                {respuesta.veredicto}
+              </Badge>
               <h2
                 id={`${id}-resultado`}
                 className="mt-3 text-[clamp(30px,5vw,44px)] leading-[1.08] tracking-[-0.03em]"
@@ -109,8 +188,14 @@ export function AnalizarMensaje() {
                 No podemos confirmarlo
               </h2>
               <p className="mt-3 text-(--text-secondary)">
-                El análisis automático llega en la siguiente versión. Hasta
-                entonces, trata el mensaje como no verificado.
+                {respuesta.motivo}. Hasta entonces, trata el mensaje como no
+                verificado.
+              </p>
+              <p className="mt-3 text-base">
+                URL analizada:{" "}
+                <code className="font-mono [overflow-wrap:anywhere]">
+                  {respuesta.url_analizada ?? "ninguna"}
+                </code>
               </p>
             </div>
 
