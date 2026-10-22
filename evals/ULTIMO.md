@@ -4,7 +4,7 @@ Generado por `bun run eval` en local (una pasada, en serie, 1 s entre casos). Pi
 
 ## deepseek-v4-flash
 
-Fecha: 2026-10-22T17:58:02.543Z · commit: 5bddd64 · conjunto: `src/datos/evals/dev.json` · casos: 35 × 1
+Fecha: 2026-10-22T18:09:57.985Z · commit: df0efbc · conjunto: `src/datos/evals/dev.json` · casos: 35 × 1
 
 - Accuracy: **97.1 %** (34/35) ✅ (puerta: ≥ 85 %)
 - Falsos `oficial_verificado`: **0** ✅ (puerta: 0)
@@ -29,25 +29,25 @@ Matriz de confusión (filas: esperado; columnas: obtenido, en el orden oficial_v
 
 ## glm5.3-flash
 
-Fecha: 2026-10-22T18:03:18.337Z · commit: 5bddd64 · conjunto: `src/datos/evals/dev.json` · casos: 35 × 1
+Fecha: 2026-10-22T18:15:14.039Z · commit: df0efbc · conjunto: `src/datos/evals/dev.json` · casos: 35 × 1
 
-- Accuracy: **82.9 %** (29/35) ❌ (puerta: ≥ 85 %)
+- Accuracy: **77.1 %** (27/35) ❌ (puerta: ≥ 85 %)
 - Falsos `oficial_verificado`: **0** ✅ (puerta: 0)
 - Ejemplos de `datos/mensajes-ejemplo.json`: **9/10** ❌ (puerta: 10/10)
-- `no_oficial` → `no_determinable`: 0
-- Respuestas de reserva (modelo no disponible): 21
+- `no_oficial` → `no_determinable`: 2
+- Respuestas de reserva (modelo no disponible): 23
 - Casos inestables entre repeticiones: ninguno
 
 | Clase | Precisión | Recall | Casos |
 | --- | --- | --- | --- |
 | oficial_verificado | — | 0.0 % | 6 |
-| no_oficial | 100.0 % | 100.0 % | 14 |
-| no_determinable | 71.4 % | 100.0 % | 15 |
+| no_oficial | 100.0 % | 85.7 % | 14 |
+| no_determinable | 65.2 % | 100.0 % | 15 |
 
 Matriz de confusión (filas: esperado; columnas: obtenido, en el orden oficial_verificado / no_oficial / no_determinable):
 
 | esperado \ obtenido | oficial_verificado | no_oficial | no_determinable |
 | --- | --- | --- | --- |
 | oficial_verificado | 0 | 0 | 6 |
-| no_oficial | 0 | 14 | 0 |
+| no_oficial | 0 | 12 | 2 |
 | no_determinable | 0 | 0 | 15 |
