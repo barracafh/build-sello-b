@@ -10,8 +10,6 @@ export const va = {
   pagina: {
     ...ca.pagina,
     titulo: "Este missatge és de veritat?",
-    intro:
-      "Apega un SMS, un correu o una web que diu ser de la DGT, d'Hisenda o d'un altre organisme i et direm si ho podem confirmar.",
   },
   pie: {
     ...ca.pie,
@@ -62,10 +60,11 @@ export const va = {
   },
   analizar: {
     ...ca.analizar,
-    etiquetaCampo: "Apega ací el missatge que t'ha arribat",
-    ayudaCampo:
-      "Pot ser un SMS, un correu o l'enllaç d'una web. Inclou el remitent i l'enllaç tal com apareixen.",
-    noPulses: "No toques l'enllaç.",
+    campo: {
+      antes: "Apega ací l'SMS, el correu o la web tal com t'ha arribat, ",
+      negrita: "sense tocar cap enllaç",
+      despues: ", i et direm si ho podem confirmar.",
+    },
     ayudaImagen: "Captura en PNG, JPG o WebP, fins a 4 MB.",
     privacidad: "No guardem el que apegues ni les imatges, ni obrim els seus enllaços.",
     ejemplos: "Vols provar amb un exemple?",
@@ -102,9 +101,8 @@ export const va = {
     titulo: "Envia-ho a la teua família",
     copiado: "Text copiat. Apega'l en el xat de la teua família.",
     noCopiado: "No l'hem pogut copiar. Prova amb «Envia per WhatsApp».",
-    meHaLlegado: "M'ha arribat este missatge:",
     pie: (nombre: string, url: string) =>
-      `Ho he comprovat amb ${nombre}, una ferramenta experimental que no és un servei oficial: ${url}`,
+      `Ho he comprovat amb ${nombre}: ${url}`,
     ayuda017: "Si dubtes o ja has donat dades, telefona gratis al 017 d'INCIBE.",
     laWeb: (entidad: string | null, direccion: string) =>
       `La web oficial${entidad ? ` ${deEntitat(entidad)}` : ""} és ${direccion}`,
@@ -120,7 +118,10 @@ export const va = {
   },
   emergencia: {
     ...ca.emergencia,
-    marca: "Marca tot el que corresponga. Els passos apareixen a l'instant.",
+    marca: "Marca tot el que corresponga.",
+    marcaArriba: "Marca dalt el que vas fer.",
+    vacio: "Ací voràs què has de fer, en orde.",
+    verPasos: (n: number) => `Vore els teus ${n} ${n === 1 ? "pas" : "passos"}`,
     pasos: {
       ...ca.emergencia.pasos,
       banco: "Telefona ara al teu banc i demana que bloquegen la targeta o el compte. El telèfon està en el revers de la targeta.",

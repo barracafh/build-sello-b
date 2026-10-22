@@ -39,10 +39,7 @@ export const ca = {
     },
   },
   pagina: {
-    antetitulo: "Verificador de missatges",
     titulo: "Aquest missatge és de veritat?",
-    intro:
-      "Enganxa un SMS, un correu o una web que diu ser de la DGT, d'Hisenda o d'un altre organisme i et direm si ho podem confirmar.",
   },
   pie: {
     descripcion: (nombre: string) =>
@@ -99,10 +96,11 @@ export const ca = {
     },
   },
   analizar: {
-    etiquetaCampo: "Enganxa aquí el missatge que t'ha arribat",
-    ayudaCampo:
-      "Pot ser un SMS, un correu o l'enllaç d'un web. Inclou el remitent i l'enllaç tal com apareixen.",
-    noPulses: "No toquis l'enllaç.",
+    campo: {
+      antes: "Enganxa aquí l'SMS, el correu o la web tal com t'ha arribat, ",
+      negrita: "sense tocar cap enllaç",
+      despues: ", i et direm si ho podem confirmar.",
+    },
     placeholder: "DGT: Disposa de 24 hores per pagar la multa. Consulti l'enllaç següent: hxxps://…",
     contador: (actual: string, maximo: string) => `${actual} de ${maximo} caràcters com a màxim`,
     subirCaptura: "Puja captura",
@@ -244,9 +242,8 @@ export const ca = {
     copiar: "Copia el text",
     copiado: "Text copiat. Enganxa'l al xat de la teva família.",
     noCopiado: "No l'hem pogut copiar. Prova amb «Envia per WhatsApp».",
-    meHaLlegado: "M'ha arribat aquest missatge:",
     pie: (nombre: string, url: string) =>
-      `Ho he comprovat amb ${nombre}, una eina experimental que no és un servei oficial: ${url}`,
+      `Ho he comprovat amb ${nombre}: ${url}`,
     ayuda017: "Si dubtes o ja has donat dades, truca gratis al 017 d'INCIBE.",
     laWeb: (entidad: string | null, direccion: string) =>
       `El web oficial${entidad ? ` ${deEntitat(entidad)}` : ""} és ${direccion}`,
@@ -275,11 +272,21 @@ export const ca = {
     cuentanos: "Explica'ns què ha passat i et direm què has de fer ara.",
     yaHePulsado: "Ja l'he tocat →",
     queHiciste: "Què vas fer?",
-    marca: "Marca tot el que correspongui. Els passos apareixen a l'instant.",
+    marca: "Marca tot el que correspongui.",
+    pasosDebajo: "Els passos apareixen a sota.",
+    pasosDerecha: "Els passos apareixen a la dreta.",
     cerrar: "Tanca",
     accionesAria: "Accions fetes",
-    pasosTitulo: "Passos per al teu cas",
-    ahora: "Ara",
+    anuncio: (n: number) => `${n} ${n === 1 ? "pas" : "passos"} per al teu cas.`,
+    vacio: "Aquí veuràs què has de fer, en ordre.",
+    marcaArriba: "Marca a dalt el que vas fer.",
+    marcaIzquierda: "Marca a l'esquerra el que vas fer.",
+    queHacerAhora: "Què has de fer ara",
+    cuantosPasos: (n: number) => `${n} ${n === 1 ? "pas" : "passos"}`,
+    grupos: { primero: "Primer, ara mateix", despues: "Després", queHacer: "Què has de fer" },
+    verPasos: (n: number) => `Veure els teus ${n} ${n === 1 ? "pas" : "passos"}`,
+    // Fuentes del modo emergencia: «INCIBE» y «017» los pone el componente.
+    fuentes: { linea: "Línia d'ajuda en ciberseguretat", reporte: "Notificació de frau" },
     acciones: {
       enlace: { label: "Vaig tocar l'enllaç", descripcion: "Vaig obrir la web, però no hi vaig posar res" },
       tarjeta: { label: "Vaig posar les dades de la targeta o del banc", descripcion: "Número de targeta, CVV, compte…" },

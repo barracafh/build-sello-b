@@ -39,10 +39,7 @@ export const eu = {
     },
   },
   pagina: {
-    antetitulo: "Mezu-egiaztatzailea",
     titulo: "Mezu hau benetakoa da?",
-    intro:
-      "Itsatsi DGTrena, Ogasunarena edo beste erakunde batena dela dioen SMS, mezu elektroniko edo webgune bat, eta baieztatu dezakegun esango dizugu.",
   },
   pie: {
     descripcion: (nombre: string) =>
@@ -101,10 +98,11 @@ export const eu = {
     },
   },
   analizar: {
-    etiquetaCampo: "Itsatsi hemen jaso duzun mezua",
-    ayudaCampo:
-      "SMS bat, mezu elektroniko bat edo webgune baten esteka izan daiteke. Sartu igorlea eta esteka agertzen diren bezala.",
-    noPulses: "Ez sakatu estekan.",
+    campo: {
+      antes: "Itsatsi hemen SMSa, mezu elektronikoa edo webgunea jaso duzun bezala, ",
+      negrita: "estekarik sakatu gabe",
+      despues: ", eta baieztatu dezakegun esango dizugu.",
+    },
     placeholder: "DGT: 24 ordu dituzu isuna ordaintzeko. Kontsultatu esteka honetan: hxxps://…",
     contador: (actual: string, maximo: string) => `${actual} / ${maximo} karaktere gehienez`,
     subirCaptura: "Igo argazkia",
@@ -246,9 +244,8 @@ export const eu = {
     copiar: "Kopiatu testua",
     copiado: "Testua kopiatu da. Itsatsi zure familiaren txatean.",
     noCopiado: "Ezin izan dugu kopiatu. Probatu «Bidali WhatsApp bidez» botoiarekin.",
-    meHaLlegado: "Mezu hau iritsi zait:",
     pie: (nombre: string, url: string) =>
-      `${nombre} tresnarekin egiaztatu dut. Tresna esperimentala da, ez zerbitzu ofiziala: ${url}`,
+      `${nombre} tresnarekin egiaztatu dut: ${url}`,
     ayuda017: "Zalantzarik baduzu edo datuak eman badituzu, deitu doan INCIBEren 017ra.",
     laWeb: (entidad: string | null, direccion: string) =>
       entidad
@@ -281,11 +278,21 @@ export const eu = {
     cuentanos: "Kontatu zer gertatu den, eta orain zer egin esango dizugu.",
     yaHePulsado: "Sakatu egin dut →",
     queHiciste: "Zer egin zenuen?",
-    marca: "Markatu dagokion guztia. Urratsak berehala agertzen dira.",
+    marca: "Markatu dagokion guztia.",
+    pasosDebajo: "Urratsak behean agertzen dira.",
+    pasosDerecha: "Urratsak eskuinean agertzen dira.",
     cerrar: "Itxi",
     accionesAria: "Egindako ekintzak",
-    pasosTitulo: "Zure kasurako urratsak",
-    ahora: "Orain",
+    anuncio: (n: number) => `${n} urrats zure kasurako.`,
+    vacio: "Hemen ikusiko duzu zer egin, ordenan.",
+    marcaArriba: "Markatu goian zer egin zenuen.",
+    marcaIzquierda: "Markatu ezkerrean zer egin zenuen.",
+    queHacerAhora: "Zer egin orain",
+    cuantosPasos: (n: number) => `${n} urrats`,
+    grupos: { primero: "Lehenik, oraintxe bertan", despues: "Ondoren", queHacer: "Zer egin" },
+    verPasos: (n: number) => `Ikusi zure ${n} urratsak`,
+    // Fuentes del modo emergencia: «INCIBE» y «017» los pone el componente.
+    fuentes: { linea: "Zibersegurtasuneko laguntza-lerroa", reporte: "Iruzurren berri ematea" },
     acciones: {
       enlace: { label: "Esteka sakatu nuen", descripcion: "Webgunea ireki nuen, baina ez nuen ezer idatzi" },
       tarjeta: { label: "Txartelaren edo bankuaren datuak sartu nituen", descripcion: "Txartel-zenbakia, CVVa, kontua…" },

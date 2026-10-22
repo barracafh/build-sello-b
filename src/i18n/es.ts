@@ -32,10 +32,7 @@ export const es = {
     },
   },
   pagina: {
-    antetitulo: "Verificador de mensajes",
     titulo: "¿Este mensaje es de verdad?",
-    intro:
-      "Pega un SMS, un correo o una web que dice ser de la DGT, Hacienda u otro organismo y te decimos si podemos confirmarlo.",
   },
   pie: {
     descripcion: (nombre: string) =>
@@ -96,10 +93,12 @@ export const es = {
     },
   },
   analizar: {
-    etiquetaCampo: "Pega aquí el mensaje que te ha llegado",
-    ayudaCampo:
-      "Puede ser un SMS, un correo o el enlace de una web. Incluye el remitente y el enlace tal como aparecen.",
-    noPulses: "No pulses el enlace.",
+    // Una sola frase, que es la etiqueta de la caja; `negrita` va resaltada.
+    campo: {
+      antes: "Pega aquí el SMS, el correo o la web tal como te ha llegado, ",
+      negrita: "sin pulsar ningún enlace",
+      despues: ", y te decimos si podemos confirmarlo.",
+    },
     placeholder:
       "DGT: Dispone de 24 horas para pagar su multa. Consulte en el siguiente enlace: hxxps://…",
     contador: (actual: string, maximo: string) => `${actual} de ${maximo} caracteres como máximo`,
@@ -249,9 +248,8 @@ export const es = {
     copiado: "Texto copiado. Pégalo en el chat de tu familia.",
     noCopiado: "No hemos podido copiarlo. Prueba con «Enviar por WhatsApp».",
     // Texto que se manda (src/lib/compartir.ts).
-    meHaLlegado: "Me ha llegado este mensaje:",
     pie: (nombre: string, url: string) =>
-      `Lo he comprobado con ${nombre}, una herramienta experimental que no es un servicio oficial: ${url}`,
+      `Lo he comprobado con ${nombre}: ${url}`,
     ayuda017: "Si dudas o ya has dado datos, llama gratis al 017 de INCIBE.",
     laWeb: (entidad: string | null, direccion: string) =>
       `La web oficial${entidad ? ` ${deEntidad(entidad)}` : ""} es ${direccion}`,
@@ -278,11 +276,21 @@ export const es = {
     cuentanos: "Cuéntanos qué pasó y te decimos qué hacer ahora.",
     yaHePulsado: "Ya he pulsado →",
     queHiciste: "¿Qué hiciste?",
-    marca: "Marca todo lo que corresponda. Los pasos aparecen al instante.",
+    marca: "Marca todo lo que corresponda.",
+    pasosDebajo: "Los pasos aparecen debajo.",
+    pasosDerecha: "Los pasos aparecen a la derecha.",
     cerrar: "Cerrar",
     accionesAria: "Acciones realizadas",
-    pasosTitulo: "Pasos para tu caso",
-    ahora: "Ahora",
+    anuncio: (n: number) => `${n} ${n === 1 ? "paso" : "pasos"} para tu caso.`,
+    vacio: "Aquí verás qué hacer, en orden.",
+    marcaArriba: "Marca arriba lo que hiciste.",
+    marcaIzquierda: "Marca a la izquierda lo que hiciste.",
+    queHacerAhora: "Qué hacer ahora",
+    cuantosPasos: (n: number) => `${n} ${n === 1 ? "paso" : "pasos"}`,
+    grupos: { primero: "Primero, ahora mismo", despues: "Después", queHacer: "Qué hacer" },
+    verPasos: (n: number) => `Ver tus ${n} ${n === 1 ? "paso" : "pasos"}`,
+    // Fuentes del modo emergencia: «INCIBE» y «017» los pone el componente.
+    fuentes: { linea: "Línea de ayuda en ciberseguridad", reporte: "Reporte de fraude" },
     // Una por AccionId de src/datos/pasos-emergencia.ts.
     acciones: {
       enlace: { label: "Pulsé el enlace", descripcion: "Abrí la web, pero no introduje nada" },
