@@ -13,7 +13,7 @@ import { CompartirFamilia } from "@/components/CompartirFamilia";
 import { Fuentes } from "@/components/Fuentes";
 import { textoParaFamilia } from "@/lib/compartir";
 import { avisosIncibe, horario017, linea017 } from "@/datos/incibe";
-import { NOMBRES_EJEMPLOS, tipoDeEjemplo } from "@/datos/ejemplos";
+import { EJEMPLOS_PANEL, NOMBRES_EJEMPLOS, tipoDeEjemplo } from "@/datos/ejemplos";
 import {
   deEntidad,
   fichaDe,
@@ -54,14 +54,16 @@ const textoDeEjemplo = (caso: Ejemplo) => {
   return url ? `${caso.texto} ${url}` : caso.texto;
 };
 
-const EJEMPLOS = (ejemplos as Ejemplo[]).map((caso) => ({
-  id: caso.id,
-  nombre: NOMBRES_EJEMPLOS[caso.id] ?? caso.id,
-  tipo: tipoDeEjemplo(caso.id),
-  // Lo que debería devolver, con la misma píldora que el resultado.
-  esperado: fichaDe(caso.esperado),
-  texto: textoDeEjemplo(caso),
-}));
+const EJEMPLOS = (ejemplos as Ejemplo[])
+  .filter((caso) => EJEMPLOS_PANEL.includes(caso.id))
+  .map((caso) => ({
+    id: caso.id,
+    nombre: NOMBRES_EJEMPLOS[caso.id] ?? caso.id,
+    tipo: tipoDeEjemplo(caso.id),
+    // Lo que debería devolver, con la misma píldora que el resultado.
+    esperado: fichaDe(caso.esperado),
+    texto: textoDeEjemplo(caso),
+  }));
 
 // Frase corta para cada código de `motivos` (LAB-34/38); el código nunca se muestra solo.
 const frases: Record<string, string> = {
