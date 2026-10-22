@@ -19,6 +19,7 @@ import { MensajeSenalado } from "@/components/MensajeSenalado";
 import { CargaResultado } from "@/components/CargaResultado";
 import { RETRASO_MS, esperaAntesDeMostrar } from "@/lib/carga";
 import { formularioPlegado } from "@/lib/formulario";
+import { useAltoCabecera } from "@/lib/alto-cabecera";
 import { textoParaFamilia } from "@/lib/compartir";
 import { avisosIncibe, horario017, linea017 } from "@/datos/incibe";
 import { EJEMPLOS_PANEL, NOMBRES_EJEMPLOS, tipoDeEjemplo } from "@/datos/ejemplos";
@@ -156,6 +157,7 @@ export function AnalizarMensaje({
   const tituloRef = useRef<HTMLHeadingElement>(null);
   // Descarta respuestas que llegan después de cambiar el mensaje.
   const peticion = useRef(0);
+  useAltoCabecera();
 
   // Con zoom o en el móvil, el resultado sale por debajo: llevamos ahí el foco
   // y la vista para que nadie se lo pierda.
@@ -410,11 +412,14 @@ export function AnalizarMensaje({
               aria-invalid={error?.delCampo || undefined}
               value={mensaje}
               onChange={(event) => cambiar(event.target.value)}
-              rows={6}
+              rows={3}
               spellCheck={false}
               autoComplete="off"
               placeholder="DGT: Dispone de 24 horas para pagar su multa. Consulte en el siguiente enlace: hxxps://…"
-              className="mt-4 min-h-44 px-4 py-3 text-lg leading-relaxed md:text-lg [overflow-wrap:anywhere]"
+              // Crece con el texto hasta el 20 % del alto de la pantalla sin la
+              // cabecera; a partir de ahí, scroll dentro. Mínimo de 3 líneas (+ relleno
+              // y borde) salvo que no quepan en ese 20 % (LAB-69).
+              className="mt-4 [--alto-caja:calc((100dvh_-_var(--alto-cabecera,0px))*0.2)] max-h-(--alto-caja) min-h-[min(calc(3lh_+_1.5rem_+_2px),var(--alto-caja))] px-4 py-3 text-lg leading-relaxed md:text-lg [overflow-wrap:anywhere]"
             />
             {cercaDelLimite && (
               <p

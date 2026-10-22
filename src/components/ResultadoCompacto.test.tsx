@@ -77,3 +77,22 @@ describe("desplegables del resultado", () => {
     assert.match(html, /<details(?![^>]*\bopen)[^>]*>\s*<summary[^>]*>[\s\S]*Ya lo han desmentido \(2\)/);
   });
 });
+
+// LAB-69 (2ª ronda): la caja del mensaje nunca pasa del 20 % del alto útil.
+describe("caja del mensaje", () => {
+  const html = renderToStaticMarkup(<AnalizarMensaje />);
+  const caja = html.match(/<textarea[^>]*name="mensaje"[^>]*>/)?.[0] ?? ""; // tema-ok: busca la caja en el HTML renderizado
+
+  test("su alto máximo es el 20 % de la pantalla menos la cabecera medida", () => {
+    assert.match(caja, /max-h-\(--alto-caja\)/);
+    assert.match(caja, /\[--alto-caja:calc\(\(100dvh_-_var\(--alto-cabecera,0px\)\)\*0\.2\)\]/);
+  });
+
+  test("unas 3 líneas como mínimo, salvo que no quepan en ese 20 %", () => {
+    assert.match(caja, /min-h-\[min\(calc\(3lh_\+_1\.5rem_\+_2px\),var\(--alto-caja\)\)\]/);
+  });
+
+  test("sin alto fijo que lo contradiga", () => {
+    assert.doesNotMatch(caja, /min-h-44|rows="6"/);
+  });
+});
