@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { ClipboardPaste, ExternalLink, Phone } from "lucide-react";
+import { ExternalLink, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ruta } from "@/config/sitio";
 import { Badge } from "@/components/ui/badge";
@@ -81,18 +81,11 @@ export function AnalizarMensaje({
   // Solo los errores del mensaje marcan el campo como no válido; los de red, no.
   const [error, setError] = useState<{ texto: string; delCampo: boolean } | null>(null);
   const [enviando, setEnviando] = useState(false);
-  const [puedePegar, setPuedePegar] = useState(false);
-  const [avisoPegar, setAvisoPegar] = useState<string | null>(null);
   const campoRef = useRef<HTMLTextAreaElement>(null);
   const comprobarRef = useRef<HTMLButtonElement>(null);
   const tituloRef = useRef<HTMLHeadingElement>(null);
   // Descarta respuestas que llegan después de cambiar el mensaje.
   const peticion = useRef(0);
-
-  // En el servidor no hay portapapeles: se decide en el navegador.
-  useEffect(() => {
-    setPuedePegar(typeof navigator.clipboard?.readText === "function");
-  }, []);
 
   // Con zoom o en el móvil, el resultado sale por debajo: llevamos ahí el foco
   // y la vista para que nadie se lo pierda.
@@ -110,10 +103,9 @@ export function AnalizarMensaje({
     setRespuesta(null);
     setError(null);
     setEnviando(false);
-    setAvisoPegar(null);
   }
 
-  // Tras pegar o empezar de nuevo, el foco vuelve al campo.
+  // Al empezar de nuevo, el foco vuelve al campo.
   function cargar(texto: string) {
     cambiar(texto);
     campoRef.current?.focus();
@@ -129,7 +121,6 @@ export function AnalizarMensaje({
   async function analizar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setRespuesta(null);
-    setAvisoPegar(null);
     if (mensaje.trim().length === 0) {
       setError({ texto: "Escribe o pega un mensaje antes de comprobar.", delCampo: true });
       return;
@@ -159,23 +150,6 @@ export function AnalizarMensaje({
     setEnviando(false);
     if (datos) setRespuesta(datos);
     else setError({ texto: "No hemos podido comprobarlo. Inténtalo de nuevo.", delCampo: false });
-  }
-
-  async function pegar() {
-    try {
-      const texto = await navigator.clipboard.readText();
-      if (texto.trim().length === 0) {
-        setAvisoPegar(
-          "No hay nada copiado. Copia el mensaje y vuelve a pulsar «Pegar».",
-        );
-        return;
-      }
-      cargar(texto);
-    } catch {
-      setAvisoPegar(
-        "No hemos podido pegarlo. Mantén pulsado el cuadro de texto y elige «Pegar».",
-      );
-    }
   }
 
   const ficha = respuesta ? fichaDe(respuesta.veredicto) : null;
@@ -275,26 +249,6 @@ export function AnalizarMensaje({
             >
               {error.texto}
             </p>
-          )}
-          {puedePegar && (
-            <div className="mt-4">
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                onClick={pegar}
-                className="h-12 gap-2 px-5 text-lg max-sm:w-full"
-              >
-                <ClipboardPaste aria-hidden="true" className="size-5" />
-                Pegar
-              </Button>
-              <p
-                role="status"
-                className="mt-2 text-base text-(--text-secondary) empty:mt-0"
-              >
-                {avisoPegar}
-              </p>
-            </div>
           )}
           <Button
             ref={comprobarRef}
