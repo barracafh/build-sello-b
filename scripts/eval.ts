@@ -3,22 +3,24 @@
 // con 1 s de pausa. Sin `--modelo`: HELMCODE_MODEL_CLASIFICADOR o deepseek-v4-flash.
 // Escribe evals/resultados/<fecha>-<modelo>.json (ignorado por git) y evals/ULTIMO.md.
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { informeCompleto, resumenMarkdown, tablaTexto, type Informe } from "./eval-lib";
+import {
+  informeCompleto,
+  leerArgumentosEval,
+  resumenMarkdown,
+  tablaTexto,
+  type Informe,
+} from "./eval-lib";
 
-const argumento = (nombre: string) => {
-  const i = process.argv.indexOf(`--${nombre}`);
-  return i >= 0 ? process.argv[i + 1] : undefined;
-};
-
-const repeticiones = Number(argumento("repeticiones") ?? 1);
-if (!Number.isInteger(repeticiones) || repeticiones < 1) {
-  console.error("--repeticiones debe ser un entero ≥ 1");
+let argumentos: ReturnType<typeof leerArgumentosEval>;
+try {
+  argumentos = leerArgumentosEval(process.argv.slice(2));
+} catch (e) {
+  console.error((e as Error).message);
   process.exit(2);
 }
 
 const informe = await informeCompleto({
-  modelo: argumento("modelo"),
-  repeticiones,
+  ...argumentos,
   alCaso: (e) => console.error(`${e.id}: ${e.obtenido} (${e.pasa ? "ok" : "NO"})`),
 }).catch((e: Error) => {
   console.error(`No se pudo ejecutar el eval: ${e.message}`);
