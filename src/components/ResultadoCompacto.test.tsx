@@ -23,30 +23,34 @@ describe("formulario plegado", () => {
   });
 
   test("la barra dice que está comprobado y ofrece comprobar otro", () => {
-    const html = renderToStaticMarkup(<BarraComprobado onOtro={() => {}} />);
+    const html = renderToStaticMarkup(<BarraComprobado onOtro={() => {}} texto="Mensaje comprobado" boton="Comprobar otro mensaje" />);
     assert.match(html, /Mensaje comprobado/);
     assert.match(html, /<button[^>]*>[\s\S]*Comprobar otro mensaje[\s\S]*<\/button>/); // tema-ok: busca el botón en el HTML renderizado
   });
 });
 
-describe("compartir compacto", () => {
+describe("compartir", () => {
   const html = renderToStaticMarkup(
-    <CompartirFamilia texto="Me ha llegado este mensaje" onCopiarEnlace={async () => "ok"} />,
+    <CompartirFamilia titulo="Mándaselo a tu familia" texto="Me ha llegado este mensaje" onCopiarEnlace={async () => "ok"} />,
   );
 
-  test("WhatsApp, copiar texto y copiar enlace en un solo grupo", () => {
-    assert.match(html, /WhatsApp/);
-    assert.match(html, /Copiar texto/);
+  test("la franja de #50 con «Copiar enlace» de este PR", () => {
+    assert.match(html, /Enviar por WhatsApp/);
+    assert.match(html, /Copiar el texto/);
     assert.match(html, /Copiar enlace/);
   });
 
-  test("el texto editable va dentro de un desplegable cerrado", () => {
-    assert.match(html, /<details(?![^>]*\bopen)[^>]*>\s*<summary[^>]*>[\s\S]*Ver y editar el texto/);
-    assert.match(html, /<details[^>]*>[\s\S]*<textarea/); // tema-ok: busca la caja en el HTML renderizado
+  test("sin caja de texto: el texto se ve en WhatsApp o en la app elegida", () => {
+    assert.doesNotMatch(html, /<textarea|<details|Ver y editar el texto/); // tema-ok: comprueba que no hay caja en el HTML renderizado
   });
 
-  test("el aviso de privacidad es una sola línea", () => {
+  test("una línea avisa de que el enlace lleva el mensaje", () => {
     assert.equal(html.match(/datos personales/g)?.length, 1);
+    assert.match(html, /El mensaje va en el enlace: no lo compartas si lleva datos personales\./);
+  });
+
+  test("dentro del resultado su título es h3", () => {
+    assert.match(html, /<h3[^>]*>Mándaselo a tu familia<\/h3>/);
   });
 });
 

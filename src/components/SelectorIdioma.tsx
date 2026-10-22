@@ -1,0 +1,39 @@
+"use client";
+
+import { useId } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { IDIOMAS, NOMBRES, langHtml, type Idioma } from "@/i18n";
+
+// Cambia ?lang y conserva el resto de parámetros (p. ej. casos-test).
+export function SelectorIdioma({ idioma, etiqueta }: { idioma: Idioma; etiqueta: string }) {
+  const id = useId();
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+
+  const cambiar = (nuevo: string) => {
+    const siguiente = new URLSearchParams(params.toString());
+    siguiente.set("lang", nuevo);
+    router.replace(`${pathname}?${siguiente.toString()}${window.location.hash}`, { scroll: false });
+  };
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      <label htmlFor={id} className="text-base text-(--text-secondary)">
+        {etiqueta}
+      </label>
+      <select
+        id={id}
+        value={idioma}
+        onChange={(e) => cambiar(e.target.value)}
+        className="h-11 min-w-0 rounded-lg border border-input bg-background px-3 text-base text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+      >
+        {IDIOMAS.map((codigo) => (
+          <option key={codigo} value={codigo} lang={langHtml(codigo)}>
+            {NOMBRES[codigo]}
+          </option>
+        ))}
+      </select>
+    </span>
+  );
+}

@@ -1,5 +1,6 @@
 // Cómo se enseña cada veredicto de /api/verificar. El código crudo
-// (`no_determinable`…) no se enseña nunca: siempre icono y palabra.
+// (`no_determinable`…) no se enseña nunca: siempre icono y palabra. Las
+// palabras (etiqueta, titular, entradilla y pasos) están en src/i18n/.
 import { CircleCheck, CircleQuestionMark, CircleX, type LucideIcon } from "lucide-react";
 import { leerFragmentos, type Fragmento } from "@/lib/trozos";
 import { neutralizar } from "@/lib/url";
@@ -7,88 +8,45 @@ import dominios from "../../datos/dominios-oficiales.json";
 
 export type Veredicto = "oficial_verificado" | "no_oficial" | "no_determinable";
 
-type Contexto = {
-  /** «de la DGT», ya con su preposición; null si la API no la da. */
-  deEntidad: string | null;
-  /** Si el mensaje traía un enlace. */
-  hayEnlace: boolean;
-};
-
 export type FichaVeredicto = {
-  etiqueta: string;
+  veredicto: Veredicto;
   icono: LucideIcon;
-  titular: (contexto: Contexto) => string;
-  /** Lo primero que hay que hacer, en una frase. */
-  entradilla: string;
   /** Clases de la píldora. Solo tokens de Sol; el significado lo llevan el icono y la palabra. */
   tono: string;
   /** Fondo de la cabecera del bloque del veredicto (tokens de Sol). */
   fondo: string;
   /** Color del icono de la píldora sobre la cabecera. */
   colorIcono: string;
-  /** Pasos de «Qué hacer ahora». */
-  pasos: readonly string[];
   /** Si se ofrece llamar al 017. */
   ofrece017: boolean;
 };
 
 export const VEREDICTOS: Record<Veredicto, FichaVeredicto> = {
   no_oficial: {
-    etiqueta: "No es oficial",
+    veredicto: "no_oficial",
     icono: CircleX,
-    titular: ({ deEntidad, hayEnlace }) => {
-      const que = hayEnlace ? "Este enlace" : "Este mensaje";
-      return deEntidad ? `${que} no es ${deEntidad}` : `${que} no es oficial`;
-    },
-    entradilla: "No pulses sus enlaces y no respondas al mensaje.",
     // Texto en foreground: destructive sobre su tinte se queda en 4,2:1. El rojo va en el icono.
     tono: "bg-destructive/10 text-foreground [&>svg]:text-destructive",
     fondo: "bg-destructive/10",
     colorIcono: "[&>svg]:text-destructive",
-    pasos: [
-      "No pulses el enlace ni respondas al mensaje.",
-      "Si quieres comprobar algo, entra tú en la web oficial escribiendo la dirección.",
-      "Si ya lo has pulsado o has dado datos, llama gratis al 017.",
-    ],
     ofrece017: true,
   },
   no_determinable: {
-    etiqueta: "No podemos confirmarlo",
+    veredicto: "no_determinable",
     icono: CircleQuestionMark,
-    titular: ({ deEntidad }) =>
-      deEntidad
-        ? `No podemos confirmar que sea ${deEntidad}`
-        : "No podemos saber quién lo envía",
-    entradilla: "Que el texto parezca oficial no prueba quién lo envía.",
     tono: "bg-(--warning) text-(--warning-foreground)",
     fondo: "bg-(--warning)",
     colorIcono: "[&>svg]:text-(--warning-foreground)",
-    pasos: [
-      "No pulses el enlace ni respondas al mensaje.",
-      "Entra tú en la web oficial escribiendo la dirección.",
-      "Si dudas, llama gratis al 017.",
-    ],
     ofrece017: true,
   },
   oficial_verificado: {
-    etiqueta: "Web oficial",
+    veredicto: "oficial_verificado",
     icono: CircleCheck,
-    titular: ({ deEntidad }) =>
-      deEntidad
-        ? `Esta web es ${deEntidad}`
-        : "Esta web está en nuestra lista de webs oficiales",
-    entradilla:
-      "Solo comprobamos la dirección, no lo que te pidan dentro. Para volver a entrar, escribe tú la dirección.",
     // Verde de éxito de Import@ss (src/styles/importass.css, LAB-58): el texto
     // sigue en foreground sobre el tinte y el verde va en el icono (4,97:1).
     tono: "bg-iss-success-700/20 text-foreground [&>svg]:text-iss-success-700",
     fondo: "bg-iss-success-700/20",
     colorIcono: "[&>svg]:text-iss-success-700",
-    pasos: [
-      "Aun así, no des datos si no lo esperabas.",
-      "Si dudas, entra tú escribiendo la dirección de la web oficial.",
-      "Si ya has dado datos, llama gratis al 017 de INCIBE.",
-    ],
     ofrece017: false,
   },
 };
@@ -263,9 +221,21 @@ export function leerRespuesta(datos: unknown): Respuesta | null {
 /** 2000 → «2.000» (en español, `toLocaleString` no agrupa los números de 4 cifras). */
 export const miles = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
-/** «2025-03-01T00:00:00Z» → «marzo de 2025»; null si no es una fecha. */
-export function mesDe(fecha: string | null): string | null {
+const mesEnCastellano = (mes: number, año: number) =>
+  new Intl.DateTimeFormat("es-ES", { month: "long", year: "numeric", timeZone: "UTC" }).format(
+    Date.UTC(año, mes),
+  );
+
+/**
+ * «2025-03-01T00:00:00Z» → «marzo de 2025»; null si no es una fecha. Cada idioma
+ * pasa su `nombrar` (src/i18n/): Chrome no trae los meses en euskera.
+ */
+export function mesDe(
+  fecha: string | null,
+  nombrar: (mes: number, año: number) => string = mesEnCastellano,
+): string | null {
   const ms = fecha ? Date.parse(fecha) : NaN;
   if (Number.isNaN(ms)) return null;
-  return new Intl.DateTimeFormat("es-ES", { month: "long", year: "numeric", timeZone: "UTC" }).format(ms);
+  const d = new Date(ms);
+  return nombrar(d.getUTCMonth(), d.getUTCFullYear());
 }

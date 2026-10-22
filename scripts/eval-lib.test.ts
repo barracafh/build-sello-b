@@ -12,7 +12,7 @@ const ejemplos = CASOS.filter((c) => c.fuente.startsWith("repo:mensajes-ejemplo:
 
 describe("conjunto", () => {
   test("usa el dev de LAB-47, con los 10 mensajes de ejemplo", () => {
-    assert.equal(CASOS.length, 35);
+    assert.equal(CASOS.length, 41);
     assert.equal(ejemplos.length, 10);
   });
 });
@@ -77,5 +77,18 @@ describe("ejecutarEvals", () => {
     assert.equal(maximo, 1);
     for (let i = 1; i < inicios.length; i++) assert.ok(inicios[i] - inicios[i - 1] >= 30);
     assert.deepEqual(r.map((e) => e.repeticion), [1, 1, 1, 2, 2, 2]);
+  });
+
+  test("pasa el idioma a cada análisis", async () => {
+    const idiomas: unknown[] = [];
+    const falso = async (_t: string, o?: { idioma?: string }) => {
+      idiomas.push(o?.idioma);
+      return {
+        veredicto: "no_determinable", motivos: [], url_analizada: null,
+        senales: [], clasificado: true, motivo: "m",
+      } as unknown as Analisis;
+    };
+    await ejecutarEvals({ modelo: "m", casos: CASOS.slice(0, 2), pausaMs: 0, idioma: "eu", analizar: falso });
+    assert.deepEqual(idiomas, ["eu", "eu"]);
   });
 });

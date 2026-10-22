@@ -4,6 +4,9 @@ import { Cabecera } from "@/components/Cabecera";
 import { Pie } from "@/components/Pie";
 import { cn } from "@/lib/utils";
 import { mostrarCasosTest } from "@/lib/casos-test";
+import { diccionario, langHtml } from "@/i18n";
+import { idiomaDePeticion } from "@/i18n/servidor";
+import { IdiomaDocumento } from "@/components/IdiomaDocumento";
 
 // El panel de ejemplos (para demos y pruebas) solo sale con ?casos-test=true;
 // sin él, el verificador ocupa todo el ancho.
@@ -18,10 +21,13 @@ export default async function Home({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const conEjemplos = mostrarCasosTest((await searchParams)["casos-test"]);
+  const idioma = await idiomaDePeticion();
+  const t = diccionario(idioma);
 
   return (
     <>
-      <Cabecera activa="verificar" />
+      <IdiomaDocumento lang={langHtml(idioma)} />
+      <Cabecera activa="verificar" idioma={idioma} />
 
       <main
         id="contenido"
@@ -33,32 +39,29 @@ export default async function Home({
         )}
       >
         <p className="font-mono text-sm tracking-[0.06em] text-(--text-secondary) uppercase">
-          Verificador de mensajes
+          {t.pagina.antetitulo}
         </p>
         <h1 className="mt-4 max-w-[760px] font-heading text-[clamp(36px,4.5vw,60px)] leading-[1.1] tracking-[-0.02em]">
-          ¿Este mensaje es de verdad?
+          {t.pagina.titulo}
         </h1>
         <span aria-hidden="true" className="mt-6 block h-1 w-16 rounded-full bg-brand" />
 
         <div className="mt-6">
           <AnalizarMensaje
             conEjemplos={conEjemplos}
-            intro={
-              <p className="max-w-[760px] text-(--text-secondary)">
-                Pega un SMS, un correo o una web que dice ser de la DGT,
-                Hacienda u otro organismo y te decimos si podemos confirmarlo.
-              </p>
-            }
+            idioma={idioma}
+            intro={<p className="max-w-[760px] text-(--text-secondary)">{t.pagina.intro}</p>}
           />
         </div>
 
         <section aria-labelledby="emergencia-titulo" className="mt-12 border-t border-border pt-10">
+          {/* Modo emergencia: aún solo en castellano (LAB-70). */}
           <p id="emergencia-titulo" className="sr-only">Si ya has actuado</p>
           <ModoEmergencia />
         </section>
       </main>
 
-      <Pie />
+      <Pie idioma={idioma} />
     </>
   );
 }

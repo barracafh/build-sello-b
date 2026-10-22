@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { diccionario, type Idioma } from "@/i18n";
 
 export type Source = { nombre: string; url: string };
 
@@ -34,26 +35,29 @@ function Lista({ fuentes }: { fuentes: readonly Source[] }) {
 export function Fuentes({
   fuentes,
   verificadores = [],
+  idioma = "es",
 }: {
   fuentes: readonly Source[];
   verificadores?: readonly Source[];
+  idioma?: Idioma;
 }) {
+  const t = diccionario(idioma).fuentes;
   return (
     // Con verificadores, en escritorio van al lado de las fuentes para no alargar la página.
     <aside
-      aria-label="Fuentes"
+      aria-label={t.aria}
       className={cn("text-base", verificadores.length > 0 && "lg:grid lg:grid-cols-2 lg:gap-x-8")}
     >
       <div>
         <h3 className="text-xl font-semibold">
-          Fuentes oficiales
+          {t.oficiales}
         </h3>
         <Lista fuentes={fuentes} />
       </div>
       {verificadores.length > 0 && (
         <div className="max-lg:mt-6">
           <h3 className="text-xl font-semibold">
-            Verificadores
+            {t.verificadores}
           </h3>
           <Lista fuentes={verificadores} />
         </div>

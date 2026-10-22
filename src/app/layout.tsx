@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import type { ReactNode } from "react";
 import ficha from "../../ficha.json";
+import { diccionario, langHtml } from "@/i18n";
+import { idiomaDePeticion } from "@/i18n/servidor";
 import "./globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
@@ -19,15 +21,16 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const idioma = await idiomaDePeticion();
   return (
-    <html lang="es" className={`${geist.variable} ${geistMono.variable}`}>
+    <html lang={langHtml(idioma)} className={`${geist.variable} ${geistMono.variable}`}>
       <body>
         <a
           href="#contenido"
           className="fixed top-2 left-2 z-50 inline-flex min-h-11 -translate-y-[calc(100%+16px)] items-center rounded-xl bg-foreground px-4 text-[15px] font-medium text-background focus-visible:translate-y-0"
         >
-          Saltar al contenido
+          {diccionario(idioma).saltarContenido}
         </a>
         {/* El aviso «Herramienta experimental. No es un servicio oficial.» (regla 5) vive en el pie de page.tsx. */}
         {children}
