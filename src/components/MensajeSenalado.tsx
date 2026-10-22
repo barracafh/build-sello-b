@@ -16,17 +16,19 @@ export function MensajeSenalado({
   fragmentos,
   id,
   idioma = "es",
+  className,
 }: {
   texto: string;
   fragmentos: Fragmento[];
   id: string;
   idioma?: Idioma;
+  className?: string;
 }) {
   const t = diccionario(idioma).senalado;
   const partes = trozos(texto, fragmentos);
   if (!partes.some((p) => p.nivel)) return null;
   return (
-    <section aria-labelledby={id}>
+    <section aria-labelledby={id} className={className}>
       <h3 id={id} className="text-xl font-semibold">
         {t.titulo}
       </h3>

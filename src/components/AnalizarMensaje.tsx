@@ -534,8 +534,18 @@ export function AnalizarMensaje({
               <p className="mt-4 text-xl font-semibold">{textos.entradilla}</p>
             </div>
 
-            <div className="px-6 py-6 md:px-8 md:py-8 [&>*+*]:mt-8">
-              <div>
+            {/* Debajo de la cabecera, dos secciones: primero el mensaje tal como
+                llegó, con sus trampas subrayadas, y después qué hemos visto en él. */}
+            <div className="divide-y divide-foreground/10">
+              <MensajeSenalado
+                idioma={idioma}
+                id={`${id}-senalado`}
+                texto={analizado}
+                fragmentos={respuesta.fragmentos}
+                className="px-6 py-6 md:px-8 md:py-8"
+              />
+
+              <div className="px-6 py-6 md:px-8 md:py-8">
                 <h3 className="text-xl font-semibold">{a.porQue}</h3>
                 <p className="mt-2">
                   {frase}
@@ -612,14 +622,6 @@ export function AnalizarMensaje({
                   </p>
                 )}
               </div>
-
-              <MensajeSenalado
-                idioma={idioma}
-                id={`${id}-senalado`}
-                texto={analizado}
-                fragmentos={respuesta.fragmentos}
-              />
-
             </div>
 
             {web && (
