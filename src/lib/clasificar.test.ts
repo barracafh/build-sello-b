@@ -9,7 +9,7 @@ import {
 } from "./clasificar";
 import { combinar, senales } from "./senales";
 import { verificar } from "./verificar";
-import type { Determinista } from "./clasificar-prompt";
+import { SISTEMA, type Determinista } from "./clasificar-prompt";
 
 const determinista = (texto: string): Determinista => {
   const url = verificar(texto);
@@ -219,5 +219,14 @@ describe("clasificarMensaje", () => {
       [console.log, console.error, console.warn] = original;
     }
     assert.ok(!vistos.some((v) => v.includes("dgt-multas-pago")));
+  });
+});
+
+describe("SISTEMA", () => {
+  test("el modelo recibe los teléfonos del SEPE escritos como en contexto.md §4.2", () => {
+    const sepe = ["91", "926", "79", "70"].join(" ");
+    assert.ok(SISTEMA.includes(`solo da los teléfonos 060 y ${sepe};`));
+    assert.ok(SISTEMA.includes(`017 (INCIBE) o ${sepe} no se da por bueno`));
+    assert.ok(!SISTEMA.includes("${"));
   });
 });
