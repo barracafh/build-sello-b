@@ -144,7 +144,6 @@ function PasoItem({ paso, numero }: { paso: Paso; numero: number }) {
             ))}
           </ul>
         )}
-        <p className="mt-1 font-mono text-xs text-(--text-secondary)">{paso.fuente}</p>
       </div>
     </li>
   );
