@@ -18,15 +18,17 @@ export function SelectorIdioma({ idioma, etiqueta }: { idioma: Idioma; etiqueta:
   };
 
   return (
-    <span className="inline-flex items-center gap-2">
-      <label htmlFor={id} className="text-base text-(--text-secondary)">
+    <span className="inline-flex items-center">
+      {/* «Idioma» solo para lectores de pantalla: a la vista basta con el selector. */}
+      <label htmlFor={id} className="sr-only">
         {etiqueta}
       </label>
       <select
         id={id}
         value={idioma}
         onChange={(e) => cambiar(e.target.value)}
-        className="h-11 min-w-0 rounded-lg border border-input bg-background px-3 text-base text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        // h-12, como los botones del menú, para que la fila quede alineada.
+        className="h-12 min-w-0 rounded-lg border border-input bg-background px-3 text-base text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
       >
         {IDIOMAS.map((codigo) => (
           <option key={codigo} value={codigo} lang={langHtml(codigo)}>
