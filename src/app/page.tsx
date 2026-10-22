@@ -29,7 +29,7 @@ export default function Home() {
         <p className="font-mono text-xs tracking-[0.06em] text-(--text-secondary) uppercase">
           Verificador de mensajes
         </p>
-        <h1 className="mt-4 text-[clamp(36px,4.5vw,60px)] leading-[1.1] tracking-[-0.02em]">
+        <h1 className="mt-4 font-heading text-[clamp(36px,4.5vw,60px)] leading-[1.1] tracking-[-0.02em]">
           ¿Este mensaje es de verdad?
         </h1>
         <p className="mt-6 text-lg text-(--text-secondary)">
