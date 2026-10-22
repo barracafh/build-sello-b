@@ -6,8 +6,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { BotonAviso } from "./BotonAviso";
 import { site } from "@/config/sitio";
 
-// La regla del proyecto pide el componente <BotonAviso /> en la página, no una copia del enlace.
-const PAGINA = join(import.meta.dirname, "..", "app", "page.tsx");
+// La regla del proyecto pide el componente <BotonAviso /> en el pie, no una copia del enlace.
+const PIE = join(import.meta.dirname, "Pie.tsx");
 
 describe("BotonAviso", () => {
   test("enlaza con la página de avisos", () => {
@@ -21,9 +21,9 @@ describe("BotonAviso", () => {
     assert.match(html, /class="[^"]*\bmt-4\b/);
   });
 
-  test("la página lo pinta en vez de copiar el enlace", () => {
-    const pagina = readFileSync(PAGINA, "utf8");
-    assert.match(pagina, /<BotonAviso\b[^>]*\/>/);
-    assert.doesNotMatch(pagina, /site\.feedbackUrl/);
+  test("el pie lo pinta en vez de copiar el enlace", () => {
+    const pie = readFileSync(PIE, "utf8");
+    assert.match(pie, /<BotonAviso\b[^>]*\/>/);
+    assert.doesNotMatch(pie, /site\.feedbackUrl/);
   });
 });
