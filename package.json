@@ -12,7 +12,8 @@
     "prebuild": "bun run lint:tema",
     "build": "next build --webpack",
     "typecheck": "tsc --noEmit",
-    "test": "bun test scripts/ src/"
+    "test": "bun test scripts/ src/",
+    "a11y": "playwright test"
   },
   "dependencies": {
     "@base-ui/react": "1.8.0",
@@ -25,11 +26,13 @@
     "tldts": "^7.4.19"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.64.1",
     "@tailwindcss/postcss": "4.3.3",
-    "tailwindcss": "4.3.3",
-    "typescript": "5.9.3",
     "@types/node": "22.15.30",
     "@types/react": "19.3.0",
-    "@types/react-dom": "19.3.0"
+    "@types/react-dom": "19.3.0",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3"
   }
 }
