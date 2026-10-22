@@ -160,4 +160,4 @@ function main() {
   console.log(`lint:tema ok (${ms} ms)`);
 }
 
-if (import.meta.main) main();
+if ((import.meta as { main?: boolean }).main) main();
