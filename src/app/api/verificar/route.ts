@@ -1,3 +1,4 @@
+import { aplicarDesmentidos, buscarDesmentidos, consultaDesmentido } from "@/lib/factcheck";
 import { combinar, senales } from "@/lib/senales";
 import { verificar } from "@/lib/verificar";
 
@@ -24,9 +25,13 @@ export async function POST(request: Request) {
   // Marcadores hasta que existan Safe Browsing y RDAP.
   const url = verificar(texto);
   const lista = senales(texto, url);
+  const resultado = combinar(url, lista, texto);
+  // Después del veredicto final: un desmentido solo lo apoya, nunca lo cambia.
+  const desmentidos = await buscarDesmentidos(consultaDesmentido(texto, resultado));
   return Response.json({
-    ...combinar(url, lista, texto),
+    ...aplicarDesmentidos(resultado, desmentidos),
     senales: lista,
+    desmentidos,
     reputacion: "no_consultada",
     rdap: "no_disponible",
   });
