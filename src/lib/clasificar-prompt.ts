@@ -87,12 +87,12 @@ FORMATO DE SALIDA (JSON, sin texto fuera del JSON)
   "veredicto": "no_oficial" | "no_determinable",
   "motivo": "una frase en castellano llano para un ciudadano, sin jerga",
   "señales": [
-    { "codigo": uno de ${CODIGOS.join(", ")}, "evidencia": "cita corta del mensaje o explicación breve", "fuente": "apartado de contexto.md, por ejemplo §5.4" }
+    { "codigo": uno de ${CODIGOS.join(", ")}, "evidencia": "cita corta del mensaje o explicación breve", "fuente": "apartado de contexto.md, por ejemplo §5.4", "fragmento": "copia literal y exacta de las palabras del mensaje donde se ve la señal, de 80 caracteres como máximo, o null si no hay una frase concreta" }
   ],
   "entidad_suplantada": "nombre del organismo que parece suplantarse, o null",
   "web_oficial": "https://… de la web oficial de ese organismo si la conoces con seguridad, o null"
 }
-Si no hay ninguna señal, "señales" es [] o contiene solo "sin_senales". Nunca inventes importes, plazos ni requisitos.`;
+Si no hay ninguna señal, "señales" es [] o contiene solo "sin_senales". "fragmento" se copia tal cual del mensaje, sin resumir ni corregir; si no está escrito en el mensaje, usa null. Nunca inventes importes, plazos ni requisitos.`;
 
 export type Determinista = { resultado: Resultado; senales: Senal[] };
 

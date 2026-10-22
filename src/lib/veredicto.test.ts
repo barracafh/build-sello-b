@@ -90,6 +90,7 @@ describe("leerRespuesta", () => {
         entidad: 1,
         senales: [{ codigo: "a", nivel: "roja", texto: "t" }, { codigo: "b", nivel: "azul", texto: "t" }],
         indicador: { nombre: "INCIBE" },
+        fragmentos: [{ inicio: 0, fin: 3, nivel: "roja", codigo: "a" }, { inicio: 2, fin: 1, nivel: "roja", codigo: "b" }],
       }),
       {
         veredicto: "no_oficial",
@@ -109,6 +110,7 @@ describe("leerRespuesta", () => {
         señales: [],
         entidad_suplantada: null,
         desmentidos: [],
+        fragmentos: [{ inicio: 0, fin: 3, nivel: "roja", codigo: "a" }],
       },
     );
   });

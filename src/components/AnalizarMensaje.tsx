@@ -7,10 +7,14 @@ import { ruta } from "@/config/sitio";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CompartirFamilia } from "@/components/CompartirFamilia";
 import { Fuentes } from "@/components/Fuentes";
+import { MensajeSenalado } from "@/components/MensajeSenalado";
+import { CargaResultado } from "@/components/CargaResultado";
+import { RETRASO_MS, esperaAntesDeMostrar } from "@/lib/carga";
 import { textoParaFamilia } from "@/lib/compartir";
 import { avisosIncibe, linea017 } from "@/datos/incibe";
 import { EJEMPLOS_PANEL, tipoDeEjemplo } from "@/datos/ejemplos";
@@ -98,10 +102,16 @@ export function AnalizarMensaje({
   const a = t.analizar;
   const [mensaje, setMensaje] = useState("");
   const [respuesta, setRespuesta] = useState<Respuesta | null>(null);
+  // El texto que se comprobó: los fragmentos de la respuesta son posiciones en él.
+  const [analizado, setAnalizado] = useState("");
   // Solo los errores del mensaje marcan el campo como no válido; los de red, no.
   const [error, setError] = useState<{ texto: string; delCampo: boolean } | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [avisoEnlace, setAvisoEnlace] = useState<string | null>(null);
+  // El esqueleto sale solo si tarda más de RETRASO_MS; aquí, cuándo apareció.
+  const [inicioCarga, setInicioCarga] = useState<number | null>(null);
+  const inicioCargaRef = useRef<number | null>(null);
+  const [transcurrido, setTranscurrido] = useState(0);
   const [leyendo, setLeyendo] = useState(false);
   const imagenRef = useRef<HTMLInputElement>(null);
   const campoRef = useRef<HTMLTextAreaElement>(null);
@@ -119,6 +129,24 @@ export function AnalizarMensaje({
     const reducir = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     titulo.scrollIntoView({ behavior: reducir ? "auto" : "smooth", block: "start" });
   }, [respuesta]);
+
+  useEffect(() => {
+    if (!enviando) return;
+    const inicio = Date.now();
+    const retraso = setTimeout(() => {
+      inicioCargaRef.current = Date.now();
+      setTranscurrido(Date.now() - inicio);
+      setInicioCarga(inicioCargaRef.current);
+    }, RETRASO_MS);
+    const reloj = setInterval(() => setTranscurrido(Date.now() - inicio), 250);
+    return () => {
+      clearTimeout(retraso);
+      clearInterval(reloj);
+      inicioCargaRef.current = null;
+      setInicioCarga(null);
+    };
+  }, [enviando]);
+  const mostrarCarga = enviando && inicioCarga !== null;
 
   function cambiar(texto: string) {
     peticion.current++;
@@ -204,8 +232,17 @@ export function AnalizarMensaje({
     }
     // Si el mensaje ha cambiado mientras tanto, esta respuesta ya no vale.
     if (esta !== peticion.current) return;
+    // Si el esqueleto ya está en pantalla, se queda un mínimo para no parpadear.
+    const espera = esperaAntesDeMostrar(inicioCargaRef.current, Date.now());
+    if (espera > 0) {
+      await new Promise((resolver) => setTimeout(resolver, espera));
+      if (esta !== peticion.current) return;
+    }
     setEnviando(false);
-    if (datos) setRespuesta(datos);
+    if (datos) {
+      setAnalizado(texto);
+      setRespuesta(datos);
+    }
     else setError({ texto: t.errores.red, delCampo: false });
   }
 
@@ -403,8 +440,20 @@ export function AnalizarMensaje({
             focusableWhenDisabled
             className="mt-6 h-14 px-6 text-lg max-sm:w-full"
           >
-            {enviando ? a.comprobando : a.comprobar}
+            {enviando ? (
+              <>
+                <Spinner />
+                {a.comprobando}
+              </>
+            ) : (
+              a.comprobar
+            )}
           </Button>
+          {/* Un solo anuncio al empezar. El veredicto lo lee el lector al recibir
+              el foco su titular, y los errores ya son role="alert": aquí no se repiten. */}
+          <p aria-live="polite" className="sr-only">
+            {enviando ? a.comprobando : ""}
+          </p>
           <p
             id={`${id}-privacidad`}
             className="mt-3 text-base text-(--text-secondary)"
@@ -415,54 +464,61 @@ export function AnalizarMensaje({
       </div>
 
       {conEjemplos && (
-        <section
-          aria-labelledby={`${id}-ejemplos`}
-          className="lg:sticky lg:top-8 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:rounded-xl lg:bg-muted lg:p-6"
-        >
-          <h2 id={`${id}-ejemplos`} className="font-sans text-lg font-medium">
-            {a.ejemplos}
-          </h2>
-          <div className="mt-3 flex flex-wrap gap-3 lg:flex-col">
-            {EJEMPLOS.map((ejemplo) => (
-              <Button
-                key={ejemplo.id}
-                type="button"
-                variant="outline"
-                onClick={() => probarEjemplo(ejemplo.texto)}
-                className={cn(
-                  "h-auto min-h-12 max-w-full flex-col items-start gap-1.5 border-l-4 px-4 py-2 text-left text-base whitespace-normal",
-                  ejemplo.tipo === "Fraude" ? "border-l-destructive" : "border-l-muted-foreground",
-                )}
-              >
-                <span>{t.ejemplos[ejemplo.id as keyof Diccionario["ejemplos"]] ?? ejemplo.id}</span>
-                <span className="flex flex-wrap items-center gap-2 text-sm font-normal">
-                  {ejemplo.tipo && (
-                    <span className="font-semibold">
-                      {ejemplo.tipo === "Fraude" ? a.fraude : a.legitimo}
-                    </span>
+        // La columna ocupa solo las filas del formulario y el resultado: el panel
+        // se queda fijo al hacer scroll, pero se para al llegar al final del
+        // resultado y no pisa «Mándaselo a tu familia», que va en la fila de abajo.
+        <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-stretch">
+          <section
+            aria-labelledby={`${id}-ejemplos`}
+            className="lg:sticky lg:top-8 lg:rounded-xl lg:bg-muted lg:p-6"
+          >
+            <h2 id={`${id}-ejemplos`} className="font-sans text-lg font-medium">
+              {a.ejemplos}
+            </h2>
+            <div className="mt-3 flex flex-wrap gap-3 lg:flex-col">
+              {EJEMPLOS.map((ejemplo) => (
+                <Button
+                  key={ejemplo.id}
+                  type="button"
+                  variant="outline"
+                  onClick={() => probarEjemplo(ejemplo.texto)}
+                  className={cn(
+                    "h-auto min-h-12 max-w-full flex-col items-start gap-1.5 border-l-4 px-4 py-2 text-left text-base whitespace-normal",
+                    ejemplo.tipo === "Fraude" ? "border-l-destructive" : "border-l-muted-foreground",
                   )}
-                  <Badge
-                    className={cn(
-                      "h-auto gap-1.5 px-2 py-0.5 text-sm font-medium whitespace-normal [&>svg]:size-4!",
-                      ejemplo.esperado.tono,
+                >
+                  <span>{t.ejemplos[ejemplo.id as keyof Diccionario["ejemplos"]] ?? ejemplo.id}</span>
+                  <span className="flex flex-wrap items-center gap-2 text-sm font-normal">
+                    {ejemplo.tipo && (
+                      <span className="font-semibold">
+                        {ejemplo.tipo === "Fraude" ? a.fraude : a.legitimo}
+                      </span>
                     )}
-                  >
-                    <ejemplo.esperado.icono aria-hidden="true" />
-                    <span className="sr-only">{a.deberiaDar}</span>
-                    {t.veredictos[ejemplo.esperado.veredicto].etiqueta}
-                  </Badge>
-                </span>
-              </Button>
-            ))}
-          </div>
-        </section>
+                    <Badge
+                      className={cn(
+                        "h-auto gap-1.5 px-2 py-0.5 text-sm font-medium whitespace-normal [&>svg]:size-4!",
+                        ejemplo.esperado.tono,
+                      )}
+                    >
+                      <ejemplo.esperado.icono aria-hidden="true" />
+                      <span className="sr-only">{a.deberiaDar}</span>
+                      {t.veredictos[ejemplo.esperado.veredicto].etiqueta}
+                    </Badge>
+                  </span>
+                </Button>
+              ))}
+            </div>
+          </section>
+        </div>
       )}
 
+      <div aria-busy={mostrarCarga} className="empty:hidden lg:col-start-1 lg:row-start-2">
+      {mostrarCarga && <CargaResultado transcurrido={transcurrido} />}
       {respuesta && ficha && textos && (
         // Tres bloques: el veredicto y por qué, qué hacer ahora y las fuentes.
         <section
           aria-labelledby={`${id}-resultado`}
-          className="[&>*+*]:mt-8 lg:col-start-1 lg:row-start-2"
+          className="[&>*+*]:mt-8"
         >
           {/* 1 · Veredicto: cabecera teñida según el resultado y, debajo, el porqué. */}
           <Card render={<article />} className="gap-0 py-0 text-lg">
@@ -568,6 +624,12 @@ export function AnalizarMensaje({
                   </p>
                 )}
               </div>
+
+              <MensajeSenalado
+                id={`${id}-senalado`}
+                texto={analizado}
+                fragmentos={respuesta.fragmentos}
+              />
 
             </div>
 
@@ -746,6 +808,7 @@ export function AnalizarMensaje({
           </div>
         </section>
       )}
+      </div>
 
       {respuesta && (
         // Abajo del todo, a lo ancho: debajo del resultado y de los ejemplos.
