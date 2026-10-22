@@ -803,7 +803,7 @@ export function AnalizarMensaje({
         <div className="lg:col-span-2 lg:row-start-3">
           <CompartirFamilia
             titulo={t.compartir.titulo}
-            texto={textoParaFamilia(mensaje, respuesta, idioma)}
+            texto={textoParaFamilia(respuesta, idioma)}
             idioma={idioma}
           />
         </div>

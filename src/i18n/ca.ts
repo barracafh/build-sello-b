@@ -238,9 +238,8 @@ export const ca = {
     copiar: "Copia el text",
     copiado: "Text copiat. Enganxa'l al xat de la teva família.",
     noCopiado: "No l'hem pogut copiar. Prova amb «Envia per WhatsApp».",
-    meHaLlegado: "M'ha arribat aquest missatge:",
     pie: (nombre: string, url: string) =>
-      `Ho he comprovat amb ${nombre}, una eina experimental que no és un servei oficial: ${url}`,
+      `Ho he comprovat amb ${nombre}: ${url}`,
     ayuda017: "Si dubtes o ja has donat dades, truca gratis al 017 d'INCIBE.",
     laWeb: (entidad: string | null, direccion: string) =>
       `El web oficial${entidad ? ` ${deEntitat(entidad)}` : ""} és ${direccion}`,

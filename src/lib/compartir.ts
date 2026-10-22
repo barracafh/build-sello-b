@@ -1,7 +1,7 @@
 // Texto ya redactado para mandar el resultado a la familia por WhatsApp u otra
-// app: el mensaje que se ha comprobado, con sus enlaces desactivados, y el
-// veredicto con la web oficial. Se arma en el navegador y la persona lo puede
-// editar antes de enviarlo (por ejemplo, para quitar datos personales).
+// app: solo el veredicto, la dirección analizada sin enlace, la web oficial, el
+// 017 y el aviso de herramienta no oficial. El mensaje que pegó la persona no se
+// comparte nunca: puede llevar su nombre, su DNI o su teléfono (LAB-82).
 import { neutralizar } from "@/lib/url";
 import { webOficial, type Respuesta } from "@/lib/veredicto";
 import { diccionario, type Idioma } from "@/i18n";
@@ -38,7 +38,7 @@ export function resumenParaFamilia(respuesta: ParaCompartir, idioma: Idioma = "e
           t.ayuda017,
         ]
       : respuesta.veredicto === "oficial_verificado"
-        ? [t.oficial(entidad, url || null), t.noDesDatos]
+        ? [t.oficial(entidad, url || null), t.noDesDatos, t.ayuda017]
         : // Cualquier otro valor es la duda: nunca «oficial».
           [
             entidad ? t.dudaEntidad(entidad) : t.duda,
@@ -52,30 +52,13 @@ export function resumenParaFamilia(respuesta: ParaCompartir, idioma: Idioma = "e
             t.ayuda017,
           ];
 
-  return [...parrafos, t.pie(ficha.nombre, urlHerramienta(idioma))].filter(Boolean).join("\n\n");
+  const pie = `${t.pie(ficha.nombre, urlHerramienta(idioma))}\n${diccionario(idioma).pie.aviso}`;
+  return [...parrafos, pie].filter(Boolean).join("\n\n");
 }
 
-const URL_CON_ESQUEMA = /(?:https?|hxxps?):\/\/[^\s<>"']+/gi;
-// Dominios sueltos («dgt-multas.com», «sede.dgt.gob.es»): WhatsApp también los enlaza.
-const DOMINIO_SUELTO = /\b(?:[a-z0-9-]+\.)+[a-z]{2,}\b/gi;
-
-/** Desactiva todas las direcciones del texto: ni WhatsApp ni el correo las enlazan. */
-export const neutralizarTexto = (texto: string) =>
-  texto
-    // La puntuación final («…/x.») no es parte de la dirección.
-    .replace(URL_CON_ESQUEMA, (url) => {
-      const fin = /[.,;:!?)}»”]+$/.exec(url)?.[0] ?? "";
-      return neutralizar(url.slice(0, url.length - fin.length)) + fin;
-    })
-    .replace(DOMINIO_SUELTO, (dominio) => dominio.replace(/\./g, "[.]"));
-
-/** El mensaje comprobado, sin enlaces vivos, seguido del resultado. */
-export const textoParaFamilia = (mensaje: string, respuesta: ParaCompartir, idioma: Idioma = "es") =>
-  [
-    diccionario(idioma).compartir.meHaLlegado,
-    `«${neutralizarTexto(mensaje.trim())}»`,
-    resumenParaFamilia(respuesta, idioma),
-  ].join("\n\n");
+/** El texto que se comparte: el resultado, sin el mensaje que se ha comprobado. */
+export const textoParaFamilia = (respuesta: ParaCompartir, idioma: Idioma = "es") =>
+  resumenParaFamilia(respuesta, idioma);
 
 /** Enlace de WhatsApp que abre el chat con el texto ya escrito. */
 export const enlaceWhatsApp = (texto: string) =>

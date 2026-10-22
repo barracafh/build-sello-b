@@ -101,9 +101,8 @@ export const va = {
     titulo: "Envia-ho a la teua família",
     copiado: "Text copiat. Apega'l en el xat de la teua família.",
     noCopiado: "No l'hem pogut copiar. Prova amb «Envia per WhatsApp».",
-    meHaLlegado: "M'ha arribat este missatge:",
     pie: (nombre: string, url: string) =>
-      `Ho he comprovat amb ${nombre}, una ferramenta experimental que no és un servei oficial: ${url}`,
+      `Ho he comprovat amb ${nombre}: ${url}`,
     ayuda017: "Si dubtes o ja has donat dades, telefona gratis al 017 d'INCIBE.",
     laWeb: (entidad: string | null, direccion: string) =>
       `La web oficial${entidad ? ` ${deEntitat(entidad)}` : ""} és ${direccion}`,
