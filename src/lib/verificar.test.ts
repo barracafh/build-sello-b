@@ -31,6 +31,25 @@ const esperar = (texto: string, veredicto: string, motivo?: string) =>
     if (motivo) assert.ok(r.motivos.includes(motivo), r.motivos.join());
   });
 
+describe("avisos que citan la web oficial sin enlace", () => {
+  const porId = (id: string) => ejemplos.find((c) => c.id === id) as Ejemplo;
+  for (const [id, entidad] of [
+    ["L01", "Agencia Tributaria"],
+    ["L02", "Dirección General de Tráfico"],
+    ["L03", "Correos"],
+    ["L04", "Dirección Electrónica Habilitada"],
+  ]) {
+    test(`${id} reconoce la web oficial citada`, () => {
+      const r = verificar(textoDeEjemplo(porId(id)));
+      assert.equal(r.veredicto, "no_determinable");
+      assert.equal(r.motivos[0], "web_oficial_citada", r.motivos.join());
+      assert.ok(r.entidad?.includes(entidad), r.entidad);
+      assert.ok(r.web_oficial?.startsWith("https://"));
+      assert.ok(r.url_analizada?.includes("[.]"), r.url_analizada ?? "");
+    });
+  }
+});
+
 describe("§5.3 sin red", () => {
   esperar("sede.agenciatributaria.gob.es", "oficial_verificado", "en_allowlist");
   esperar("www.dgt.es", "oficial_verificado");
@@ -73,10 +92,94 @@ describe("otros", () => {
     assert.equal(verificar("Pague su multa en dgt-pagos.com").veredicto, "no_oficial");
   });
   test("un dominio oficial citado en prosa, sin esquema, no confirma el mensaje", () => {
-    assert.equal(verificar("Consulta sede.dgt.gob.es").veredicto, "no_determinable");
+    const r = verificar("Consulta sede.dgt.gob.es");
+    assert.equal(r.veredicto, "no_determinable");
+    assert.deepEqual(r.motivos, ["web_oficial_citada"]);
+    assert.ok(r.web_oficial);
   });
   test("sede.dival.es exacto es oficial, un inquilino no", () => {
     assert.equal(verificar("https://sede.dival.es").veredicto, "oficial_verificado");
     assert.equal(verificar("https://rocafort.sede.dival.es").veredicto, "no_determinable");
+  });
+});
+
+describe("indicadores publicados", () => {
+  esperar("https://actc.center/x", "no_oficial", "indicador_publicado");
+  esperar("actc[.]center", "no_oficial", "indicador_publicado");
+  test("un indicador con marca suma la imitación", () => {
+    const r = verificar("portal.seg-socioal.cfd");
+    assert.deepEqual(r.motivos.slice(0, 2), ["indicador_publicado", "imitacion_de_marca"]);
+    assert.ok(r.indicador?.url.startsWith("https://"));
+  });
+});
+
+describe("homógrafos", () => {
+  esperar("https://xn--crreos-wqf.es/", "no_oficial", "homografo");
+  test("un host con xn-- que no imita la allowlist no es homógrafo", () => {
+    const r = verificar("https://xn--espaa-rta.com/");
+    assert.notEqual(r.veredicto, "no_oficial");
+  });
+});
+
+describe("remitente de correo", () => {
+  const correo = (local: string, dominio: string) => [local, dominio].join("@");
+  test("el nombre del servicio con otro dominio es no_oficial", () => {
+    const r = verificar(
+      `De: ${correo("carpetaciudadana", "info[.]com[.]es")}. Responda a este correo.`,
+    );
+    assert.equal(r.veredicto, "no_oficial");
+    assert.ok(r.motivos.includes("remitente_dominio_ajeno"), r.motivos.join());
+    assert.ok(r.web_oficial);
+  });
+  test("un remitente del dominio oficial no prueba nada", () => {
+    const r = verificar(`De: ${correo("correos", "correos.com")}. Tu envío está en camino.`);
+    assert.equal(r.veredicto, "no_determinable");
+  });
+  test("un remitente sin marca en un dominio desconocido no concluye", () => {
+    const r = verificar(`De: ${correo("hola", "ejemplo.com")}. Buenas tardes.`);
+    assert.equal(r.veredicto, "no_determinable");
+  });
+});
+
+describe("remitente: la marca cuenta por token completo", () => {
+  const correo = (local: string, dominio: string) => [local, dominio].join("@");
+  const veredictoDe = (local: string, dominio: string) =>
+    verificar(`De: ${correo(local, dominio)}. Buenas tardes.`);
+
+  for (const [local, dominio] of [
+    ["pepe.sepeda", "gmail.com"],
+    ["info", "enclave-hotel.com"],
+    ["ana", "clavería.com"],
+    ["madgtr", "gmail.com"],
+    ["info", "dehumidificadores.es"],
+    ["rrhh", "sepes.es"],
+    ["info", "correosexpress.com"],
+    ["info", "hacienda-lasrosas.com"],
+    ["juan.clave", "gmail.com"],
+  ]) {
+    test(`${local}@${dominio} → no_determinable`, () => {
+      const r = veredictoDe(local, dominio);
+      assert.equal(r.veredicto, "no_determinable");
+      assert.ok(!r.motivos.includes("remitente_dominio_ajeno"));
+    });
+  }
+
+  for (const [local, dominio] of [
+    ["carpetaciudadana", "info.com.es"],
+    ["dgt-multas", "gmail.com"],
+    ["seg-social", "ejemplo.com"],
+  ]) {
+    test(`${local}@${dominio} → no_oficial`, () => {
+      const r = veredictoDe(local, dominio);
+      assert.equal(r.veredicto, "no_oficial");
+      assert.ok(r.motivos.includes("remitente_dominio_ajeno"), r.motivos.join());
+    });
+  }
+
+  test("solo remitente: lo devuelve neutralizado y con el aviso de INCIBE", () => {
+    const r = veredictoDe("carpetaciudadana", "info.com.es");
+    assert.equal(r.url_analizada, null);
+    assert.equal(r.remitente_analizado, "carpetaciudadana@info[.]com[.]es");
+    assert.match(r.aviso?.url ?? "", /mi-carpeta-ciudadana-no-esta-enviando/);
   });
 });

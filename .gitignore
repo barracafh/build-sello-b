@@ -10,5 +10,6 @@ next-env.d.ts
 
 # Evals: los informes por modelo no se suben; evals/ULTIMO.md sí
 evals/resultados/
-# Informe del eval de preview (lo escribe scripts/eval-build.ts)
-public/evals.json
+# Conjunto de prueba de evals: nunca en el repo (LAB-47)
+*evals-holdout/
+src/datos/evals/**/test.json

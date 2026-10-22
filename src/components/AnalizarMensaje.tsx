@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
-import { ShieldCheck, ShieldQuestion, ShieldX } from "lucide-react";
+import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { ExternalLink, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ruta } from "@/config/sitio";
 import { Badge } from "@/components/ui/badge";
@@ -9,52 +9,46 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Fuentes } from "@/components/Fuentes";
+import { avisosIncibe, horario017, linea017 } from "@/datos/incibe";
+import { NOMBRES_EJEMPLOS } from "@/datos/ejemplos";
+import {
+  deEntidad,
+  fichaDe,
+  leerRespuesta,
+  miles,
+  webOficial,
+  type Respuesta,
+} from "@/lib/veredicto";
 import ejemplos from "../../datos/mensajes-ejemplo.json";
 
 // El texto vive en el estado del navegador y se envía solo a /api/verificar,
 // que no lo guarda ni lo registra.
 const LIMITE = 2000;
+// El contador solo aparece cuando falta poco para el límite.
+const AVISO_LIMITE = 1800;
 
-type Veredicto = "oficial_verificado" | "no_oficial" | "no_determinable";
-
-type Senal = { codigo: string; nivel: "roja" | "naranja"; texto: string };
-
-type SenalFinal = { codigo: string; evidencia: string; fuente: string };
-
-type Respuesta = {
-  veredicto: Veredicto;
-  motivos: string[];
-  web_oficial?: string;
-  entidad?: string;
-  fuente?: string;
-  url_analizada: string | null;
-  senales: Senal[];
-  // Solo si ha clasificado el modelo (el texto no era solo un enlace).
-  motivo?: string;
-  señales?: SenalFinal[];
-  entidad_suplantada?: string | null;
-  clasificado?: boolean;
-  reputacion: string;
-  rdap: string;
+type Ejemplo = (typeof ejemplos)[number] & {
+  url_defanged?: string | null;
+  url?: string;
 };
 
-const titulares: Record<Veredicto, string> = {
-  oficial_verificado: "Esta web es oficial",
-  no_oficial: "Cuidado: esta web no es oficial",
-  no_determinable: "No podemos confirmar que sea oficial",
+const textoDeEjemplo = (caso: Ejemplo) => {
+  const url = caso.url_prueba_sintetica ?? caso.url_defanged ?? caso.url;
+  return url ? `${caso.texto} ${url}` : caso.texto;
 };
 
-const iconos = {
-  oficial_verificado: ShieldCheck,
-  no_oficial: ShieldX,
-  no_determinable: ShieldQuestion,
-} as const;
+const EJEMPLOS = (ejemplos as Ejemplo[]).map((caso) => ({
+  id: caso.id,
+  nombre: NOMBRES_EJEMPLOS[caso.id] ?? caso.id,
+  texto: textoDeEjemplo(caso),
+}));
 
-// Frase corta para el ciudadano; el código de `motivos` nunca se muestra solo.
+// Frase corta para cada código de `motivos` (LAB-34/38); el código nunca se muestra solo.
 const frases: Record<string, string> = {
   contenido_sospechoso: "La web del enlace figura como oficial, pero el mensaje tiene señales de fraude: no podemos confirmarlo.",
   contenido_fraudulento: "El mensaje usa el nombre de un organismo oficial y tiene señales claras de fraude.",
   sin_enlace: "No hemos encontrado ningún enlace en el mensaje.",
+  web_oficial_citada: "El mensaje cita una dirección que sí es una web oficial. Eso no prueba quién lo envía: entra tecleando tú la dirección.",
   url_no_valida: "El enlace no tiene un formato que podamos leer.",
   ip_como_host: "El enlace lleva a un número en vez de a un nombre de web, algo que las webs oficiales no hacen.",
   credenciales_en_url: "El enlace esconde la web real detrás de un @: lo que parece el nombre es solo un disfraz.",
@@ -65,10 +59,13 @@ const frases: Record<string, string> = {
   imitacion_de_marca: "Imita el nombre de un organismo oficial y tiene otras señales de fraude.",
   posible_imitacion_de_marca: "Se parece al nombre de un organismo oficial, pero no podemos asegurar que sea falsa.",
   dominio_desconocido: "No es una web que tengamos en nuestra lista de webs oficiales.",
+  homografo: "El nombre usa letras de otro alfabeto para parecerse a una web oficial.",
+  indicador_publicado: "Un organismo oficial ha avisado de que esta dirección es un fraude.",
+  remitente_dominio_ajeno: "El remitente usa el nombre de un organismo oficial con una dirección de correo que no es la suya.",
   en_allowlist: "La dirección está en nuestra lista de webs oficiales.",
 };
 
-// Título en castellano llano de cada señal del clasificador.
+// Título en castellano llano de cada señal del clasificador (LAB-39).
 const titulosSenal: Record<string, string> = {
   pide_dinero: "Pide dinero",
   pide_datos: "Pide datos personales o bancarios",
@@ -87,399 +84,488 @@ const titulosSenal: Record<string, string> = {
   aviso_informativo: "Parece un aviso informativo",
 };
 
-// Los apartados de contexto.md en los que se apoyan las señales.
-const contextoMd = (señales: SenalFinal[] = []) => {
-  const apartados = [...new Set(señales.flatMap((s) => s.fuente.match(/§\d+(?:\.\d+)?/g) ?? []))];
+const MOTIVO_NO_DISPONIBLE = "clasificador no disponible";
+
+// Los apartados de contexto.md en los que se apoyan las señales del clasificador.
+const contextoMd = (señales: Respuesta["señales"]) => {
+  const apartados = [
+    ...new Set(señales.flatMap((s) => s.fuente.match(/§\d+(?:\.\d+)?/g) ?? [])),
+  ];
   return {
     nombre: `Criterios de Sello (contexto.md${apartados.length ? ` ${apartados.join(", ")}` : ""})`,
     url: "https://github.com/barracafh/build-sello-b/blob/main/contexto.md",
   };
 };
 
-const pasosPorVeredicto: Record<Veredicto, string[]> = {
-  oficial_verificado: [
-    "Aun así, no des datos si no lo esperabas.",
-    "Si dudas, entra tú escribiendo la dirección de la web oficial.",
-    "Si ya has dado datos, llama gratis al 017 de INCIBE.",
-  ],
-  no_oficial: [
-    "No pulses el enlace ni respondas al mensaje.",
-    "Entra tú en la web oficial del organismo escribiendo su dirección.",
-    "Si dudas o ya has dado datos, llama gratis al 017 de INCIBE.",
-  ],
-  no_determinable: [
-    "No pulses el enlace ni respondas al mensaje.",
-    "Entra tú en la web oficial del organismo escribiendo su dirección.",
-    "Si dudas o ya has dado datos, llama gratis al 017 de INCIBE.",
-  ],
-};
-
-type Ejemplo = (typeof ejemplos)[number] & {
-  url_defanged?: string | null;
-  url?: string;
-};
-
-const textoDeEjemplo = (caso: Ejemplo) => {
-  const url = caso.url_prueba_sintetica ?? caso.url_defanged ?? caso.url;
-  return url ? `${caso.texto} ${url}` : caso.texto;
-};
-
-const linea017 = {
-  nombre: "Línea 017 de INCIBE",
-  url: "https://www.incibe.es/linea-de-ayuda-en-ciberseguridad",
-};
-const avisosIncibe = {
-  nombre: "INCIBE · Avisos a la ciudadanía",
-  url: "https://www.incibe.es/ciudadania/avisos",
-};
-
-export function AnalizarMensaje() {
+// `intro` va encima del formulario, en su columna: así el panel de ejemplos
+// arranca a la altura de la entradilla en escritorio. Los ejemplos solo se
+// enseñan con `conEjemplos` (la página lo activa con ?casos-test).
+export function AnalizarMensaje({
+  intro,
+  conEjemplos = false,
+}: {
+  intro?: ReactNode;
+  conEjemplos?: boolean;
+}) {
   const id = useId();
   const [mensaje, setMensaje] = useState("");
   const [respuesta, setRespuesta] = useState<Respuesta | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Solo los errores del mensaje marcan el campo como no válido; los de red, no.
+  const [error, setError] = useState<{ texto: string; delCampo: boolean } | null>(null);
   const [enviando, setEnviando] = useState(false);
-  const resultado = useRef<HTMLDivElement>(null);
+  const campoRef = useRef<HTMLTextAreaElement>(null);
+  const comprobarRef = useRef<HTMLButtonElement>(null);
+  const tituloRef = useRef<HTMLHeadingElement>(null);
+  // Descarta respuestas que llegan después de cambiar el mensaje.
+  const peticion = useRef(0);
 
+  // Con zoom o en el móvil, el resultado sale por debajo: llevamos ahí el foco
+  // y la vista para que nadie se lo pierda.
   useEffect(() => {
-    if (respuesta) resultado.current?.focus();
+    const titulo = tituloRef.current;
+    if (!respuesta || !titulo) return;
+    titulo.focus({ preventScroll: true });
+    const reducir = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    titulo.scrollIntoView({ behavior: reducir ? "auto" : "smooth", block: "start" });
   }, [respuesta]);
+
+  function cambiar(texto: string) {
+    peticion.current++;
+    setMensaje(texto);
+    setRespuesta(null);
+    setError(null);
+    setEnviando(false);
+  }
+
+  // Al empezar de nuevo, el foco vuelve al campo.
+  function cargar(texto: string) {
+    cambiar(texto);
+    campoRef.current?.focus();
+  }
+
+  // Con un ejemplo, el foco va al botón de comprobar, justo debajo del texto
+  // cargado: así se ve y no se abre el teclado del móvil.
+  function probarEjemplo(texto: string) {
+    cambiar(texto);
+    comprobarRef.current?.focus();
+  }
 
   async function analizar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setRespuesta(null);
     if (mensaje.trim().length === 0) {
-      setError("Escribe o pega un mensaje antes de comprobar.");
+      setError({ texto: "Escribe o pega un mensaje antes de comprobar.", delCampo: true });
       return;
     }
     if (mensaje.length > LIMITE) {
-      setError(
-        `El mensaje es demasiado largo: ${mensaje.length} de ${LIMITE} caracteres como máximo.`,
-      );
+      setError({
+        texto: `El mensaje es demasiado largo: tiene ${miles(mensaje.length)} caracteres y el máximo es ${miles(LIMITE)}.`,
+        delCampo: true,
+      });
       return;
     }
     setError(null);
     setEnviando(true);
+    const esta = ++peticion.current;
+    let datos: Respuesta | null = null;
     try {
       const res = await fetch(ruta("/api/verificar"), {
         method: "POST",
         body: JSON.stringify({ texto: mensaje }),
       });
-      if (!res.ok) throw new Error();
-      setRespuesta((await res.json()) as Respuesta);
+      if (res.ok) datos = leerRespuesta(await res.json());
     } catch {
-      setError("No hemos podido comprobarlo. Inténtalo de nuevo.");
-    } finally {
-      setEnviando(false);
+      // Sin red o sin JSON: igual que una respuesta sin veredicto.
     }
+    // Si el mensaje ha cambiado mientras tanto, esta respuesta ya no vale.
+    if (esta !== peticion.current) return;
+    setEnviando(false);
+    if (datos) setRespuesta(datos);
+    else setError({ texto: "No hemos podido comprobarlo. Inténtalo de nuevo.", delCampo: false });
   }
 
-  function cargar(texto: string) {
-    setMensaje(texto);
-    setRespuesta(null);
-    setError(null);
-  }
+  const ficha = respuesta ? fichaDe(respuesta.veredicto) : null;
+  const web = webOficial(respuesta?.web_oficial);
+  const de = deEntidad(respuesta?.entidad);
+  // El veredicto sale del remitente y no hay enlace: se habla del mensaje.
+  const soloRemitente =
+    respuesta?.veredicto === "no_oficial" &&
+    Boolean(respuesta.remitente_analizado) &&
+    !respuesta.url_analizada;
+  // La web citada en prosa es oficial: se dice de quién, sin enlazarla (LAB-40).
+  const webCitada = respuesta?.motivos[0] === "web_oficial_citada";
+  const frase = respuesta
+    ? respuesta.clasificado
+      ? respuesta.motivo === MOTIVO_NO_DISPONIBLE
+        ? "No hemos podido analizar el texto del mensaje ahora mismo, así que no podemos confirmar nada. Las señales que ves salen de reglas fijas."
+        : respuesta.motivo
+      : soloRemitente
+      ? frases.remitente_dominio_ajeno
+      : webCitada && respuesta.entidad
+        ? `El mensaje cita una dirección que sí es la web oficial de ${respuesta.entidad}. Eso no prueba quién lo envía: entra tecleando tú la dirección.`
+        : frases[respuesta.motivos.find((m) => frases[m]) ?? "dominio_desconocido"]
+    : null;
+  const hayRoja = respuesta?.senales.some((s) => s.nivel === "roja") ?? false;
+  const fuentes = respuesta
+    ? [
+        ...(respuesta.indicador ? [respuesta.indicador] : []),
+        ...(respuesta.aviso ? [respuesta.aviso] : []),
+        ...(respuesta.fuente && respuesta.entidad
+          ? [{ nombre: respuesta.entidad, url: respuesta.fuente }]
+          : []),
+        ...(respuesta.clasificado ? [contextoMd(respuesta.señales)] : []),
+        avisosIncibe,
+        linea017,
+      ].filter((f, i, todas) => todas.findIndex((o) => o.url === f.url) === i)
+    : [];
+  const cercaDelLimite = mensaje.length >= AVISO_LIMITE;
 
   return (
-    <div className="[&>*+*]:mt-12">
-      <form onSubmit={analizar} aria-describedby={`${id}-privacidad`}>
-        <label htmlFor={`${id}-mensaje`} className="block font-medium">
-          Pega aquí el enlace, el SMS o el correo
-        </label>
-        <p id={`${id}-ayuda`} className="mt-1 text-(--text-secondary)">
-          Incluye el remitente y el enlace tal como aparecen. No pulses el
-          enlace.
-        </p>
-        <Textarea
-          id={`${id}-mensaje`}
-          name="mensaje"
-          aria-describedby={cn(
-            `${id}-ayuda`,
-            `${id}-contador`,
-            error && `${id}-error`,
+    // En escritorio, dos columnas: formulario y resultado a la izquierda; ejemplos a la derecha.
+    <div
+      className={cn(
+        "text-lg leading-relaxed",
+        conEjemplos
+          ? "max-lg:[&>*+*]:mt-12 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-x-16 lg:gap-y-12"
+          : "[&>*+*]:mt-12",
+      )}
+    >
+      <div className="lg:col-start-1 lg:row-start-1">
+        {intro}
+        <form
+          onSubmit={analizar}
+          aria-describedby={`${id}-privacidad`}
+          className={intro ? "mt-10" : undefined}
+        >
+          <label htmlFor={`${id}-mensaje`} className="block text-xl font-medium">
+            Pega aquí el mensaje que te ha llegado
+          </label>
+          <p id={`${id}-ayuda`} className="mt-1 text-(--text-secondary)">
+            Puede ser un SMS, un correo o el enlace de una web. Incluye el
+            remitente y el enlace tal como aparecen.{" "}
+            <strong className="font-semibold text-foreground">
+              No pulses el enlace.
+            </strong>
+          </p>
+          <Textarea
+            ref={campoRef}
+            id={`${id}-mensaje`}
+            name="mensaje"
+            aria-describedby={cn(
+              `${id}-ayuda`,
+              cercaDelLimite && `${id}-contador`,
+              error && `${id}-error`,
+            )}
+            aria-invalid={error?.delCampo || undefined}
+            value={mensaje}
+            onChange={(event) => cambiar(event.target.value)}
+            rows={6}
+            spellCheck={false}
+            autoComplete="off"
+            placeholder="DGT: Dispone de 24 horas para pagar su multa. Consulte en el siguiente enlace: hxxps://…"
+            className="mt-4 min-h-44 px-4 py-3 text-lg leading-relaxed md:text-lg [overflow-wrap:anywhere]"
+          />
+          {cercaDelLimite && (
+            <p
+              id={`${id}-contador`}
+              className={cn(
+                "mt-2 text-base tabular-nums",
+                mensaje.length > LIMITE
+                  ? "font-medium text-destructive"
+                  : "text-(--text-secondary)",
+              )}
+            >
+              {miles(mensaje.length)} de {miles(LIMITE)} caracteres como máximo
+            </p>
           )}
-          aria-invalid={error ? true : undefined}
-          value={mensaje}
-          onChange={(event) => {
-            setMensaje(event.target.value);
-            setRespuesta(null);
-            setError(null);
-          }}
-          rows={6}
-          spellCheck={false}
-          autoComplete="off"
-          placeholder="DGT: Dispone de 24 horas para pagar su multa. Consulte en el siguiente enlace: hxxps://…"
-          className="mt-4 min-h-40 px-4 py-3 text-base md:text-base [overflow-wrap:anywhere]"
-        />
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm text-(--text-secondary)">
-          <p id={`${id}-privacidad`}>
-            No guardamos lo que pegas ni abrimos sus enlaces.
-          </p>
-          <p id={`${id}-contador`} className="font-mono tabular-nums">
-            {mensaje.length}/{LIMITE}
-          </p>
-        </div>
-        {error && (
-          <p
-            id={`${id}-error`}
-            role="alert"
-            className="mt-2 font-medium text-destructive"
-          >
-            {error}
-          </p>
-        )}
-        <div className="mt-6 flex flex-wrap gap-3">
+          {error && (
+            <p
+              id={`${id}-error`}
+              role="alert"
+              className="mt-2 font-medium text-destructive"
+            >
+              {error.texto}
+            </p>
+          )}
           <Button
+            ref={comprobarRef}
             type="submit"
-            variant="sunset"
+            // Si el resultado trae su propia acción principal (ir a la web
+            // oficial), esta pasa a secundaria: una sola por pantalla.
+            variant={web ? "outline" : "sunset"}
             size="lg"
             disabled={enviando}
-            className="h-11 px-5 text-base max-sm:w-full"
+            // Sin perder el foco mientras comprueba (un botón deshabilitado lo suelta).
+            focusableWhenDisabled
+            className="mt-6 h-14 px-6 text-lg max-sm:w-full"
           >
-            Comprobar
+            {enviando ? "Comprobando…" : "Comprobar el mensaje"}
           </Button>
+          <p
+            id={`${id}-privacidad`}
+            className="mt-3 text-base text-(--text-secondary)"
+          >
+            No guardamos lo que pegas ni abrimos sus enlaces.
+          </p>
+        </form>
+      </div>
+
+      {conEjemplos && (
+        <section
+          aria-labelledby={`${id}-ejemplos`}
+          className="lg:sticky lg:top-8 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:rounded-xl lg:bg-muted lg:p-6"
+        >
+          <h2 id={`${id}-ejemplos`} className="font-sans text-lg font-medium">
+            ¿Quieres probar con un ejemplo?
+          </h2>
+          <div className="mt-3 flex flex-wrap gap-3 lg:flex-col">
+            {EJEMPLOS.map((ejemplo) => (
+              <Button
+                key={ejemplo.id}
+                type="button"
+                variant="outline"
+                onClick={() => probarEjemplo(ejemplo.texto)}
+                className="h-auto min-h-12 max-w-full px-4 py-2 text-base whitespace-normal lg:justify-start lg:text-left"
+              >
+                {ejemplo.nombre}
+              </Button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {respuesta && ficha && (
+        // Tres bloques: el veredicto y por qué, qué hacer ahora y las fuentes.
+        <section
+          aria-labelledby={`${id}-resultado`}
+          className="[&>*+*]:mt-8 lg:col-start-1 lg:row-start-2"
+        >
+          {/* 1 · Veredicto: cabecera teñida según el resultado y, debajo, el porqué. */}
+          <Card render={<article />} className="gap-0 py-0 text-lg">
+            <div className={cn("px-6 py-6 md:px-8 md:py-8", ficha.fondo)}>
+              <h2
+                ref={tituloRef}
+                id={`${id}-resultado`}
+                tabIndex={-1}
+                className="scroll-mt-6 text-[clamp(30px,5vw,44px)] leading-[1.12] tracking-[-0.03em] outline-none"
+              >
+                <Badge
+                  className={cn(
+                    "h-auto justify-start gap-2 bg-background px-3 py-1.5 text-left font-sans text-xl font-semibold tracking-normal whitespace-normal text-foreground ring-1 ring-foreground/10 [&>svg]:size-6!",
+                    ficha.colorIcono,
+                  )}
+                >
+                  <ficha.icono aria-hidden="true" />
+                  {ficha.etiqueta}
+                </Badge>
+                <span className="sr-only">. </span>
+                <span className="mt-4 block">
+                  {ficha.titular({ deEntidad: de, hayEnlace: !soloRemitente && !!respuesta.url_analizada })}
+                </span>
+              </h2>
+              <p className="mt-4 text-xl font-semibold">{ficha.entradilla}</p>
+            </div>
+
+            <div className="px-6 py-6 md:px-8 md:py-8 [&>*+*]:mt-8">
+              <div>
+                <h3 className="text-xl font-semibold">Por qué lo decimos</h3>
+                <p className="mt-2">
+                  {frase}
+                  {respuesta.motivos.includes("sin_cifrado") &&
+                    " Eso sí, el enlace no está cifrado (http)."}
+                </p>
+                {respuesta.veredicto === "no_oficial" && respuesta.entidad_suplantada && (
+                  <p className="mt-2 text-(--text-secondary)">
+                    Intenta hacerse pasar por: {respuesta.entidad_suplantada}
+                  </p>
+                )}
+                {respuesta.clasificado && respuesta.señales.length > 0 && (
+                  <ul className="mt-4 grid gap-3" aria-label="Señales encontradas">
+                    {respuesta.señales.map((s) => {
+                      const nivel = respuesta.senales.find((x) => x.codigo === s.codigo)?.nivel;
+                      return (
+                        <li key={s.codigo} className="flex flex-wrap items-start gap-x-3 gap-y-1">
+                          {nivel && (
+                            <Badge
+                              className={cn(
+                                "h-auto px-2.5 py-1 text-base font-semibold",
+                                nivel === "roja"
+                                  ? "bg-destructive/10 text-foreground"
+                                  : "bg-(--warning) text-(--warning-foreground)",
+                              )}
+                            >
+                              {nivel === "roja" ? "Señal roja" : "Señal naranja"}
+                            </Badge>
+                          )}
+                          <span className="min-w-0 flex-[1_1_220px] [overflow-wrap:anywhere]">
+                            <span className="font-semibold">
+                              {titulosSenal[s.codigo] ?? "Otra señal"}.
+                            </span>{" "}
+                            {s.evidencia}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+                {!respuesta.clasificado && respuesta.senales.length > 0 && (
+                  <ul className="mt-4 grid gap-3" aria-label="Señales encontradas">
+                    {respuesta.senales.map((senal) => (
+                      <li key={senal.codigo} className="flex flex-wrap items-start gap-x-3 gap-y-1">
+                        {/* Texto en foreground o warning: el rojo sobre su tinte no llega a AA. */}
+                        <Badge
+                          className={cn(
+                            "h-auto px-2.5 py-1 text-base font-semibold",
+                            senal.nivel === "roja"
+                              ? "bg-destructive/10 text-foreground"
+                              : "bg-(--warning) text-(--warning-foreground)",
+                          )}
+                        >
+                          {senal.nivel === "roja" ? "Señal roja" : "Señal naranja"}
+                        </Badge>
+                        <span className="min-w-0 flex-[1_1_220px]">{senal.texto}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {(soloRemitente ? respuesta.remitente_analizado : respuesta.url_analizada) && (
+                  // Neutralizada y como texto: la dirección analizada nunca es un enlace.
+                  <p className="mt-4 text-(--text-secondary)">
+                    {soloRemitente
+                      ? "Remitente del mensaje"
+                      : webCitada
+                        ? "Dirección citada"
+                        : "Dirección del mensaje"}{" "}
+                    (no la abras):{" "}
+                    <code className="font-mono text-foreground [overflow-wrap:anywhere]">
+                      {soloRemitente ? respuesta.remitente_analizado : respuesta.url_analizada}
+                    </code>
+                  </p>
+                )}
+              </div>
+
+            </div>
+
+            {web && (
+              // Una sola tarjeta con el sol por vista: la web oficial, el dato que
+              // más importa. A sangre, sin márgenes, cerrando el bloque del veredicto.
+              <section
+                aria-labelledby={`${id}-web`}
+                className="flex flex-col gap-3 bg-brand-yellow px-6 py-6 md:px-8 md:py-8"
+              >
+                <h3 id={`${id}-web`} className="font-medium">
+                  {de ? `La web oficial ${de} es` : "La web oficial es"}
+                </h3>
+                <p className="font-mono text-2xl leading-snug [overflow-wrap:anywhere] md:text-3xl">
+                  {web.direccion}
+                </p>
+                <a
+                  href={web.href}
+                  className={cn(
+                    buttonVariants({ variant: "sunset", size: "lg" }),
+                    "mt-2 h-14 w-fit gap-2 px-6 text-lg max-sm:w-full",
+                  )}
+                >
+                  Ir a la web oficial
+                  <ExternalLink aria-hidden="true" className="size-5" />
+                </a>
+              </section>
+            )}
+          </Card>
+
+          {/* 2 · Qué hacer ahora: fondo beige (naranja de marca al 10 %), pasos
+              numerados y, si toca, la línea 017. */}
+          {(ficha.pasos.length > 0 || ficha.ofrece017 || hayRoja) && (
+            <Card
+              render={<section aria-labelledby={`${id}-pasos`} />}
+              className="gap-0 bg-(--brand-orange)/10 py-0 text-lg ring-0"
+            >
+              {ficha.pasos.length > 0 && (
+                <div className="px-6 py-6 md:px-8 md:py-8">
+                  <h3 id={`${id}-pasos`} className="text-xl font-semibold">
+                    Qué hacer ahora
+                  </h3>
+                  <ol className="mt-5 grid gap-5">
+                    {ficha.pasos.map((paso, i) => (
+                      <li
+                        key={paso}
+                        className="grid grid-cols-[24px_minmax(0,1fr)] gap-x-3 md:grid-cols-[32px_minmax(0,1fr)] md:gap-x-4"
+                      >
+                        <span
+                          aria-hidden="true"
+                          // 24 px como mínimo: así cuenta como texto grande (3:1) sobre el beige.
+                          className="text-[24px] leading-[1.1] font-light text-brand tabular-nums md:text-[26px]"
+                        >
+                          {i + 1}
+                        </span>
+                        <p>{paso}</p>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+
+              {(ficha.ofrece017 || hayRoja) && (
+                <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-t border-(--brand-orange)/25 px-6 py-6 md:px-8">
+                  <div className="min-w-0 flex-[1_1_260px]">
+                    <p className="text-base text-(--text-secondary)">
+                      ¿Dudas o ya has dado datos?
+                    </p>
+                    <p className="mt-1 leading-snug font-medium">
+                      Línea 017 de INCIBE, gratuita y confidencial
+                    </p>
+                    <p className="mt-1 text-base text-(--text-secondary)">
+                      {horario017}
+                    </p>
+                  </div>
+                  <a
+                    href="tel:017"
+                    className={cn(
+                      buttonVariants({ variant: "outline", size: "lg" }),
+                      "h-12 gap-2 px-5 text-lg max-md:w-full",
+                    )}
+                  >
+                    <Phone aria-hidden="true" className="size-5" />
+                    Llamar al 017
+                  </a>
+                </div>
+              )}
+            </Card>
+          )}
+
+          {/* 3 · Fuentes oficiales: en el azul de Import@ss, como los enlaces del pie. */}
+          <section
+            aria-label="Fuentes y datos de la comprobación"
+            className="rounded-xl bg-(--azul-importass) px-6 py-6 text-background md:px-8 md:py-8"
+          >
+            <Fuentes fuentes={fuentes} />
+            <ul className="mt-6 text-base text-background/90">
+              <li>
+                Reputación del enlace:{" "}
+                {respuesta.reputacion === "no_consultada" || !respuesta.reputacion
+                  ? "no consultada"
+                  : respuesta.reputacion}
+              </li>
+              <li>
+                Registro del dominio:{" "}
+                {respuesta.rdap === "no_disponible" || !respuesta.rdap
+                  ? "no disponible"
+                  : respuesta.rdap}
+              </li>
+            </ul>
+          </section>
+
           <Button
             type="button"
             variant="outline"
             size="lg"
             onClick={() => cargar("")}
-            className="h-11 px-5 text-base max-sm:w-full"
+            className="h-12 px-5 text-lg max-sm:w-full"
           >
-            Borrar
+            Comprobar otro mensaje
           </Button>
-        </div>
-      </form>
-
-      <section aria-labelledby={`${id}-ejemplos`}>
-        <h2
-          id={`${id}-ejemplos`}
-          className="font-sans text-sm font-medium text-(--text-secondary)"
-        >
-          Ejemplos
-        </h2>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {ejemplos.map((caso) => (
-            <Button
-              key={caso.id}
-              type="button"
-              variant="outline"
-              onClick={() => cargar(textoDeEjemplo(caso as Ejemplo))}
-              className="h-11 px-4 text-base"
-            >
-              {caso.id}
-            </Button>
-          ))}
-        </div>
-      </section>
-
-      <section aria-live="polite" aria-labelledby={`${id}-resultado`}>
-        {respuesta && (
-          <div
-            ref={resultado}
-            tabIndex={-1}
-            className="text-lg outline-none [&>*+*]:mt-8"
-          >
-            <Resultado respuesta={respuesta} titleId={`${id}-resultado`} />
-          </div>
-        )}
-      </section>
+        </section>
+      )}
     </div>
-  );
-}
-
-const MOTIVO_NO_DISPONIBLE = "clasificador no disponible";
-
-function motivoVisible(r: Respuesta): string {
-  if (r.motivo === MOTIVO_NO_DISPONIBLE) {
-    return "No hemos podido analizar el texto del mensaje ahora mismo, así que no podemos confirmar nada. Las señales que ves salen de reglas fijas.";
-  }
-  return r.motivo ?? "";
-}
-
-function Resultado({
-  respuesta,
-  titleId,
-}: {
-  respuesta: Respuesta;
-  titleId: string;
-}) {
-  const { veredicto, motivos, web_oficial, entidad, fuente } = respuesta;
-  const Icono = iconos[veredicto];
-  const frase =
-    frases[motivos.find((m) => frases[m]) ?? "dominio_desconocido"];
-  const sinCifrado = motivos.includes("sin_cifrado");
-  const hayRoja = respuesta.senales.some((s) => s.nivel === "roja");
-
-  return (
-    <>
-      <div>
-        <div className="flex items-center justify-between gap-3">
-          <Icono
-            aria-hidden="true"
-            className={cn(
-              "size-12",
-              veredicto === "no_oficial" ? "text-destructive" : "text-brand",
-            )}
-          />
-          <Badge variant="outline" className="font-mono">
-            {veredicto}
-          </Badge>
-        </div>
-        <h2
-          id={titleId}
-          className={cn(
-            "mt-3 text-[clamp(30px,5vw,44px)] leading-[1.08] tracking-[-0.03em]",
-            veredicto === "no_oficial" && "text-destructive",
-          )}
-        >
-          {titulares[veredicto]}
-        </h2>
-        <p className="mt-3">
-          {respuesta.clasificado
-            ? motivoVisible(respuesta)
-            : frase}
-          {sinCifrado && " Eso sí, el enlace no está cifrado (http)."}
-        </p>
-        {veredicto === "no_oficial" && respuesta.entidad_suplantada && (
-          <p className="mt-3 text-base text-(--text-secondary)">
-            Parece que intenta hacerse pasar por: {respuesta.entidad_suplantada}
-          </p>
-        )}
-        <p className="mt-3 text-base text-(--text-secondary)">
-          Enlace analizado (no pulsable):{" "}
-          <code className="font-mono text-foreground [overflow-wrap:anywhere]">
-            {respuesta.url_analizada ?? "ninguno"}
-          </code>
-        </p>
-      </div>
-
-      {respuesta.clasificado && (respuesta.señales?.length ?? 0) > 0 && (
-        <section aria-labelledby={`${titleId}-senales`}>
-          <h3 id={`${titleId}-senales`} className="text-lg leading-[1.35] font-medium">
-            Señales encontradas
-          </h3>
-          <ul className="mt-3 grid gap-3 text-base">
-            {respuesta.señales!.map((s) => {
-              const nivel = respuesta.senales.find((x) => x.codigo === s.codigo)?.nivel;
-              return (
-                <li key={s.codigo} className="flex flex-wrap items-start gap-x-3 gap-y-1">
-                  {nivel && (
-                    <Badge variant={nivel === "roja" ? "destructive" : "secondary"}>
-                      {nivel === "roja" ? "Señal roja" : "Señal naranja"}
-                    </Badge>
-                  )}
-                  <span className="min-w-0 flex-[1_1_220px] [overflow-wrap:anywhere]">
-                    <span className="font-medium">{titulosSenal[s.codigo] ?? "Otra señal"}.</span>{" "}
-                    {s.evidencia}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
-
-      {!respuesta.clasificado && respuesta.senales.length > 0 && (
-        <section aria-labelledby={`${titleId}-senales`}>
-          <h3 id={`${titleId}-senales`} className="text-lg leading-[1.35] font-medium">
-            Señales encontradas
-          </h3>
-          <ul className="mt-3 grid gap-3 text-base">
-            {respuesta.senales.map((s) => (
-              <li key={s.codigo} className="flex flex-wrap items-start gap-x-3 gap-y-1">
-                <Badge variant={s.nivel === "roja" ? "destructive" : "secondary"}>
-                  {s.nivel === "roja" ? "Señal roja" : "Señal naranja"}
-                </Badge>
-                <span className="min-w-0 flex-[1_1_220px]">{s.texto}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {web_oficial && (
-        <Card
-          render={<section />}
-          className="gap-3 bg-brand-yellow px-6 py-6 text-base text-foreground"
-        >
-          <h3 className="text-lg leading-[1.35] font-medium">
-            La web buena es:{" "}
-            <span className="font-mono text-base [overflow-wrap:anywhere]">
-              {web_oficial.replace(/^https?:\/\//, "")}
-            </span>
-          </h3>
-          {entidad && <p className="text-sm">{entidad}</p>}
-          <a
-            href={web_oficial}
-            className={cn(
-              buttonVariants({ variant: "sunset", size: "lg" }),
-              "h-11 w-fit px-5 text-base max-md:w-full",
-            )}
-          >
-            Ir a la web oficial <span aria-hidden="true">↗</span>
-          </a>
-        </Card>
-      )}
-
-      <ol className="grid gap-5">
-        {pasosPorVeredicto[veredicto].map((paso, i) => (
-          <li
-            key={paso}
-            className="grid grid-cols-[24px_minmax(0,1fr)] gap-x-3 md:grid-cols-[32px_minmax(0,1fr)] md:gap-x-4"
-          >
-            <span className="text-[22px] leading-[1.1] font-light text-brand tabular-nums md:text-[26px]">
-              {i + 1}
-            </span>
-            <p>{paso}</p>
-          </li>
-        ))}
-      </ol>
-
-      {(veredicto !== "oficial_verificado" || hayRoja) && (
-        <Card
-          render={<section />}
-          className="flex-row flex-wrap items-center justify-between gap-x-6 gap-y-4 px-6 py-6 text-base"
-        >
-          <div className="min-w-0 flex-[1_1_260px]">
-            <p className="text-sm text-(--text-secondary)">¿Dudas? Pide ayuda</p>
-            <h3 className="mt-1 text-lg leading-[1.35] font-medium">
-              Línea 017 de INCIBE, gratuita y confidencial
-            </h3>
-            <p className="mt-1 text-sm text-(--text-secondary)">
-              De 8:00 a 23:00, los 365 días.
-            </p>
-          </div>
-          <a
-            href={linea017.url}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "lg" }),
-              "h-11 px-5 text-base max-md:w-full",
-            )}
-          >
-            Ver cómo contactar <span aria-hidden="true">↗</span>
-          </a>
-        </Card>
-      )}
-
-      <ul className="text-base text-(--text-secondary)">
-        <li>
-          Reputación:{" "}
-          {respuesta.reputacion === "no_consultada" ? "no consultada" : respuesta.reputacion}
-        </li>
-        <li>
-          Registro del dominio:{" "}
-          {respuesta.rdap === "no_disponible" ? "no disponible" : respuesta.rdap}
-        </li>
-      </ul>
-
-      <Fuentes
-        fuentes={[
-          ...(fuente && entidad ? [{ nombre: entidad, url: fuente }] : []),
-          ...(respuesta.clasificado ? [contextoMd(respuesta.señales)] : []),
-          avisosIncibe,
-          linea017,
-        ]}
-      />
-    </>
   );
 }

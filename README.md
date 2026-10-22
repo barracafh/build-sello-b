@@ -80,3 +80,17 @@ Para añadir componentes: `bunx shadcn@4.22.1 add <componente>`. Responded **no*
 Referencias: [basePath de Next.js](https://nextjs.org/docs/app/api-reference/config/next-config-js/basePath), [Tailwind con Next.js](https://tailwindcss.com/docs/installation/framework-guides/nextjs) y [shadcn/ui con Base UI](https://ui.shadcn.com/docs).
 
 Hello! 👋
+
+## Verificador de enlaces (sello-b)
+
+**Problema.** Llegan SMS y correos que suplantan a la DGT, Hacienda, la Seguridad Social o Correos. **Usuario:** cualquier persona que duda antes de pulsar un enlace.
+
+**Qué hay.** Pegas un mensaje o una URL y `POST /api/verificar` devuelve `oficial_verificado`, `no_oficial` o `no_determinable`, los motivos y la web oficial buena. Es determinista, sin IA y sin red (`src/lib/verificar.ts`, apartado 5.2 de `contexto.md`):
+
+- Extrae enlaces con esquema, neutralizados (`hxxps`, `[.]`) y dominios sueltos. Nunca los abre, sigue ni expande; se muestran neutralizados y sin enlace.
+- Rechaza IP y credenciales en la URL, detecta homógrafos (esqueleto de confundibles cirílicos y griegos), calcula el dominio registrable con la Public Suffix List (`tldts`), trata las plataformas compartidas de sedes y compara con `datos/dominios-oficiales.json` por etiquetas completas.
+- Imitación de marca solo concluye con una segunda señal (TLD barato o palabra de contenido); los dominios que un organismo ha publicado como fraude están en `src/datos/indicadores.ts`.
+- Un correo remitente con el nombre de un organismo y otro dominio es `no_oficial`; uno del dominio oficial no prueba nada.
+- Un dominio desconocido o un texto bien redactado salen `no_determinable`. Los 10 casos de `datos/mensajes-ejemplo.json` y la tabla 5.3 sin red se prueban con `bun run test`.
+
+**Qué falta para producción.** Google Safe Browsing y RDAP (hoy «no consultada» y «no disponible»), DNS para distinguir un `.gob.es` real de uno inventado, la comprobación TLS, la lista de inquilinos de plataformas municipales (04b), el feed de INCIBE en vez de la copia manual de indicadores y el alias del remitente (Registro de Alias de la CNMC).
