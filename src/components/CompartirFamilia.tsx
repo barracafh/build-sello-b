@@ -53,10 +53,10 @@ export function CompartirFamilia({
   }
 
   return (
-    // Verde de WhatsApp (src/styles/marcas.css) con el texto en foreground: 10:1.
+    // Verde pastel de WhatsApp (src/styles/marcas.css) con el texto en foreground: 16:1.
     <Card
       render={<section aria-labelledby={`${id}-titulo`} />}
-      className="flex-row flex-wrap items-center justify-between gap-x-6 gap-y-4 bg-whatsapp px-6 py-6 text-lg ring-0 md:px-8"
+      className="flex-row flex-wrap items-center justify-between gap-x-6 gap-y-4 bg-whatsapp-pastel px-6 py-6 text-lg ring-0 md:px-8"
     >
       {/* h2: va fuera del resultado, al mismo nivel que él. */}
       <h2 id={`${id}-titulo`} className="font-sans text-xl font-semibold">

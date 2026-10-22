@@ -744,13 +744,13 @@ export function AnalizarMensaje({
             </Card>
           )}
 
-          {/* 3 · Fuentes oficiales: en el azul de Import@ss, como los enlaces del pie. */}
+          {/* 3 · Fuentes oficiales: sobre azul pastel; los enlaces, en el azul de los del pie. */}
           <section
             aria-label={a.fuentesYDatos}
-            className="rounded-xl bg-(--azul-importass) px-6 py-6 text-background md:px-8 md:py-8"
+            className="rounded-xl bg-(--azul-pastel) px-6 py-6 text-foreground md:px-8 md:py-8"
           >
             <Fuentes fuentes={fuentes} verificadores={verificadores} idioma={idioma} />
-            <ul className="mt-6 text-base text-background/90">
+            <ul className="mt-6 text-base text-foreground/80">
               <li>
                 {a.reputacion}{" "}
                 {respuesta.reputacion === "no_consultada" || !respuesta.reputacion
