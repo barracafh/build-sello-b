@@ -23,7 +23,7 @@ const ACORTADORES = [
   "cutt.ly", "ow.ly", "acortar.link", "shorturl.at", "rebrand.ly",
 ];
 const PLATAFORMAS = ["sedelectronica.es", "sedipualba.es", "sede.dival.es", "sede.gob.es"];
-const MARCAS = [
+export const MARCAS = [
   "dgt", "agenciatributaria", "seg-social", "sepe", "correos",
   "clave", "hacienda", "carpetaciudadana", "dehu",
 ];
