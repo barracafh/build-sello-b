@@ -21,3 +21,10 @@ export function tipoDeEjemplo(id: string): "Fraude" | "Legítimo" | null {
   if (id.startsWith("L")) return "Legítimo";
   return null;
 }
+
+/** Los que enseña el panel: uno por veredicto (rojo, amarillo y verde). */
+export const EJEMPLOS_PANEL: readonly string[] = [
+  "F02", // no_oficial: multa falsa de la DGT
+  "L01", // no_determinable: aviso de Hacienda sin enlace
+  "L05", // oficial_verificado: web de cita del centro de salud
+];

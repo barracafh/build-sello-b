@@ -9,10 +9,12 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { CompartirFamilia } from "@/components/CompartirFamilia";
 import { Fuentes } from "@/components/Fuentes";
 import { MensajeSenalado } from "@/components/MensajeSenalado";
+import { textoParaFamilia } from "@/lib/compartir";
 import { avisosIncibe, horario017, linea017 } from "@/datos/incibe";
-import { NOMBRES_EJEMPLOS, tipoDeEjemplo } from "@/datos/ejemplos";
+import { EJEMPLOS_PANEL, NOMBRES_EJEMPLOS, tipoDeEjemplo } from "@/datos/ejemplos";
 import {
   deEntidad,
   fichaDe,
@@ -53,14 +55,16 @@ const textoDeEjemplo = (caso: Ejemplo) => {
   return url ? `${caso.texto} ${url}` : caso.texto;
 };
 
-const EJEMPLOS = (ejemplos as Ejemplo[]).map((caso) => ({
-  id: caso.id,
-  nombre: NOMBRES_EJEMPLOS[caso.id] ?? caso.id,
-  tipo: tipoDeEjemplo(caso.id),
-  // Lo que debería devolver, con la misma píldora que el resultado.
-  esperado: fichaDe(caso.esperado),
-  texto: textoDeEjemplo(caso),
-}));
+const EJEMPLOS = (ejemplos as Ejemplo[])
+  .filter((caso) => EJEMPLOS_PANEL.includes(caso.id))
+  .map((caso) => ({
+    id: caso.id,
+    nombre: NOMBRES_EJEMPLOS[caso.id] ?? caso.id,
+    tipo: tipoDeEjemplo(caso.id),
+    // Lo que debería devolver, con la misma píldora que el resultado.
+    esperado: fichaDe(caso.esperado),
+    texto: textoDeEjemplo(caso),
+  }));
 
 // Frase corta para cada código de `motivos` (LAB-34/38); el código nunca se muestra solo.
 const frases: Record<string, string> = {
@@ -780,6 +784,17 @@ export function AnalizarMensaje({
             </p>
           </div>
         </section>
+      )}
+
+      {respuesta && (
+        // Abajo del todo, a lo ancho: debajo del resultado y de los ejemplos.
+        <div className="lg:col-span-2 lg:row-start-3">
+          <CompartirFamilia
+            titulo="Mándaselo a tu familia"
+            explicacion="Va el mensaje que has comprobado, con sus enlaces desactivados, y el resultado. Quita antes lo que sea personal."
+            texto={textoParaFamilia(mensaje, respuesta)}
+          />
+        </div>
       )}
     </div>
   );
