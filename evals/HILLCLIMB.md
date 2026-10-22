@@ -55,3 +55,23 @@ Regla para quedarse con un cambio: la accuracy media sobre 3 pasadas sube y ning
 Iteración 1: baja la latencia media y los tokens, pero las reservas siguen en los mismos casos (dev-17, dev-24 y dev-25 agotan los 8 s). dev-17, un ejemplo, también sale `no_oficial` una vez. Lo que tarda es la cola de esos casos, no la media.
 
 Iteración 2: los fallos que quedan son dev-24 (sale `no_oficial` en las 3 pasadas), dev-25 (`no_oficial` una vez y reserva dos) y dev-21 (reserva dos veces). +2 aciertos sobre 105 está cerca del ruido entre pasadas. Aun así, cumple la regla (media mayor y ninguna puerta peor) y es el primer candidato con 30/30 en los ejemplos.
+
+## Tras el merge de `main` (LAB-62, `fragmento`) y los límites de crédito
+
+El merge `df1b67c` trajo de `main` el campo `fragmento` y otra redacción de `evidencia`. Los números de las iteraciones 0–2 se midieron antes, con un prompt que ya no está en la rama. Desde las 21:03 (hora de Madrid), Edu pone estos límites para proteger el crédito de HelmCode, que comparte producción:
+- Exploración con `--repeticiones 1`.
+- Solo deepseek-v4-flash.
+- Como mucho 6 pasadas de 35 llamadas.
+- Parar si hay un 402 o si las reservas suben respecto a la pasada anterior.
+
+No se ha vuelto a medir `main` aparte: la referencia es la línea base de 95/105, y `main` ha cambiado desde entonces.
+
+| Pasada | Prompt | Llamadas | Accuracy | Falsos OV | Recall no_oficial | Ejemplos | Reservas | Latencia media (respondidas) | Tokens por caso | Resultado |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| — | `main` en `df1b67c` (re-baseline pedido antes de los límites) | ≈ 8 (cortada al llegar los límites; sin informe) | — | — | — | — | — | — | — | abandonada |
+| 1 | `df1b67c`: iteración 2 + `fragmento` | 35 | 91.4 % (32/35) | 0 | 100 % | 10/10 | 1 (dev-21, 8 s) | 3.7 s | 2 607 | candidato actual: todas las puertas pasan |
+| 2 | Iteración 3: §5.4, última fila, dicha explícita para empresas privadas y organismos de otros países (sin regla publicada → `no_determinable`, salvo que se hagan pasar por un organismo español de §4.2) | 35 | 94.3 % (33/35) | 0 | 100 % | 9/10 ❌ | 2 (dev-08 y dev-17, 8 s) | 4.3 s | 2 775 | **revertida, y parada obligatoria**: las reservas suben de 1 a 2 |
+
+Iteración 3: corrige dev-24 y dev-25, y no hay ningún veredicto equivocado. Los 2 fallos son tiempos agotados de 8 s (dev-17 es un ejemplo, de ahí el 9/10). Como sube la latencia, las reservas pasan de 1 a 2 y eso dispara la parada de Edu. No hubo ningún 402.
+
+**Bucle parado.** Llamadas gastadas desde los límites: 70 de 210, más ≈ 8 de la pasada cortada. No se ha hecho la medición final con `--repeticiones 3`. El candidato en la rama es el de la pasada 1, medido en una sola pasada.
