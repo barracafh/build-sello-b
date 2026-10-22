@@ -50,5 +50,8 @@ Regla para quedarse con un cambio: la accuracy media sobre 3 pasadas sube y ning
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 0 | Línea base (prompt de `main`) | 90.5 % (95/105) | 31 · 32 · 32 | 0 | 100 % | 29/30 | 5 | 3.5 s | 2 587 | — |
 | 1 | Prompt condensado (las mismas reglas y apartados, en menos palabras) y salida acotada (como mucho 3 señales, citas cortas, motivo de menos de 25 palabras) | 91.4 % (96/105) | 32 · 31 · 33 | 0 | 100 % | 27/30 ❌ | 6 | 2.8 s | 1 764 | **revertido**: los ejemplos bajan de 29/30 a 27/30 |
+| 2 | Prompt de `main` con la salida acotada: como mucho 3 señales, citas de menos de 12 palabras, motivo de menos de 25 | 92.4 % (97/105) | 33 · 32 · 32 | 0 | 100 % | 30/30 ✅ | 4 | 3.2 s | 2 498 | **se queda**: +2 aciertos y todas las puertas pasan |
 
 Iteración 1: baja la latencia media y los tokens, pero las reservas siguen en los mismos casos (dev-17, dev-24 y dev-25 agotan los 8 s). dev-17, un ejemplo, también sale `no_oficial` una vez. Lo que tarda es la cola de esos casos, no la media.
+
+Iteración 2: los fallos que quedan son dev-24 (sale `no_oficial` en las 3 pasadas), dev-25 (`no_oficial` una vez y reserva dos) y dev-21 (reserva dos veces). +2 aciertos sobre 105 está cerca del ruido entre pasadas. Aun así, cumple la regla (media mayor y ninguna puerta peor) y es el primer candidato con 30/30 en los ejemplos.
