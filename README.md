@@ -13,11 +13,29 @@ bun install --frozen-lockfile
 bun run dev
 ```
 
-Abre `http://localhost:3000/<equipo>`, con el `equipo` de `ficha.json`. Cambia el ejemplo en `src/app/page.tsx`; los metadatos salen de `ficha.json`.
+`bun run dev` imprime la URL en la que sirve, por ejemplo `http://localhost:3142/sello-b`, con el `equipo` de `ficha.json`. Cambia el ejemplo en `src/app/page.tsx`; los metadatos salen de `ficha.json`.
 
 - Pon `<Fuentes fuentes={[{ nombre: "Fuente oficial", url: "https://www.boe.es/" }]} />` debajo de **cada respuesta**. Cita la página concreta que sostiene la respuesta.
 - Conserva el aviso de no oficial y `<BotonAviso />`, que abre un issue en vuestro repo.
 - La IA se llama desde el servidor con `src/lib/ia.ts`; hay un ejemplo en `src/app/api/ia/route.ts`. Las claves van en `.env.local` y nunca en el código ni en variables `NEXT_PUBLIC_*`.
+
+## Varios worktrees a la vez
+
+Cada worktree del repo puede tener su propio servidor de desarrollo al mismo tiempo, sin chocar con los demás:
+
+- **Puerto.** `bun run dev` (`scripts/dev.ts`) saca un puerto fijo entre 3100 y 3199 a partir de la ruta del worktree; si está ocupado, toma el siguiente libre del rango. El 3000 queda libre para otras cosas. `PORT=4000 bun run dev` lo fija a mano y siempre gana.
+- **URL.** Al arrancar imprime `http://localhost:<puerto>/<equipo>`, ya con la ruta del equipo.
+- **Nada compartido.** Cada worktree tiene su `.next`, su `tsconfig.tsbuildinfo`, su `.env.local` (fuera de git; cópialo a mano en cada worktree) y su `node_modules`. Ejecuta `bun install --frozen-lockfile` en cada uno: Bun enlaza los paquetes desde su caché global, que es de solo lectura, así que la instalación es rápida y segura.
+
+```sh
+git worktree add ../sello-b-otra -b mi-rama
+cd ../sello-b-otra
+cp ../build-sello-b/.env.local .   # si lo tienes
+bun install --frozen-lockfile
+bun run dev
+```
+
+`bun run test` prueba la elección de puerto. Vercel no usa nada de esto: sigue con `bun run build`.
 
 ## Publicar
 
