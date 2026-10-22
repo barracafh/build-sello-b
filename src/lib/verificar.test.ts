@@ -132,6 +132,8 @@ describe("remitente: la marca cuenta por token completo", () => {
     ["info", "dehumidificadores.es"],
     ["rrhh", "sepes.es"],
     ["info", "correosexpress.com"],
+    ["info", "hacienda-lasrosas.com"],
+    ["juan.clave", "gmail.com"],
   ]) {
     test(`${local}@${dominio} → no_determinable`, () => {
       const r = veredictoDe(local, dominio);
