@@ -36,6 +36,10 @@ const enlacePie =
 
 // ?casos-test enseña el panel de ejemplos (para demos y pruebas); sin él, el
 // verificador ocupa todo el ancho. ?casos-test=false o =0 también lo ocultan.
+// Anchos del portal Import@ss (evidencia en docs/evidencias/ancho-importass.md):
+// header y pie a 1024 px (max-w-5xl = 64rem, como .ss-header y .ss-wrapper) y el
+// contenido a 58rem con 2rem de margen, como .ss-content. Con el panel de
+// ejemplos el contenido usa los 1024 px para que quepan las dos columnas.
 export default async function Home({
   searchParams,
 }: {
@@ -48,7 +52,7 @@ export default async function Home({
   return (
     <>
       <header className="border-b border-border bg-background">
-        <div className="mx-auto flex min-h-24 max-w-(--container-content) flex-wrap items-center justify-between gap-4 px-(--page-gutter) py-4">
+        <div className="mx-auto flex min-h-24 max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-4">
           {/* Icono, nombre y frase de ficha.json: sin logotipos de la Administración. */}
           <span className="inline-flex items-center gap-4">
             <span
@@ -73,7 +77,10 @@ export default async function Home({
       <main
         id="contenido"
         tabIndex={-1}
-        className="mx-auto max-w-(--container-content) px-(--page-gutter) pt-12 pb-20 outline-none md:pt-16"
+        className={cn(
+          "mx-auto px-(--page-gutter) pt-12 pb-20 outline-none md:px-8 md:pt-16",
+          conEjemplos ? "max-w-5xl" : "max-w-[58rem]",
+        )}
       >
         <p className="font-mono text-sm tracking-[0.06em] text-(--text-secondary) uppercase">
           Verificador de mensajes
@@ -99,7 +106,7 @@ export default async function Home({
       {/* Pie con la maqueta del equipo (estilo portal de la Administración), pero
           con la marca de ficha.json: sin escudos ni logotipos oficiales. */}
       <footer className="mt-8 bg-muted text-base">
-        <div className="mx-auto grid max-w-(--container-content) gap-10 px-(--page-gutter) py-14 md:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1fr] lg:gap-0">
+        <div className="mx-auto grid max-w-5xl gap-10 px-(--page-gutter) py-14 md:px-8 md:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1fr] lg:gap-0">
           <div className="lg:pr-10">
             <span className="inline-flex items-center gap-4 border-l-4 border-brand-yellow pl-4">
               <span
@@ -165,7 +172,7 @@ export default async function Home({
         </div>
 
         <div className="border-t border-border">
-          <div className="mx-auto flex max-w-(--container-content) flex-wrap items-center justify-between gap-4 px-(--page-gutter) py-6">
+          <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-(--page-gutter) md:px-8 py-6">
             <span className="inline-flex items-center gap-3 font-semibold">
               <span
                 aria-hidden="true"
