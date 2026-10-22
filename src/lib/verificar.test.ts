@@ -80,3 +80,41 @@ describe("otros", () => {
     assert.equal(verificar("https://rocafort.sede.dival.es").veredicto, "no_determinable");
   });
 });
+
+describe("indicadores publicados", () => {
+  esperar("https://actc.center/x", "no_oficial", "indicador_publicado");
+  esperar("actc[.]center", "no_oficial", "indicador_publicado");
+  test("un indicador con marca suma la imitación", () => {
+    const r = verificar("portal.seg-socioal.cfd");
+    assert.deepEqual(r.motivos.slice(0, 2), ["indicador_publicado", "imitacion_de_marca"]);
+    assert.ok(r.indicador?.url.startsWith("https://"));
+  });
+});
+
+describe("homógrafos", () => {
+  esperar("https://xn--crreos-wqf.es/", "no_oficial", "homografo");
+  test("un host con xn-- que no imita la allowlist no es homógrafo", () => {
+    const r = verificar("https://xn--espaa-rta.com/");
+    assert.notEqual(r.veredicto, "no_oficial");
+  });
+});
+
+describe("remitente de correo", () => {
+  const correo = (local: string, dominio: string) => [local, dominio].join("@");
+  test("el nombre del servicio con otro dominio es no_oficial", () => {
+    const r = verificar(
+      `De: ${correo("carpetaciudadana", "info[.]com[.]es")}. Responda a este correo.`,
+    );
+    assert.equal(r.veredicto, "no_oficial");
+    assert.ok(r.motivos.includes("remitente_dominio_ajeno"), r.motivos.join());
+    assert.ok(r.web_oficial);
+  });
+  test("un remitente del dominio oficial no prueba nada", () => {
+    const r = verificar(`De: ${correo("correos", "correos.com")}. Tu envío está en camino.`);
+    assert.equal(r.veredicto, "no_determinable");
+  });
+  test("un remitente sin marca en un dominio desconocido no concluye", () => {
+    const r = verificar(`De: ${correo("hola", "ejemplo.com")}. Buenas tardes.`);
+    assert.equal(r.veredicto, "no_determinable");
+  });
+});

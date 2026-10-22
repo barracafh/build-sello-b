@@ -25,6 +25,7 @@ type Respuesta = {
   web_oficial?: string;
   entidad?: string;
   fuente?: string;
+  indicador?: { nombre: string; url: string; fecha: string };
   url_analizada: string | null;
   senales: Senal[];
   reputacion: string;
@@ -58,6 +59,9 @@ const frases: Record<string, string> = {
   imitacion_de_marca: "Imita el nombre de un organismo oficial y tiene otras señales de fraude.",
   posible_imitacion_de_marca: "Se parece al nombre de un organismo oficial, pero no podemos asegurar que sea falsa.",
   dominio_desconocido: "No es una web que tengamos en nuestra lista de webs oficiales.",
+  homografo: "El nombre usa letras de otro alfabeto para parecerse a una web oficial.",
+  indicador_publicado: "Un organismo oficial ha avisado de que esta dirección es un fraude.",
+  remitente_dominio_ajeno: "El remitente usa el nombre de un organismo oficial con una dirección de correo que no es la suya.",
   en_allowlist: "La dirección está en nuestra lista de webs oficiales.",
 };
 
@@ -397,6 +401,7 @@ function Resultado({
 
       <Fuentes
         fuentes={[
+          ...(respuesta.indicador ? [respuesta.indicador] : []),
           ...(fuente && entidad ? [{ nombre: entidad, url: fuente }] : []),
           avisosIncibe,
           linea017,
