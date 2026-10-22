@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { textoDeRespuesta } from "./ia";
+import { completar, textoDeRespuesta } from "./ia";
 
 const respuesta = (message: object) => ({ choices: [{ message }] });
 
@@ -27,4 +27,25 @@ test("no usa el texto de `reasoning_content` como respuesta", () => {
 
 test("falla si no hay `choices`", () => {
   assert.throws(() => textoDeRespuesta({ error: "x" }));
+});
+
+test("con `razonar: false` pide el modelo sin razonamiento; sin él, no añade nada", async () => {
+  const fetchReal = globalThis.fetch;
+  const entorno = { ...process.env };
+  const cuerpos: Record<string, unknown>[] = [];
+  globalThis.fetch = (async (_url: string, init: RequestInit) => {
+    cuerpos.push(JSON.parse(String(init.body)));
+    return new Response(JSON.stringify(respuesta({ content: "{}" })));
+  }) as typeof fetch;
+  process.env.HELMCODE_API_KEY = "k";
+  process.env.HELMCODE_MODEL = "m";
+  try {
+    await completar([{ role: "user", content: "hola" }], { razonar: false });
+    await completar([{ role: "user", content: "hola" }]);
+  } finally {
+    globalThis.fetch = fetchReal;
+    process.env = entorno;
+  }
+  assert.deepEqual(cuerpos[0].thinking, { type: "disabled" });
+  assert.equal("thinking" in cuerpos[1], false);
 });

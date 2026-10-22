@@ -14,6 +14,8 @@ export type UsoIa = {
   prompt_tokens?: number;
   completion_tokens?: number;
   total_tokens?: number;
+  // Parte de completion_tokens que el modelo gasta razonando, si la informa.
+  completion_tokens_details?: { reasoning_tokens?: number };
 };
 
 export type OpcionesIa = {
@@ -22,6 +24,8 @@ export type OpcionesIa = {
   temperatura?: number;
   // Pide `response_format: json_object`.
   formatoJson?: boolean;
+  // `false` pide la respuesta sin razonamiento previo (`thinking: disabled`).
+  razonar?: boolean;
   // Cancela la petición y también la espera entre reintentos.
   signal?: AbortSignal;
   // Recibe el uso de tokens que informa HelmCode, si lo informa.
@@ -47,7 +51,7 @@ const esperar = (ms: number, signal?: AbortSignal) =>
 
 export async function completar(
   messages: Mensaje[],
-  { modelo, temperatura, formatoJson, signal, alUso }: OpcionesIa = {},
+  { modelo, temperatura, formatoJson, razonar, signal, alUso }: OpcionesIa = {},
 ): Promise<string> {
   const { HELMCODE_API_KEY, HELMCODE_MODEL } = process.env;
   const model = modelo ?? HELMCODE_MODEL;
@@ -58,6 +62,7 @@ export async function completar(
     messages,
     ...(temperatura !== undefined && { temperature: temperatura }),
     ...(formatoJson && { response_format: { type: "json_object" } }),
+    ...(razonar === false && { thinking: { type: "disabled" } }),
   });
   // Todos los equipos comparten límites: ante un 429, espera y reintenta.
   for (let intento = 0; ; intento++) {

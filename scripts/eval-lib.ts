@@ -2,6 +2,7 @@
 // POST /api/verificar, en proceso y de uno en uno, con una pausa entre casos: los
 // límites de HelmCode son compartidos. Cuesta llamadas reales a la API: no forma
 // parte de `test` ni de `build`.
+import { IDIOMA_POR_DEFECTO, IDIOMAS, esIdioma, type Idioma } from "../src/i18n";
 import { execSync } from "node:child_process";
 import { readFileSync, realpathSync } from "node:fs";
 import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
@@ -34,6 +35,9 @@ export type Ejecucion = {
   pasa: boolean;
   latencia_ms: number;
   tokens: number | null;
+  // De `tokens`, los de la respuesta y, dentro de ellos, los de razonamiento (LAB-73).
+  tokens_salida?: number | null;
+  tokens_razonamiento?: number | null;
   clasificado: boolean;
   // Se llamó al modelo y no respondió (ver `esReserva`). Cuenta como fallo.
   reserva: boolean;
@@ -62,6 +66,10 @@ export type Metricas = {
 
 export type Informe = {
   modelo: string;
+  /** Idioma del `motivo` (LAB-68); sin él, castellano. */
+  idioma?: Idioma;
+  /** Tiempo límite forzado con --timeout-ms; sin él, el del clasificador. */
+  timeout_ms?: number;
   conjunto: string;
   fecha: string;
   commit: string | null;
@@ -100,18 +108,33 @@ export function rutaConjuntoPermitida(ruta: string): boolean {
 if (!rutaConjuntoPermitida(RUTA_DEV)) throw new Error(`Conjunto no permitido: ${RUTA_DEV}`);
 
 // `bun run eval` no acepta otro conjunto: solo --modelo y --repeticiones.
-export function leerArgumentosEval(argv: string[]): { modelo?: string; repeticiones: number } {
+const FLAGS_EVAL = ["--modelo", "--repeticiones", "--idioma", "--timeout-ms"];
+
+export function leerArgumentosEval(argv: string[]): {
+  modelo?: string;
+  repeticiones: number;
+  idioma: Idioma;
+  timeoutMs?: number;
+} {
   const valores: Record<string, string> = {};
   for (let i = 0; i < argv.length; i += 2) {
     const [flag, valor] = [argv[i], argv[i + 1]];
-    if (flag !== "--modelo" && flag !== "--repeticiones") throw new Error(`Argumento no admitido: ${flag}`);
+    if (!FLAGS_EVAL.includes(flag)) throw new Error(`Argumento no admitido: ${flag}`);
     if (valor === undefined || valor.startsWith("--")) throw new Error(`${flag} necesita un valor`);
     valores[flag.slice(2)] = valor;
   }
   const repeticiones = Number(valores.repeticiones ?? 1);
   if (!Number.isInteger(repeticiones) || repeticiones < 1)
     throw new Error("--repeticiones debe ser un entero ≥ 1");
-  return { modelo: valores.modelo, repeticiones };
+  // --idioma pide el `motivo` en ese idioma; los veredictos deben salir iguales.
+  const idioma = valores.idioma ?? IDIOMA_POR_DEFECTO;
+  if (!esIdioma(idioma)) throw new Error(`--idioma debe ser uno de: ${IDIOMAS.join(", ")}`);
+  // --timeout-ms sube el tiempo límite para medir la latencia real (LAB-73). Esas
+  // pasadas no miden lo que se publica: no entran en ULTIMO.md.
+  const timeoutMs = valores["timeout-ms"] === undefined ? undefined : Number(valores["timeout-ms"]);
+  if (timeoutMs !== undefined && !(Number.isInteger(timeoutMs) && timeoutMs > 0))
+    throw new Error("--timeout-ms debe ser un entero > 0");
+  return { modelo: valores.modelo, repeticiones, idioma, timeoutMs };
 }
 
 // dev.ts devuelve el texto con la arroba real, el que ve el clasificador en producción.
@@ -189,9 +212,12 @@ const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export async function ejecutarEvals(opciones: {
   modelo: string;
+  idioma?: Idioma;
   repeticiones?: number;
   casos?: Caso[];
   pausaMs?: number;
+  // Solo para diagnosticar latencias (LAB-73): sin él, el del clasificador.
+  timeoutMs?: number;
   analizar?: typeof analizar;
   alCaso?: (e: Ejecucion) => void;
 }): Promise<Ejecucion[]> {
@@ -202,11 +228,21 @@ export async function ejecutarEvals(opciones: {
       // Una llamada detrás de otra, con pausa: nunca en paralelo.
       if (salida.length > 0) await esperar(opciones.pausaMs ?? PAUSA_MS);
       let tokens: number | null = null;
+      let tokensSalida: number | null = null;
+      let tokensRazonamiento: number | null = null;
       const alUso = (u: UsoIa) => {
         tokens = (tokens ?? 0) + (u.total_tokens ?? (u.prompt_tokens ?? 0) + (u.completion_tokens ?? 0));
+        if (u.completion_tokens !== undefined) tokensSalida = (tokensSalida ?? 0) + u.completion_tokens;
+        const razonamiento = u.completion_tokens_details?.reasoning_tokens;
+        if (razonamiento !== undefined) tokensRazonamiento = (tokensRazonamiento ?? 0) + razonamiento;
       };
       const inicio = performance.now();
-      const r = await analizarCaso(caso.texto, { modelo: opciones.modelo, alUso });
+      const r = await analizarCaso(caso.texto, {
+        modelo: opciones.modelo,
+        alUso,
+        idioma: opciones.idioma,
+        timeoutMs: opciones.timeoutMs,
+      });
       const reserva = esReserva(r, tokens);
       const e: Ejecucion = {
         id: caso.id,
@@ -216,6 +252,8 @@ export async function ejecutarEvals(opciones: {
         pasa: !reserva && r.veredicto === caso.esperado,
         latencia_ms: Math.round(performance.now() - inicio),
         tokens,
+        tokens_salida: tokensSalida,
+        tokens_razonamiento: tokensRazonamiento,
         clasificado: r.clasificado,
         reserva,
         motivo: r.motivo ?? null,
@@ -237,17 +275,23 @@ const commitLocal = () => {
 
 export async function informeCompleto(opciones: {
   modelo?: string;
+  idioma?: Idioma;
   repeticiones?: number;
+  timeoutMs?: number;
   alCaso?: (e: Ejecucion) => void;
 }): Promise<Informe> {
   const modelo = opciones.modelo || modeloClasificador();
   const ejecuciones = await ejecutarEvals({
     modelo,
+    idioma: opciones.idioma,
     repeticiones: opciones.repeticiones,
+    timeoutMs: opciones.timeoutMs,
     alCaso: opciones.alCaso,
   });
   return {
     modelo,
+    ...(opciones.idioma && opciones.idioma !== "es" ? { idioma: opciones.idioma } : {}),
+    ...(opciones.timeoutMs ? { timeout_ms: opciones.timeoutMs } : {}),
     conjunto: RUTA_DEV,
     fecha: new Date().toISOString(),
     commit: commitLocal(),
@@ -300,7 +344,7 @@ ${informes.map(filas).join("\n")}`;
 }
 
 export function tablaTexto(ejecuciones: Ejecucion[]): string {
-  const cab = ["id", "esperado", "obtenido", "ok", "ms", "tokens"];
+  const cab = ["id", "esperado", "obtenido", "ok", "ms", "tokens", "salida", "razon."];
   const filas = ejecuciones.map((e) => [
     `${e.id}${e.repeticion > 1 ? `#${e.repeticion}` : ""}`,
     e.esperado,
@@ -308,6 +352,8 @@ export function tablaTexto(ejecuciones: Ejecucion[]): string {
     e.pasa ? "sí" : "NO",
     String(e.latencia_ms),
     e.tokens === null ? "—" : String(e.tokens),
+    e.tokens_salida == null ? "—" : String(e.tokens_salida),
+    e.tokens_razonamiento == null ? "—" : String(e.tokens_razonamiento),
   ]);
   const anchos = cab.map((c, i) => Math.max(c.length, ...filas.map((f) => f[i].length)));
   const linea = (f: string[]) => f.map((c, i) => c.padEnd(anchos[i])).join("  ");

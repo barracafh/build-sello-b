@@ -2,6 +2,8 @@
 @import "../styles/tema.css";
 /* Design system Import@ss (docs/design-system.md): tokens --iss-*, aparte de Sol. */
 @import "../styles/importass.css";
+/* Colores de marcas ajenas (WhatsApp), también fuera de Sol. */
+@import "../styles/marcas.css";
 
 /* La base de Sol, como el layout de Reforma Digital: fondo blanco, Geist para
    todo y la serif solo en h1 y h2. */
@@ -22,11 +24,18 @@
     @apply font-heading font-normal;
   }
 
+  /* Los titulares, un punto más cerrados que el texto corrido. Los que fijan su
+     propio tracking (el h1 de la portada, el del resultado) mandan sobre este. */
+  :is(h1, h2, h3, h4) {
+    letter-spacing: -0.01em;
+  }
+
   :is(h1, h2, h3, h4, dt) {
     text-wrap: balance;
   }
 
-  :is(p, li, dd, figcaption, small) {
+  /* `label` también: la etiqueta de la caja es una frase entera. */
+  :is(p, li, dd, figcaption, small, label) {
     text-wrap: pretty;
   }
 
@@ -48,6 +57,9 @@
    equipo ha pedido para el pie. Está fuera de Sol: AGENTS.md no permite añadir
    colores. Para volver a Sol, borra este bloque y el pie de page.tsx. */
 :root {
-  --azul-importass: #0129ae; /* tema-ok: azul de Import@ss pedido por el equipo para el pie */
-  --azul-importass-oscuro: #011865; /* tema-ok: hover y foco del azul de Import@ss */
+  /* Rebranding: azul más suave para los enlaces. Es el más claro que
+     mantiene AA sobre blanco (4.7:1); un pastel de verdad no llegaría a 4.5:1. */
+  --azul-importass: #4a6fd1; /* tema-ok: azul suave de los enlaces (antes #0129ae de Import@ss) */
+  --azul-importass-oscuro: #2f4fa8; /* tema-ok: hover y foco del azul de los enlaces */
+  --azul-pastel: #e3edfc; /* tema-ok: fondo pastel del bloque de fuentes, texto en foreground 16:1 */
 }

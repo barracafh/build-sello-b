@@ -2,42 +2,52 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import ficha from "../../ficha.json";
+import { Marca } from "@/components/Marca";
+import { SelectorIdioma } from "@/components/SelectorIdioma";
+import { diccionario, type Idioma } from "@/i18n";
 
 export type Seccion = "verificar" | "juego";
 
-// `corto` es el nombre en el móvil, para que las dos quepan en una fila a 320 px.
-const SECCIONES: { id: Seccion; href: string; nombre: string; corto: string }[] = [
-  { id: "verificar", href: "/", nombre: "Comprobar un mensaje", corto: "Comprobar" },
-  { id: "juego", href: "/juego", nombre: "Juego: ¿estafa o no?", corto: "¿Estafa o no?" },
+// Los nombres de cada sección, en `cabecera.menu` (src/i18n/).
+const SECCIONES: { id: Seccion; href: string }[] = [
+  { id: "verificar", href: "/" },
+  { id: "juego", href: "/juego" },
 ];
 
-// Cabecera común: icono, nombre y frase de ficha.json y el menú de secciones.
-export function Cabecera({ activa }: { activa: Seccion }) {
+// Cabecera común: marca y nombre de ficha.json, la frase en el idioma elegido y el menú de secciones.
+export function Cabecera({ activa, idioma = "es" }: { activa: Seccion; idioma?: Idioma }) {
+  const t = diccionario(idioma);
   return (
     <header className="border-b border-border bg-background">
-      <div className="mx-auto flex min-h-24 max-w-5xl flex-wrap items-center justify-between gap-4 px-(--page-gutter) py-4 md:px-8">
-        {/* Icono, nombre y frase de ficha.json: sin logotipos de la Administración. */}
-        <span className="inline-flex items-center gap-4">
-          <span
-            aria-hidden="true"
-            className="grid size-14 shrink-0 place-items-center rounded-xl bg-brand font-mono text-3xl text-white" /* tema-ok: icono de la plantilla sobre brand */
-          >
-            {ficha.icono}
-          </span>
-          <span className="flex flex-col">
-            <span className="text-2xl leading-tight font-semibold tracking-tight">
+      {/* gap-x-2, el mismo hueco que entre los botones del menú: así botones y
+          selector quedan a 8 px unos de otros. Entre filas (móvil), 16 px. */}
+      <div className="mx-auto flex min-h-24 max-w-5xl flex-wrap items-center justify-between gap-x-2 gap-y-4 px-(--page-gutter) py-4 md:px-8">
+        {/* Marca y nombre de ficha.json, sin logotipos de la Administración. Llevan al inicio. */}
+        <Link
+          href={{ pathname: "/", query: { lang: idioma } }}
+          className="-m-1.5 inline-flex items-center gap-3 rounded-2xl p-1.5 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:gap-4"
+        >
+          <Marca className="size-12 shrink-0 sm:size-14" />
+          <span className="flex flex-col gap-1.5">
+            {/* El nombre hace de logotipo: seminegrita, más cerrada y sin interlineado. El
+                espacio de detrás lo separa de la frase en el nombre accesible del enlace. */}
+            <span className="text-[26px] leading-none font-semibold tracking-[-0.025em] sm:text-[28px]">
               {ficha.nombre}
-            </span>
-            <span className="text-base text-(--text-secondary)">{ficha.frase}</span>
+            </span>{" "}
+            <span className="text-base leading-snug text-(--text-secondary)">{t.cabecera.frase}</span>
           </span>
+        </Link>
+        <span className="lg:order-last">
+          <SelectorIdioma idioma={idioma} etiqueta={t.selector.etiqueta} />
         </span>
         {/* En el móvil, una fila propia con las dos secciones a partes iguales. */}
-        <nav aria-label="Secciones" className="w-full lg:ml-auto lg:w-auto">
+        <nav aria-label={t.cabecera.secciones} className="w-full lg:ml-auto lg:w-auto">
           <ul className="grid grid-cols-2 gap-2 lg:flex">
             {SECCIONES.map((seccion) => (
               <li key={seccion.id}>
                 <Link
-                  href={seccion.href}
+                  // Con ?lang, el idioma elegido se mantiene al cambiar de sección.
+                  href={{ pathname: seccion.href, query: { lang: idioma } }}
                   aria-current={seccion.id === activa ? "page" : undefined}
                   className={cn(
                     buttonVariants({ variant: "outline", size: "lg" }),
@@ -46,8 +56,8 @@ export function Cabecera({ activa }: { activa: Seccion }) {
                     seccion.id === activa && "border-foreground bg-muted font-semibold",
                   )}
                 >
-                  <span className="lg:hidden">{seccion.corto}</span>
-                  <span className="max-lg:hidden">{seccion.nombre}</span>
+                  <span className="lg:hidden">{t.cabecera.menu[seccion.id].corto}</span>
+                  <span className="max-lg:hidden">{t.cabecera.menu[seccion.id].nombre}</span>
                 </Link>
               </li>
             ))}

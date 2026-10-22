@@ -1,41 +1,11 @@
 // Datos para el modo emergencia «Ya he pulsado».
 // Fuente: contexto.md §5.6.6 y avisos INCIBE citados.
+// Aquí va la lógica (qué pasos tocan y cuáles urgen), igual en todos los
+// idiomas; los textos están en src/i18n/, en `emergencia`, por id.
 
 export type AccionId = "enlace" | "tarjeta" | "clave" | "instale" | "pague";
 
-export interface Accion {
-  id: AccionId;
-  label: string;
-  descripcion: string;
-}
-
-export const ACCIONES: Accion[] = [
-  {
-    id: "enlace",
-    label: "Pulsé el enlace",
-    descripcion: "Abrí la web, pero no introduje nada",
-  },
-  {
-    id: "tarjeta",
-    label: "Metí mis datos de tarjeta o bancarios",
-    descripcion: "Número de tarjeta, CVV, cuenta…",
-  },
-  {
-    id: "clave",
-    label: "Di mi contraseña de Cl@ve o mis datos de acceso",
-    descripcion: "Usuario, contraseña o código recibido",
-  },
-  {
-    id: "instale",
-    label: "Instalé algo o descargué un archivo",
-    descripcion: "Una app, un adjunto…",
-  },
-  {
-    id: "pague",
-    label: "Pagué",
-    descripcion: "Hice una transferencia o un cargo",
-  },
-];
+export const ACCIONES: readonly AccionId[] = ["enlace", "tarjeta", "clave", "instale", "pague"];
 
 export type PasoId =
   | "banco"
@@ -51,7 +21,6 @@ export type PasoId =
 
 export interface Paso {
   id: PasoId;
-  texto: string;
   urgente: boolean;
   enlaces: { texto: string; url: string }[];
   fuente: string;
@@ -60,35 +29,30 @@ export interface Paso {
 export const PASOS: Record<PasoId, Paso> = {
   banco: {
     id: "banco",
-    texto: "Llama ahora a tu banco y diles que bloqueen la tarjeta o la cuenta. El teléfono está en el reverso de la tarjeta.",
     urgente: true,
     enlaces: [],
     fuente: "contexto.md §5.6.6 — INCIBE-2026-666/566/375",
   },
   "banco-pago": {
     id: "banco-pago",
-    texto: "Llama a tu banco, explícales lo que pasó y pregunta si pueden devolverte el dinero.",
     urgente: true,
     enlaces: [],
     fuente: "contexto.md §5.6.6 — INCIBE-2026-666",
   },
   capturas: {
     id: "capturas",
-    texto: "Haz una foto con el móvil al mensaje que recibiste, para tenerlo guardado por si hace falta después.",
     urgente: false,
     enlaces: [],
     fuente: "contexto.md §5.6.6",
   },
   "cambiar-clave": {
     id: "cambiar-clave",
-    texto: "Cambia tu contraseña de Cl@ve cuanto antes. Escribe tú mismo la dirección en el navegador, no pulses ningún enlace.",
     urgente: true,
     enlaces: [{ texto: "clave.gob.es", url: "https://clave.gob.es" }],
     fuente: "INCIBE-2026-077, contexto.md §4.4",
   },
   "revisar-dehu": {
     id: "revisar-dehu",
-    texto: "Entra en tu buzón de notificaciones y en tu Carpeta Ciudadana escribiendo tú mismo la dirección, y mira si hay algo raro.",
     urgente: false,
     enlaces: [
       { texto: "dehu.redsara.es", url: "https://dehu.redsara.es" },
@@ -101,21 +65,18 @@ export const PASOS: Record<PasoId, Paso> = {
   },
   "no-dispositivo": {
     id: "no-dispositivo",
-    texto: "No uses ese teléfono u ordenador para entrar al banco ni para poner contraseñas hasta que alguien de confianza lo revise.",
     urgente: true,
     enlaces: [],
     fuente: "INCIBE 017",
   },
   "no-enlace": {
     id: "no-enlace",
-    texto: "No vuelvas a pulsar ese enlace ni llames al número que aparecía en el mensaje.",
     urgente: false,
     enlaces: [],
     fuente: "contexto.md §5.6.3",
   },
   denuncia: {
     id: "denuncia",
-    texto: "Pon una denuncia en la Policía Nacional o en la Guardia Civil. Puedes hacerlo por internet o yendo en persona.",
     urgente: false,
     enlaces: [
       { texto: "policia.es", url: "https://www.policia.es" },
@@ -125,7 +86,6 @@ export const PASOS: Record<PasoId, Paso> = {
   },
   "017": {
     id: "017",
-    texto: "Llama al 017, es gratis. Te atienden todos los días de 8 de la mañana a 11 de la noche y te explican exactamente qué hacer.",
     urgente: false,
     enlaces: [
       {
@@ -137,7 +97,6 @@ export const PASOS: Record<PasoId, Paso> = {
   },
   "reporte-incibe": {
     id: "reporte-incibe",
-    texto: "Avisa al organismo oficial de ciberseguridad (INCIBE) de lo que ha pasado.",
     urgente: false,
     enlaces: [
       {

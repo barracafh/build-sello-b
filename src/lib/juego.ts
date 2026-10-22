@@ -1,8 +1,10 @@
 // Juego «¿Estafa o no?»: los 10 casos de datos/mensajes-ejemplo.json como
 // tarjetas. Los F son fraudes publicados por INCIBE; los L, avisos legítimos.
+// Aquí solo va lo que no cambia con el idioma (id, respuesta, direcciones): el
+// texto y las pistas de cada caso están en src/i18n/, en `juego.casos`.
 import { neutralizar } from "@/lib/url";
 import { webOficial } from "@/lib/veredicto";
-import { NOMBRES_EJEMPLOS } from "@/datos/ejemplos";
+import type { Diccionario } from "@/i18n";
 import ejemplos from "../../datos/mensajes-ejemplo.json";
 
 type Caso = (typeof ejemplos)[number] & {
@@ -11,43 +13,41 @@ type Caso = (typeof ejemplos)[number] & {
   entidad?: string | null;
 };
 
+export type IdCaso = keyof Diccionario["juego"]["casos"];
+export type Tipo = keyof Diccionario["juego"]["tipos"];
+
 export type Ronda = {
-  id: string;
-  tipo: "SMS" | "Correo" | "Web";
-  texto: string;
+  id: IdCaso;
+  tipo: Tipo;
   /** Neutralizada: se enseña como texto, nunca como enlace. */
   direccion: string | null;
   esEstafa: boolean;
-  /** Por qué, con las pistas del caso. */
-  pistas: string[];
   web: { href: string; direccion: string } | null;
-  fuente: { nombre: string; url: string };
+  fuente: { url: string; entidad: string | null };
 };
 
-const TIPOS: Record<string, Ronda["tipo"]> = { sms: "SMS", email: "Correo", web: "Web" };
-
-// Los avisos de INCIBE se distinguen por el caso: si no, en la lista final
-// saldrían cinco «Aviso de INCIBE» iguales.
-const fuenteDe = (caso: Caso) => {
-  const nombre = new URL(caso.fuente).hostname.endsWith("incibe.es")
-    ? `INCIBE · ${NOMBRES_EJEMPLOS[caso.id] ?? "Aviso"}`
-    : (caso.entidad ?? "Web oficial");
-  return { nombre, url: caso.fuente };
-};
+const TIPOS: readonly string[] = ["sms", "email", "web"] satisfies Tipo[];
 
 export const RONDAS: readonly Ronda[] = (ejemplos as Caso[]).map((caso) => {
   const url = caso.url_prueba_sintetica ?? caso.url ?? null;
   return {
-    id: caso.id,
-    tipo: TIPOS[caso.tipo] ?? "SMS",
-    texto: caso.texto,
+    id: caso.id as IdCaso,
+    tipo: (TIPOS.includes(caso.tipo) ? caso.tipo : "sms") as Tipo,
     direccion: url && neutralizar(url),
     esEstafa: caso.esperado === "no_oficial",
-    pistas: caso.pistas,
     web: webOficial(caso.web_oficial_correcta),
-    fuente: fuenteDe(caso),
+    fuente: { url: caso.fuente, entidad: caso.entidad ?? null },
   };
 });
+
+// Los avisos de INCIBE se distinguen por el caso: si no, en la lista final
+// saldrían cinco «Aviso de INCIBE» iguales.
+export function fuenteDe(ronda: Ronda, t: Diccionario) {
+  const nombre = new URL(ronda.fuente.url).hostname.endsWith("incibe.es")
+    ? `INCIBE · ${t.ejemplos[ronda.id]}`
+    : (ronda.fuente.entidad ?? t.juego.webOficial);
+  return { nombre, url: ronda.fuente.url };
+}
 
 /** Fisher-Yates; `azar` se puede fijar en los tests. */
 export function barajar<T>(lista: readonly T[], azar: () => number = Math.random): T[] {
@@ -66,10 +66,13 @@ export const UMBRAL_DESLIZAR = 110;
 export const respuestaDeArrastre = (dx: number): boolean | null =>
   dx <= -UMBRAL_DESLIZAR ? true : dx >= UMBRAL_DESLIZAR ? false : null;
 
-/** Frase final según los aciertos. */
-export function valoracion(aciertos: number, total: number): string {
-  if (aciertos === total) return "¡Perfecto! Ninguna estafa te ha colado.";
-  if (aciertos >= total - 2) return "Muy bien. Repasa las que has fallado: son las que más engañan.";
-  if (aciertos >= total / 2) return "No está mal, pero alguna estafa te habría colado.";
-  return "Las estafas están muy bien hechas. Repasa las pistas y vuelve a probar.";
+/** Qué frase final toca según los aciertos (el texto, en `juego.valoracion`). */
+export function valoracion(
+  aciertos: number,
+  total: number,
+): keyof Diccionario["juego"]["valoracion"] {
+  if (aciertos === total) return "perfecto";
+  if (aciertos >= total - 2) return "muyBien";
+  if (aciertos >= total / 2) return "noEstaMal";
+  return "repasa";
 }

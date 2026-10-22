@@ -1,4 +1,5 @@
 import { analizar } from "@/lib/analizar";
+import { IDIOMA_POR_DEFECTO, esIdioma } from "@/i18n";
 import { aplicarDesmentidos, buscarDesmentidos, consultaDesmentido } from "@/lib/factcheck";
 
 const LIMITE = 2000;
@@ -22,8 +23,12 @@ export async function POST(request: Request) {
   if (texto.trim().length === 0) return error("«texto» está vacío");
   if (texto.length > LIMITE) return error("«texto» supera los 2.000 caracteres");
 
+  // Opcional: el idioma del `motivo`. Si no es uno de los cinco, castellano.
+  const pedido = (cuerpo as { idioma?: unknown }).idioma;
+  const idioma = esIdioma(pedido) ? pedido : IDIOMA_POR_DEFECTO;
+
   // Marcadores hasta que existan Safe Browsing y RDAP.
-  const analisis = await analizar(texto);
+  const analisis = await analizar(texto, { idioma });
   // Después del veredicto final: un desmentido solo lo apoya, nunca lo cambia.
   const desmentidos = await buscarDesmentidos(consultaDesmentido(texto, analisis));
   return Response.json({

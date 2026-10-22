@@ -1,0 +1,150 @@
+import type { ContextoTitular, Diccionario } from "./es";
+import { ca, deEntitat } from "./ca";
+
+// Valencià: parteix del català i només canvia el que és diferent (este,
+// apegar, ferramenta, subjuntius en -es…).
+// Traducció automàtica: l'ha de revisar una persona nativa.
+export const va = {
+  ...ca,
+  saltarContenido: "Bota al contingut",
+  pagina: {
+    ...ca.pagina,
+    titulo: "Este missatge és de veritat?",
+  },
+  pie: {
+    ...ca.pie,
+    descripcion: (nombre: string) =>
+      `${nombre} és una ferramenta independent per a ajudar-te a identificar possibles fraus.`,
+    aviso: "Ferramenta experimental. No és un servei oficial.",
+    llamar017: "Telefona al 017",
+    sobre: "Sobre la ferramenta",
+    privacidad: "No guardem el que apegues ni obrim els seus enllaços.",
+  },
+  botonAviso: "Hi ha alguna cosa que no està bé? Avisa'ns",
+  veredictos: {
+    no_oficial: {
+      ...ca.veredictos.no_oficial,
+      titular: ({ entidad, hayEnlace }: ContextoTitular) => {
+        const que = hayEnlace ? "Este enllaç" : "Este missatge";
+        return entidad ? `${que} no és ${deEntitat(entidad)}` : `${que} no és oficial`;
+      },
+      entradilla: "No toques els seus enllaços i no respongues el missatge.",
+      pasos: [
+        "No toques l'enllaç ni respongues el missatge.",
+        "Si vols comprovar alguna cosa, entra tu en la web oficial escrivint l'adreça.",
+        "Si ja l'has tocat o has donat dades, telefona gratis al 017.",
+      ],
+    },
+    no_determinable: {
+      ...ca.veredictos.no_determinable,
+      titular: ({ entidad }: ContextoTitular) =>
+        entidad ? `No podem confirmar que siga ${deEntitat(entidad)}` : "No podem saber qui l'envia",
+      pasos: [
+        "No toques l'enllaç ni respongues el missatge.",
+        "Entra tu en la web oficial escrivint l'adreça.",
+        "Si dubtes, telefona gratis al 017.",
+      ],
+    },
+    oficial_verificado: {
+      ...ca.veredictos.oficial_verificado,
+      titular: ({ entidad }: ContextoTitular) =>
+        entidad ? `Esta web és ${deEntitat(entidad)}` : "Esta web està en la nostra llista de webs oficials",
+      entradilla:
+        "Només comprovem l'adreça, no el que et demanen dins. Per a tornar a entrar, escriu tu l'adreça.",
+      pasos: [
+        "Tot i això, no dones dades si no ho esperaves.",
+        "Si dubtes, entra tu escrivint l'adreça de la web oficial.",
+        "Si ja has donat dades, telefona gratis al 017 d'INCIBE.",
+      ],
+    },
+  },
+  analizar: {
+    ...ca.analizar,
+    campo: {
+      antes: "Apega ací l'SMS, el correu o la web tal com t'ha arribat, ",
+      negrita: "sense tocar cap enllaç",
+      despues: ", i et direm si ho podem confirmar.",
+    },
+    ayudaImagen: "Captura en PNG, JPG o WebP, fins a 4 MB.",
+    privacidad: "No guardem el que apegues ni les imatges, ni obrim els seus enllaços.",
+    ejemplos: "Vols provar amb un exemple?",
+    remitente: "Remitent del missatge",
+    webOficialEs: (entidad: string | null) =>
+      entidad ? `La web oficial ${deEntitat(entidad)} és` : "La web oficial és",
+    irWebOficial: "Ves a la web oficial",
+    desmentidosTexto: "Verificadors de notícies han publicat sobre missatges semblants a este.",
+    desmentidosNoPrueba: "Això no prova per si sol que este siga fals.",
+    llamar017: "Telefona al 017",
+    copiarEnlace: "Copia l'enllaç a este resultat",
+    avisoEnlace:
+      "El missatge va dins de l'enllaç i no arriba al nostre servidor, però qui tinga l'enllaç el podrà llegir. No el compartisques si porta dades personals.",
+    enlaceCopiado: "Enllaç copiat. Qui l'òbriga veurà este missatge i el seu resultat.",
+    enlaceNoCopiado:
+      "No l'hem pogut copiar. L'enllaç ja està en la barra d'adreces: copia'l des d'allí.",
+    sinClasificadorOficial:
+      "L'adreça està en la nostra llista de webs oficials. Ara mateix no hem pogut analitzar la resta del text.",
+    webCitadaDe: (entidad: string) =>
+      `El missatge cita una adreça que sí que és la web oficial ${deEntitat(entidad)}. Això no prova qui l'envia: entra escrivint tu l'adreça.`,
+  },
+  errores: {
+    ...ca.errores,
+    vacio: "Escriu o apega un missatge abans de comprovar-lo.",
+    imagenSinTexto: "No hem trobat text en la imatge. Copia el missatge i apega'l.",
+    imagen: {
+      ...ca.errores.imagen,
+      ia: "No hem pogut llegir la imatge. Copia el text del missatge i apega'l.",
+      elegir: "Tria una imatge per a llegir-la.",
+    },
+  },
+  compartir: {
+    ...ca.compartir,
+    titulo: "Envia-ho a la teua família",
+    copiado: "Text copiat. Apega'l en el xat de la teua família.",
+    noCopiado: "No l'hem pogut copiar. Prova amb «Envia per WhatsApp».",
+    pie: (nombre: string, url: string) =>
+      `Ho he comprovat amb ${nombre}: ${url}`,
+    ayuda017: "Si dubtes o ja has donat dades, telefona gratis al 017 d'INCIBE.",
+    laWeb: (entidad: string | null, direccion: string) =>
+      `La web oficial${entidad ? ` ${deEntitat(entidad)}` : ""} és ${direccion}`,
+    noPulsesUrl: (url: string) => `No toques l'enllaç ni respongues: ${url}`,
+    noRespondasRemitente: (remitente: string) => `No respongues este remitent: ${remitente}`,
+    noPulses: "No toques els seus enllaços ni respongues.",
+    oficial: (entidad: string | null, url: string | null) =>
+      `He comprovat una web i està en la llista de webs oficials${entidad ? ` ${deEntitat(entidad)}` : ""}${url ? `: ${url}` : "."}`,
+    noDesDatos: "Tot i això, no dones dades si no ho esperaves.",
+    citaOficial: "El missatge cita la web oficial, però això no prova qui l'envia.",
+    mejorNoPulses: (url: string) => `Millor no toques l'enllaç: ${url}`,
+    mejorNoRespondas: "Millor no respongues ni toques res.",
+  },
+  emergencia: {
+    ...ca.emergencia,
+    marca: "Marca tot el que corresponga.",
+    marcaArriba: "Marca dalt el que vas fer.",
+    vacio: "Ací voràs què has de fer, en orde.",
+    verPasos: (n: number) => `Vore els teus ${n} ${n === 1 ? "pas" : "passos"}`,
+    pasos: {
+      ...ca.emergencia.pasos,
+      banco: "Telefona ara al teu banc i demana que bloquegen la targeta o el compte. El telèfon està en el revers de la targeta.",
+      "banco-pago": "Telefona al teu banc, explica què ha passat i pregunta si et poden tornar els diners.",
+      "cambiar-clave": "Canvia la contrasenya de Cl@ve com més prompte millor. Escriu tu mateix l'adreça en el navegador, no toques cap enllaç.",
+      "revisar-dehu": "Entra en la teua bústia de notificacions i en la Carpeta Ciutadana escrivint tu mateix l'adreça, i mira si hi ha res estrany.",
+      "no-dispositivo": "No utilitzes eixe telèfon o ordinador per a entrar al banc ni per a posar contrasenyes fins que algú de confiança el revise.",
+      "no-enlace": "No tornes a tocar eixe enllaç ni telefones al número que eixia en el missatge.",
+      "017": "Telefona al 017, és gratuït. T'atenen cada dia de 8 del matí a 11 de la nit i t'expliquen exactament què has de fer.",
+    },
+  },
+  carga: {
+    ...ca.carga,
+    lenta: "Açò pot tardar uns segons més.",
+  },
+  juego: {
+    ...ca.juego,
+    esDeVerdad: "És un avís de veritat. Tot i això, no et fies del missatge: entra tu en la web oficial.",
+    recuerda:
+      "Recorda: encara que un avís siga de veritat, entra tu en la web oficial escrivint l'adreça. Un missatge no prova qui l'envia.",
+    verResultado: "Vore el meu resultat",
+    tusRespuestas: "Les teues respostes",
+    flechas: (izquierda: string, derecha: string) =>
+      ` o utilitza les fletxes ${izquierda} i ${derecha} del teclat`,
+  },
+} satisfies Diccionario;

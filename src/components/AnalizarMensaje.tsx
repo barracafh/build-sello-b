@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { ExternalLink, ImageUp, Link2, Phone } from "lucide-react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { ExternalLink, ImageUp, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ruta } from "@/config/sitio";
 import { Badge } from "@/components/ui/badge";
@@ -15,11 +15,12 @@ import { Fuentes } from "@/components/Fuentes";
 import { MensajeSenalado } from "@/components/MensajeSenalado";
 import { CargaResultado } from "@/components/CargaResultado";
 import { RETRASO_MS, esperaAntesDeMostrar } from "@/lib/carga";
+import { analizarCaptura } from "@/lib/captura";
 import { textoParaFamilia } from "@/lib/compartir";
-import { avisosIncibe, horario017, linea017 } from "@/datos/incibe";
-import { EJEMPLOS_PANEL, NOMBRES_EJEMPLOS, tipoDeEjemplo } from "@/datos/ejemplos";
+import { avisosIncibe, linea017 } from "@/datos/incibe";
+import { EJEMPLOS_PANEL, tipoDeEjemplo } from "@/datos/ejemplos";
+import { diccionario, type Diccionario, type Idioma } from "@/i18n";
 import {
-  deEntidad,
   fichaDe,
   leerRespuesta,
   mesDe,
@@ -31,10 +32,11 @@ import ejemplos from "../../datos/mensajes-ejemplo.json";
 
 // El texto vive en el estado del navegador y se envía solo a /api/verificar,
 // que no lo guarda ni lo registra. Una captura va a /api/imagen, que devuelve
-// su texto para revisarlo aquí; la imagen tampoco se guarda.
+// su texto para comprobarlo; la imagen tampoco se guarda.
 //
-// Enlace para compartir: el mensaje va en el fragmento (#mensaje=…), que el
-// navegador nunca envía al servidor, así que no acaba en ningún log.
+// Los enlaces que ya se compartieron con el mensaje en el fragmento
+// (#mensaje=…) se siguen abriendo: el navegador nunca envía el fragmento al
+// servidor, así que no acaba en ningún log. El botón para copiarlos ya no está.
 const CLAVE_ENLACE = "mensaje";
 
 const mensajeDelEnlace = () => {
@@ -62,78 +64,40 @@ const EJEMPLOS = (ejemplos as Ejemplo[])
   .filter((caso) => EJEMPLOS_PANEL.includes(caso.id))
   .map((caso) => ({
     id: caso.id,
-    nombre: NOMBRES_EJEMPLOS[caso.id] ?? caso.id,
     tipo: tipoDeEjemplo(caso.id),
     // Lo que debería devolver, con la misma píldora que el resultado.
     esperado: fichaDe(caso.esperado),
     texto: textoDeEjemplo(caso),
   }));
 
-// Frase corta para cada código de `motivos` (LAB-34/38); el código nunca se muestra solo.
-const frases: Record<string, string> = {
-  contenido_sospechoso: "La web del enlace figura como oficial, pero el mensaje tiene señales de fraude: no podemos confirmarlo.",
-  contenido_fraudulento: "El mensaje usa el nombre de un organismo oficial y tiene señales claras de fraude.",
-  sin_enlace: "No hemos encontrado ningún enlace en el mensaje.",
-  web_oficial_citada: "El mensaje cita una dirección que sí es una web oficial. Eso no prueba quién lo envía: entra tecleando tú la dirección.",
-  url_no_valida: "El enlace no tiene un formato que podamos leer.",
-  ip_como_host: "El enlace lleva a un número en vez de a un nombre de web, algo que las webs oficiales no hacen.",
-  credenciales_en_url: "El enlace esconde la web real detrás de un @: lo que parece el nombre es solo un disfraz.",
-  acortador_no_resuelto: "Es un enlace acortado y no lo abrimos, así que no sabemos adónde lleva.",
-  inquilino_no_listado: "Está en una plataforma que usan muchos ayuntamientos, pero no es una web que conozcamos.",
-  gob_es_no_listado: "Termina en gob.es, reservado a administraciones, pero no sabemos de qué organismo es.",
-  marca_como_subdominio: "Usa el nombre de una web oficial al principio, pero la web real es otra.",
-  imitacion_de_marca: "Imita el nombre de un organismo oficial y tiene otras señales de fraude.",
-  posible_imitacion_de_marca: "Se parece al nombre de un organismo oficial, pero no podemos asegurar que sea falsa.",
-  dominio_desconocido: "No es una web que tengamos en nuestra lista de webs oficiales.",
-  homografo: "El nombre usa letras de otro alfabeto para parecerse a una web oficial.",
-  indicador_publicado: "Un organismo oficial ha avisado de que esta dirección es un fraude.",
-  remitente_dominio_ajeno: "El remitente usa el nombre de un organismo oficial con una dirección de correo que no es la suya.",
-  en_allowlist: "La dirección está en nuestra lista de webs oficiales.",
-};
-
-// Título en castellano llano de cada señal del clasificador (LAB-39).
-const titulosSenal: Record<string, string> = {
-  pide_dinero: "Pide dinero",
-  pide_datos: "Pide datos personales o bancarios",
-  amenaza: "Amenaza con consecuencias graves",
-  urgencia: "Mete prisa",
-  ortografia: "Faltas o símbolos raros",
-  remitente_falso: "Remitente que no cuadra",
-  enlace_sospechoso: "Enlace sospechoso",
-  enlace_no_listado: "Enlace que no conocemos",
-  enlace_acortado: "Enlace acortado",
-  enlace_parecido: "Enlace parecido a uno oficial",
-  enlace_imita_oficial: "Enlace que imita a uno oficial",
-  instruccion_qr: "Pide escanear un código QR",
-  instruccion_rara: "Pide responder, descargar o llamar",
-  devolucion_con_enlace: "Devolución con enlace para cobrar",
-  aviso_informativo: "Parece un aviso informativo",
-};
-
 const MOTIVO_NO_DISPONIBLE = "clasificador no disponible";
+// Motivo fijo de src/lib/clasificar.ts cuando la URL ya es no_oficial y el
+// modelo no responde: viene en castellano, así que se enseña el del diccionario.
+const MOTIVO_SUPLANTACION = "El mensaje tiene señales claras de suplantación.";
 
 // Los apartados de contexto.md en los que se apoyan las señales del clasificador.
-const contextoMd = (señales: Respuesta["señales"]) => {
+const contextoMd = (señales: Respuesta["señales"], t: Diccionario) => {
   const apartados = [
     ...new Set(señales.flatMap((s) => s.fuente.match(/§\d+(?:\.\d+)?/g) ?? [])),
   ];
   return {
-    nombre: `Criterios de Sello (contexto.md${apartados.length ? ` ${apartados.join(", ")}` : ""})`,
+    nombre: t.analizar.criterios(apartados.length ? ` ${apartados.join(", ")}` : ""),
     url: "https://github.com/barracafh/build-sello-b/blob/main/contexto.md",
   };
 };
 
-// `intro` va encima del formulario, en su columna: así el panel de ejemplos
-// arranca a la altura de la entradilla en escritorio. Los ejemplos solo se
-// enseñan con `conEjemplos`, que la página activa solo con ?casos-test=true.
+// Los ejemplos solo se enseñan con `conEjemplos`, que la página activa solo
+// con ?casos-test=true.
 export function AnalizarMensaje({
-  intro,
   conEjemplos = false,
+  idioma = "es",
 }: {
-  intro?: ReactNode;
   conEjemplos?: boolean;
+  idioma?: Idioma;
 }) {
   const id = useId();
+  const t = diccionario(idioma);
+  const a = t.analizar;
   const [mensaje, setMensaje] = useState("");
   const [respuesta, setRespuesta] = useState<Respuesta | null>(null);
   // El texto que se comprobó: los fragmentos de la respuesta son posiciones en él.
@@ -141,7 +105,6 @@ export function AnalizarMensaje({
   // Solo los errores del mensaje marcan el campo como no válido; los de red, no.
   const [error, setError] = useState<{ texto: string; delCampo: boolean } | null>(null);
   const [enviando, setEnviando] = useState(false);
-  const [avisoEnlace, setAvisoEnlace] = useState<string | null>(null);
   // El esqueleto sale solo si tarda más de RETRASO_MS; aquí, cuándo apareció.
   const [inicioCarga, setInicioCarga] = useState<number | null>(null);
   const inicioCargaRef = useRef<number | null>(null);
@@ -188,14 +151,6 @@ export function AnalizarMensaje({
     setRespuesta(null);
     setError(null);
     setEnviando(false);
-    setAvisoEnlace(null);
-  }
-
-  // Al empezar de nuevo, el foco vuelve al campo y el enlace deja de llevar el mensaje.
-  function cargar(texto: string) {
-    cambiar(texto);
-    quitarDelEnlace();
-    campoRef.current?.focus();
   }
 
   // Con un ejemplo, el foco va al botón de comprobar, justo debajo del texto
@@ -205,46 +160,37 @@ export function AnalizarMensaje({
     comprobarRef.current?.focus();
   }
 
-  // Una sola llamada por imagen elegida. El texto rellena el campo para que la
-  // persona lo revise antes de comprobarlo; la imagen no se conserva.
+  // Una sola lectura por imagen elegida. El texto rellena el campo y se comprueba
+  // solo; el botón queda para volver a comprobar tras editarlo. El foco no se
+  // mueve al campo (abriría el teclado del móvil): el resultado ya se lo lleva.
   async function leerCaptura(imagen: File | undefined) {
     if (imagenRef.current) imagenRef.current.value = "";
     if (!imagen) return;
     cambiar(mensaje);
     setLeyendo(true);
     const esta = peticion.current;
-    let texto: string | null = null;
-    let fallo = "No hemos podido leer la imagen. Copia el texto del mensaje y pégalo.";
-    try {
-      const cuerpo = new FormData();
-      cuerpo.set("imagen", imagen);
-      const res = await fetch(ruta("/api/imagen"), { method: "POST", body: cuerpo });
-      const datos = await res.json();
-      if (res.ok && typeof datos.texto === "string") texto = datos.texto;
-      else if (typeof datos.error === "string") fallo = datos.error;
-    } catch {
-      // Sin red o sin JSON: se queda el mensaje de error por defecto.
-    }
+    await analizarCaptura(imagen, {
+      vigente: () => esta === peticion.current,
+      mostrarTexto: (texto) => {
+        cambiar(texto);
+        quitarDelEnlace();
+      },
+      comprobar: (texto) => void comprobar(texto),
+      mostrarError: (texto) => setError({ texto, delCampo: false }),
+      idioma,
+    });
     setLeyendo(false);
-    if (esta !== peticion.current) return;
-    if (texto) cargar(texto);
-    else
-      setError({
-        texto: texto === "" ? "No hemos encontrado texto en la imagen. Copia el mensaje y pégalo." : fallo,
-        delCampo: false,
-      });
   }
 
   async function comprobar(texto: string) {
     setRespuesta(null);
-    setAvisoEnlace(null);
     if (texto.trim().length === 0) {
-      setError({ texto: "Escribe o pega un mensaje antes de comprobar.", delCampo: true });
+      setError({ texto: t.errores.vacio, delCampo: true });
       return;
     }
     if (texto.length > LIMITE) {
       setError({
-        texto: `El mensaje es demasiado largo: tiene ${miles(texto.length)} caracteres y el máximo es ${miles(LIMITE)}.`,
+        texto: t.errores.largo(miles(texto.length), miles(LIMITE)),
         delCampo: true,
       });
       return;
@@ -256,7 +202,7 @@ export function AnalizarMensaje({
     try {
       const res = await fetch(ruta("/api/verificar"), {
         method: "POST",
-        body: JSON.stringify({ texto }),
+        body: JSON.stringify({ texto, idioma }),
       });
       if (res.ok) datos = leerRespuesta(await res.json());
     } catch {
@@ -275,7 +221,7 @@ export function AnalizarMensaje({
       setAnalizado(texto);
       setRespuesta(datos);
     }
-    else setError({ texto: "No hemos podido comprobarlo. Inténtalo de nuevo.", delCampo: false });
+    else setError({ texto: t.errores.red, delCampo: false });
   }
 
   function analizar(event: FormEvent<HTMLFormElement>) {
@@ -300,24 +246,10 @@ export function AnalizarMensaje({
     return () => window.removeEventListener("hashchange", desdeEnlace);
   }, []);
 
-  async function copiarEnlace() {
-    const params = new URLSearchParams({ [CLAVE_ENLACE]: mensaje });
-    const enlace = `${window.location.origin}${window.location.pathname}${window.location.search}#${params}`;
-    // También en la barra de direcciones, por si el portapapeles no deja copiar.
-    history.replaceState(null, "", enlace);
-    try {
-      await navigator.clipboard.writeText(enlace);
-      setAvisoEnlace("Enlace copiado. Quien lo abra verá este mensaje y su resultado.");
-    } catch {
-      setAvisoEnlace(
-        "No hemos podido copiarlo. El enlace ya está en la barra de direcciones: cópialo desde ahí.",
-      );
-    }
-  }
-
   const ficha = respuesta ? fichaDe(respuesta.veredicto) : null;
+  const textos = ficha && t.veredictos[ficha.veredicto];
   const web = webOficial(respuesta?.web_oficial);
-  const de = deEntidad(respuesta?.entidad);
+  const entidad = respuesta?.entidad ?? null;
   // El veredicto sale del remitente y no hay enlace: se habla del mensaje.
   const soloRemitente =
     respuesta?.veredicto === "no_oficial" &&
@@ -329,14 +261,19 @@ export function AnalizarMensaje({
     ? respuesta.clasificado
       ? respuesta.motivo === MOTIVO_NO_DISPONIBLE
         ? respuesta.veredicto === "oficial_verificado"
-          ? "La dirección está en nuestra lista de webs oficiales. No hemos podido analizar el resto del texto ahora mismo."
-          : "No hemos podido analizar el texto del mensaje ahora mismo, así que no podemos confirmar nada. Las señales que ves salen de reglas fijas."
-        : respuesta.motivo
+          ? a.sinClasificadorOficial
+          : a.sinClasificador
+        : respuesta.motivo === MOTIVO_SUPLANTACION
+          ? a.motivoSuplantacion
+          : respuesta.motivo
       : soloRemitente
-      ? frases.remitente_dominio_ajeno
+      ? t.motivos.remitente_dominio_ajeno
       : webCitada && respuesta.entidad
-        ? `El mensaje cita una dirección que sí es la web oficial de ${respuesta.entidad}. Eso no prueba quién lo envía: entra tecleando tú la dirección.`
-        : frases[respuesta.motivos.find((m) => frases[m]) ?? "dominio_desconocido"]
+        ? a.webCitadaDe(respuesta.entidad)
+        : t.motivos[
+            (respuesta.motivos.find((m) => Object.hasOwn(t.motivos, m)) ??
+              "dominio_desconocido") as keyof Diccionario["motivos"]
+          ]
     : null;
   const hayRoja = respuesta?.senales.some((s) => s.nivel === "roja") ?? false;
   const fuentes = respuesta
@@ -346,9 +283,9 @@ export function AnalizarMensaje({
         ...(respuesta.fuente && respuesta.entidad
           ? [{ nombre: respuesta.entidad, url: respuesta.fuente }]
           : []),
-        ...(respuesta.clasificado ? [contextoMd(respuesta.señales)] : []),
-        avisosIncibe,
-        linea017,
+        ...(respuesta.clasificado ? [contextoMd(respuesta.señales, t)] : []),
+        { ...avisosIncibe, nombre: a.avisosIncibe },
+        { ...linea017, nombre: t.pie.linea017 },
       ].filter((f, i, todas) => todas.findIndex((o) => o.url === f.url) === i)
     : [];
   // Cada verificador con su web, una sola vez (LAB-45).
@@ -368,28 +305,19 @@ export function AnalizarMensaje({
       )}
     >
       <div className="lg:col-start-1 lg:row-start-1">
-        {intro}
-        <form
-          onSubmit={analizar}
-          aria-describedby={`${id}-privacidad`}
-          className={intro ? "mt-10" : undefined}
-        >
-          <label htmlFor={`${id}-mensaje`} className="block text-lg font-medium">
-            Pega aquí el mensaje que te ha llegado
+        <form onSubmit={analizar} aria-describedby={`${id}-privacidad`}>
+          {/* Una sola frase: qué pegar, que no se pulse el enlace y qué hacemos.
+              A 600 px y con la negrita sin partir, en escritorio corta justo antes de ella. */}
+          <label htmlFor={`${id}-mensaje`} className="block max-w-[600px] text-base">
+            {a.campo.antes}
+            <strong className="font-semibold whitespace-nowrap">{a.campo.negrita}</strong>
+            {a.campo.despues}
           </label>
-          <p id={`${id}-ayuda`} className="mt-1 text-base text-(--text-secondary)">
-            Puede ser un SMS, un correo o el enlace de una web. Incluye el
-            remitente y el enlace tal como aparecen.{" "}
-            <strong className="font-semibold text-foreground">
-              No pulses el enlace.
-            </strong>
-          </p>
           <Textarea
             ref={campoRef}
             id={`${id}-mensaje`}
             name="mensaje"
             aria-describedby={cn(
-              `${id}-ayuda`,
               cercaDelLimite && `${id}-contador`,
               error && `${id}-error`,
             )}
@@ -399,9 +327,9 @@ export function AnalizarMensaje({
             rows={6}
             spellCheck={false}
             autoComplete="off"
-            placeholder="DGT: Dispone de 24 horas para pagar su multa. Consulte en el siguiente enlace: hxxps://…"
-            // Fondo amarillo suave: aquí es donde se pega el mensaje.
-            className="mt-3 min-h-40 bg-brand-yellow/15 px-4 py-3 text-base leading-relaxed md:text-base [overflow-wrap:anywhere]"
+            placeholder={a.placeholder}
+            // Fondo gris claro: el muted de Sol al 70 % sobre blanco da #f8f8f8, sin color nuevo.
+            className="mt-3 min-h-40 bg-muted/70 px-4 py-3 text-base leading-relaxed md:text-base [overflow-wrap:anywhere]"
           />
           {cercaDelLimite && (
             <p
@@ -413,7 +341,7 @@ export function AnalizarMensaje({
                   : "text-(--text-secondary)",
               )}
             >
-              {miles(mensaje.length)} de {miles(LIMITE)} caracteres como máximo
+              {a.contador(miles(mensaje.length), miles(LIMITE))}
             </p>
           )}
           {/* El selector nativo queda oculto; se abre con el botón, que sí se ve y tiene foco. */}
@@ -428,7 +356,7 @@ export function AnalizarMensaje({
             onChange={(event) => leerCaptura(event.target.files?.[0])}
           />
           <p role="status" className="sr-only">
-            {leyendo ? "Leyendo la imagen…" : ""}
+            {leyendo ? a.leyendoImagen : ""}
           </p>
           {error && (
             <p
@@ -453,7 +381,7 @@ export function AnalizarMensaje({
             >
               {/* A 320 px no cabe con icono. */}
               <ImageUp aria-hidden="true" className="size-5 max-[22.5rem]:hidden" />
-              {leyendo ? "Leyendo…" : "Subir captura"}
+              {leyendo ? a.leyendoCorto : a.subirCaptura}
             </Button>
             <Button
               ref={comprobarRef}
@@ -470,31 +398,31 @@ export function AnalizarMensaje({
               {enviando ? (
                 <>
                   <Spinner />
-                  Comprobando…
+                  {a.comprobando}
                 </>
               ) : (
                 // Dos textos enteros: con uno partido, el hueco del botón (gap) separa las palabras de más.
                 <>
-                  <span className="sm:hidden">Comprobar</span>
-                  <span className="max-sm:hidden">Comprobar mensaje</span>
+                  <span className="sm:hidden">{a.comprobarCorto}</span>
+                  <span className="max-sm:hidden">{a.comprobar}</span>
                 </>
               )}
             </Button>
           </div>
           {/* Notas secundarias: más pequeñas y finas que el resto, a petición. */}
           <p id={`${id}-imagen-ayuda`} className="mt-2 text-sm font-light text-(--text-secondary)">
-            Captura en PNG, JPG o WebP, hasta 4 MB.
+            {a.ayudaImagen}
           </p>
           {/* Un solo anuncio al empezar. El veredicto lo lee el lector al recibir
               el foco su titular, y los errores ya son role="alert": aquí no se repiten. */}
           <p aria-live="polite" className="sr-only">
-            {enviando ? "Comprobando el mensaje" : ""}
+            {enviando ? a.comprobando : ""}
           </p>
           <p
             id={`${id}-privacidad`}
             className="mt-0.5 text-sm font-light text-(--text-secondary)"
           >
-            No guardamos lo que pegas ni las imágenes, ni abrimos sus enlaces.
+            {a.privacidad}
           </p>
         </form>
       </div>
@@ -509,7 +437,7 @@ export function AnalizarMensaje({
             className="lg:sticky lg:top-8 lg:rounded-xl lg:bg-muted lg:p-6"
           >
             <h2 id={`${id}-ejemplos`} className="font-sans text-lg font-medium">
-              ¿Quieres probar con un ejemplo?
+              {a.ejemplos}
             </h2>
             <div className="mt-3 flex flex-wrap gap-3 lg:flex-col">
               {EJEMPLOS.map((ejemplo) => (
@@ -523,9 +451,13 @@ export function AnalizarMensaje({
                     ejemplo.tipo === "Fraude" ? "border-l-destructive" : "border-l-muted-foreground",
                   )}
                 >
-                  <span>{ejemplo.nombre}</span>
+                  <span>{t.ejemplos[ejemplo.id as keyof Diccionario["ejemplos"]] ?? ejemplo.id}</span>
                   <span className="flex flex-wrap items-center gap-2 text-sm font-normal">
-                    {ejemplo.tipo && <span className="font-semibold">{ejemplo.tipo}</span>}
+                    {ejemplo.tipo && (
+                      <span className="font-semibold">
+                        {ejemplo.tipo === "Fraude" ? a.fraude : a.legitimo}
+                      </span>
+                    )}
                     <Badge
                       className={cn(
                         "h-auto gap-1.5 px-2 py-0.5 text-sm font-medium whitespace-normal [&>svg]:size-4!",
@@ -533,8 +465,8 @@ export function AnalizarMensaje({
                       )}
                     >
                       <ejemplo.esperado.icono aria-hidden="true" />
-                      <span className="sr-only">Debería dar: </span>
-                      {ejemplo.esperado.etiqueta}
+                      <span className="sr-only">{a.deberiaDar}</span>
+                      {t.veredictos[ejemplo.esperado.veredicto].etiqueta}
                     </Badge>
                   </span>
                 </Button>
@@ -545,8 +477,8 @@ export function AnalizarMensaje({
       )}
 
       <div aria-busy={mostrarCarga} className="empty:hidden lg:col-start-1 lg:row-start-2">
-      {mostrarCarga && <CargaResultado transcurrido={transcurrido} />}
-      {respuesta && ficha && (
+      {mostrarCarga && <CargaResultado transcurrido={transcurrido} idioma={idioma} />}
+      {respuesta && ficha && textos && (
         // Tres bloques: el veredicto y por qué, qué hacer ahora y las fuentes.
         <section
           aria-labelledby={`${id}-resultado`}
@@ -568,31 +500,31 @@ export function AnalizarMensaje({
                   )}
                 >
                   <ficha.icono aria-hidden="true" />
-                  {ficha.etiqueta}
+                  {textos.etiqueta}
                 </Badge>
                 <span className="sr-only">. </span>
                 <span className="mt-4 block">
-                  {ficha.titular({ deEntidad: de, hayEnlace: !soloRemitente && !!respuesta.url_analizada })}
+                  {textos.titular({ entidad, hayEnlace: !soloRemitente && !!respuesta.url_analizada })}
                 </span>
               </h2>
-              <p className="mt-4 text-xl font-semibold">{ficha.entradilla}</p>
+              <p className="mt-4 text-xl font-semibold">{textos.entradilla}</p>
             </div>
 
             <div className="px-6 py-6 md:px-8 md:py-8 [&>*+*]:mt-8">
               <div>
-                <h3 className="text-xl font-semibold">Por qué lo decimos</h3>
+                <h3 className="text-xl font-semibold">{a.porQue}</h3>
                 <p className="mt-2">
                   {frase}
                   {respuesta.motivos.includes("sin_cifrado") &&
-                    " Eso sí, el enlace no está cifrado (http)."}
+                    ` ${a.sinCifrado}`}
                 </p>
                 {respuesta.veredicto === "no_oficial" && respuesta.entidad_suplantada && (
                   <p className="mt-2 text-(--text-secondary)">
-                    Intenta hacerse pasar por: {respuesta.entidad_suplantada}
+                    {a.suplanta} {respuesta.entidad_suplantada}
                   </p>
                 )}
                 {respuesta.clasificado && respuesta.señales.length > 0 && (
-                  <ul className="mt-4 grid gap-3" aria-label="Señales encontradas">
+                  <ul className="mt-4 grid gap-3" aria-label={a.senalesEncontradas}>
                     {respuesta.señales.map((s) => {
                       const nivel = respuesta.senales.find((x) => x.codigo === s.codigo)?.nivel;
                       return (
@@ -606,14 +538,19 @@ export function AnalizarMensaje({
                                   : "bg-(--warning) text-(--warning-foreground)",
                               )}
                             >
-                              {nivel === "roja" ? "Señal roja" : "Señal naranja"}
+                              {nivel === "roja" ? a.senalRoja : a.senalNaranja}
                             </Badge>
                           )}
                           <span className="min-w-0 flex-[1_1_220px] [overflow-wrap:anywhere]">
                             <span className="font-semibold">
-                              {titulosSenal[s.codigo] ?? "Otra señal"}.
+                              {t.senales.titulos[s.codigo as keyof Diccionario["senales"]["titulos"]] ??
+                                a.otraSenal}
+                              .
                             </span>{" "}
-                            {s.evidencia}
+                            {/* La evidencia de una señal fija es su texto en castellano: se traduce por código. */}
+                            {respuesta.senales.some((x) => x.codigo === s.codigo && x.texto === s.evidencia)
+                              ? t.senales.texto({ codigo: s.codigo, texto: s.evidencia })
+                              : s.evidencia}
                           </span>
                         </li>
                       );
@@ -621,7 +558,7 @@ export function AnalizarMensaje({
                   </ul>
                 )}
                 {!respuesta.clasificado && respuesta.senales.length > 0 && (
-                  <ul className="mt-4 grid gap-3" aria-label="Señales encontradas">
+                  <ul className="mt-4 grid gap-3" aria-label={a.senalesEncontradas}>
                     {respuesta.senales.map((senal) => (
                       <li key={senal.codigo} className="flex flex-wrap items-start gap-x-3 gap-y-1">
                         {/* Texto en foreground o warning: el rojo sobre su tinte no llega a AA. */}
@@ -633,9 +570,9 @@ export function AnalizarMensaje({
                               : "bg-(--warning) text-(--warning-foreground)",
                           )}
                         >
-                          {senal.nivel === "roja" ? "Señal roja" : "Señal naranja"}
+                          {senal.nivel === "roja" ? a.senalRoja : a.senalNaranja}
                         </Badge>
-                        <span className="min-w-0 flex-[1_1_220px]">{senal.texto}</span>
+                        <span className="min-w-0 flex-[1_1_220px]">{t.senales.texto(senal)}</span>
                       </li>
                     ))}
                   </ul>
@@ -643,12 +580,8 @@ export function AnalizarMensaje({
                 {(soloRemitente ? respuesta.remitente_analizado : respuesta.url_analizada) && (
                   // Neutralizada y como texto: la dirección analizada nunca es un enlace.
                   <p className="mt-4 text-(--text-secondary)">
-                    {soloRemitente
-                      ? "Remitente del mensaje"
-                      : webCitada
-                        ? "Dirección citada"
-                        : "Dirección del mensaje"}{" "}
-                    (no la abras):{" "}
+                    {soloRemitente ? a.remitente : webCitada ? a.direccionCitada : a.direccion}{" "}
+                    {a.noLaAbras}{" "}
                     <code className="font-mono text-foreground [overflow-wrap:anywhere]">
                       {soloRemitente ? respuesta.remitente_analizado : respuesta.url_analizada}
                     </code>
@@ -657,6 +590,7 @@ export function AnalizarMensaje({
               </div>
 
               <MensajeSenalado
+                idioma={idioma}
                 id={`${id}-senalado`}
                 texto={analizado}
                 fragmentos={respuesta.fragmentos}
@@ -672,7 +606,7 @@ export function AnalizarMensaje({
                 className="flex flex-col gap-3 bg-brand-yellow px-6 py-6 md:px-8 md:py-8"
               >
                 <h3 id={`${id}-web`} className="font-medium">
-                  {de ? `La web oficial ${de} es` : "La web oficial es"}
+                  {a.webOficialEs(entidad)}
                 </h3>
                 <p className="font-mono text-2xl leading-snug [overflow-wrap:anywhere] md:text-3xl">
                   {web.direccion}
@@ -684,7 +618,7 @@ export function AnalizarMensaje({
                     "mt-2 h-14 w-fit gap-2 px-6 text-lg max-sm:w-full",
                   )}
                 >
-                  Ir a la web oficial
+                  {a.irWebOficial}
                   <ExternalLink aria-hidden="true" className="size-5" />
                 </a>
               </section>
@@ -698,12 +632,11 @@ export function AnalizarMensaje({
               className="gap-3 px-6 py-6 text-lg md:px-8 md:py-8"
             >
               <h3 id={`${id}-desmentidos`} className="text-xl font-semibold">
-                Ya lo han desmentido
+                {a.desmentidos}
               </h3>
               <p className="text-base text-(--text-secondary)">
-                Verificadores de noticias han publicado sobre mensajes parecidos a este.
-                {respuesta.veredicto !== "no_oficial" &&
-                  " Eso no prueba por sí solo que este sea falso."}
+                {a.desmentidosTexto}
+                {respuesta.veredicto !== "no_oficial" && ` ${a.desmentidosNoPrueba}`}
               </p>
               <ul className="grid gap-2">
                 {respuesta.desmentidos.map((d) => (
@@ -716,7 +649,7 @@ export function AnalizarMensaje({
                         <span className="block font-medium">{d.editor}</span>
                         <span className="block text-base text-(--text-secondary)">
                           «{d.calificacion}»
-                          {mesDe(d.fecha) && ` · ${mesDe(d.fecha)}`}
+                          {mesDe(d.fecha, t.mes) && ` · ${mesDe(d.fecha, t.mes)}`}
                         </span>
                       </span>
                       <span aria-hidden="true">↗</span>
@@ -729,18 +662,18 @@ export function AnalizarMensaje({
 
           {/* 2 · Qué hacer ahora: fondo beige (naranja de marca al 10 %), pasos
               numerados y, si toca, la línea 017. */}
-          {(ficha.pasos.length > 0 || ficha.ofrece017 || hayRoja) && (
+          {(textos.pasos.length > 0 || ficha.ofrece017 || hayRoja) && (
             <Card
               render={<section aria-labelledby={`${id}-pasos`} />}
               className="gap-0 bg-(--brand-orange)/10 py-0 text-lg ring-0"
             >
-              {ficha.pasos.length > 0 && (
+              {textos.pasos.length > 0 && (
                 <div className="px-6 py-6 md:px-8 md:py-8">
                   <h3 id={`${id}-pasos`} className="text-xl font-semibold">
-                    Qué hacer ahora
+                    {a.queHacer}
                   </h3>
                   <ol className="mt-5 grid gap-5">
-                    {ficha.pasos.map((paso, i) => (
+                    {textos.pasos.map((paso, i) => (
                       <li
                         key={paso}
                         className="grid grid-cols-[24px_minmax(0,1fr)] gap-x-3 md:grid-cols-[32px_minmax(0,1fr)] md:gap-x-4"
@@ -763,83 +696,51 @@ export function AnalizarMensaje({
                 <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-t border-(--brand-orange)/25 px-6 py-6 md:px-8">
                   <div className="min-w-0 flex-[1_1_260px]">
                     <p className="text-base text-(--text-secondary)">
-                      ¿Dudas o ya has dado datos?
+                      {a.dudas017}
                     </p>
                     <p className="mt-1 leading-snug font-medium">
-                      Línea 017 de INCIBE, gratuita y confidencial
+                      {a.linea017}
                     </p>
                     <p className="mt-1 text-base text-(--text-secondary)">
-                      {horario017}
+                      {a.horario017}
                     </p>
                   </div>
                   <a
                     href="tel:017"
                     className={cn(
                       buttonVariants({ variant: "outline", size: "lg" }),
-                      "h-12 gap-2 px-5 text-lg max-md:w-full",
+                      "h-auto min-h-12 gap-2 px-5 py-2 text-lg whitespace-normal max-md:w-full",
                     )}
                   >
                     <Phone aria-hidden="true" className="size-5" />
-                    Llamar al 017
+                    {a.llamar017}
                   </a>
                 </div>
               )}
             </Card>
           )}
 
-          {/* 3 · Fuentes oficiales: en el azul de Import@ss, como los enlaces del pie. */}
+          {/* 3 · Fuentes oficiales: sobre azul pastel; los enlaces, en el azul de los del pie. */}
           <section
-            aria-label="Fuentes y datos de la comprobación"
-            className="rounded-xl bg-(--azul-importass) px-6 py-6 text-background md:px-8 md:py-8"
+            aria-label={a.fuentesYDatos}
+            className="rounded-xl bg-(--azul-pastel) px-6 py-6 text-foreground md:px-8 md:py-8"
           >
-            <Fuentes fuentes={fuentes} verificadores={verificadores} />
-            <ul className="mt-6 text-base text-background/90">
+            <Fuentes fuentes={fuentes} verificadores={verificadores} idioma={idioma} />
+            <ul className="mt-6 text-base text-foreground/80">
               <li>
-                Reputación del enlace:{" "}
+                {a.reputacion}{" "}
                 {respuesta.reputacion === "no_consultada" || !respuesta.reputacion
-                  ? "no consultada"
+                  ? a.noConsultada
                   : respuesta.reputacion}
               </li>
               <li>
-                Registro del dominio:{" "}
+                {a.registro}{" "}
                 {respuesta.rdap === "no_disponible" || !respuesta.rdap
-                  ? "no disponible"
+                  ? a.noDisponible
                   : respuesta.rdap}
               </li>
             </ul>
           </section>
-
-          <div>
-            <div className="flex flex-wrap gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                onClick={copiarEnlace}
-                className="h-12 gap-2 px-5 text-lg max-sm:w-full"
-              >
-                <Link2 aria-hidden="true" className="size-5" />
-                Copiar enlace a este resultado
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                onClick={() => cargar("")}
-                className="h-12 px-5 text-lg max-sm:w-full"
-              >
-                Comprobar otro mensaje
-              </Button>
-            </div>
-            <p className="mt-3 text-base text-(--text-secondary)">
-              El mensaje va dentro del enlace y no llega a nuestro servidor, pero
-              quien tenga el enlace podrá leerlo. No lo compartas si lleva datos
-              personales.
-            </p>
-            <p role="status" className="mt-2 text-base font-medium empty:mt-0">
-              {avisoEnlace}
-            </p>
-          </div>
         </section>
       )}
       </div>
@@ -848,9 +749,9 @@ export function AnalizarMensaje({
         // Abajo del todo, a lo ancho: debajo del resultado y de los ejemplos.
         <div className="lg:col-span-2 lg:row-start-3">
           <CompartirFamilia
-            titulo="Mándaselo a tu familia"
-            explicacion="Va el mensaje que has comprobado, con sus enlaces desactivados, y el resultado. Quita antes lo que sea personal."
-            texto={textoParaFamilia(mensaje, respuesta)}
+            titulo={t.compartir.titulo}
+            texto={textoParaFamilia(respuesta, idioma)}
+            idioma={idioma}
           />
         </div>
       )}

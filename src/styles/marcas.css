@@ -1,0 +1,15 @@
+/* Colores de marcas ajenas que se usan tal cual, fuera de Sol. Cada uno solo
+   en su botón, y cada línea lleva su tema-ok. */
+
+@theme inline {
+  --color-whatsapp: var(--whatsapp);
+  --color-whatsapp-pastel: var(--whatsapp-pastel);
+}
+
+:root {
+  /* Verde de WhatsApp (about.meta.com/brand/resources/whatsapp/whatsapp-brand).
+     Con texto en foreground: 10:1. Con texto blanco no llega a AA (2:1). */
+  --whatsapp: #25d366; /* tema-ok: verde de la marca WhatsApp, solo en el logotipo de «Mándaselo a tu familia» */
+  /* Versión pastel para el fondo de la tarjeta. Con texto en foreground: 16:1. */
+  --whatsapp-pastel: #c9f2d7; /* tema-ok: verde pastel de la tarjeta «Mándaselo a tu familia» */
+}

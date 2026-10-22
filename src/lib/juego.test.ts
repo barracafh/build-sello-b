@@ -1,6 +1,7 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { RONDAS, UMBRAL_DESLIZAR, barajar, respuestaDeArrastre, valoracion } from "./juego";
+import { es } from "@/i18n/es";
+import { RONDAS, UMBRAL_DESLIZAR, barajar, fuenteDe, respuestaDeArrastre, valoracion } from "./juego";
 
 describe("RONDAS", () => {
   test("son los 10 ejemplos: 5 estafas y 5 de verdad", () => {
@@ -14,9 +15,8 @@ describe("RONDAS", () => {
     }
   });
 
-  test("cada una tiene pistas, web oficial de la lista y fuente https", () => {
+  test("cada una tiene web oficial de la lista y fuente https", () => {
     for (const r of RONDAS) {
-      assert.ok(r.pistas.length > 0, r.id);
       assert.ok(r.web, r.id);
       assert.match(r.fuente.url, /^https:\/\//, r.id);
     }
@@ -24,7 +24,7 @@ describe("RONDAS", () => {
 
   test("las estafas citan el aviso de INCIBE", () => {
     for (const r of RONDAS.filter((x) => x.esEstafa)) {
-      assert.match(r.fuente.nombre, /^INCIBE · /, r.id);
+      assert.match(fuenteDe(r, es).nombre, /^INCIBE · /, r.id);
     }
   });
 });
@@ -44,6 +44,8 @@ test("respuestaDeArrastre: izquierda es estafa, derecha de verdad", () => {
 });
 
 test("valoracion", () => {
-  assert.match(valoracion(10, 10), /Perfecto/);
-  assert.match(valoracion(3, 10), /Repasa/);
+  assert.equal(valoracion(10, 10), "perfecto");
+  assert.equal(valoracion(8, 10), "muyBien");
+  assert.equal(valoracion(5, 10), "noEstaMal");
+  assert.equal(valoracion(3, 10), "repasa");
 });

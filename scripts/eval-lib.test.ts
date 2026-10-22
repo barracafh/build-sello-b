@@ -92,6 +92,41 @@ describe("ejecutarEvals", () => {
     for (let i = 1; i < inicios.length; i++) assert.ok(inicios[i] - inicios[i - 1] >= 30);
     assert.deepEqual(r.map((e) => e.repeticion), [1, 1, 1, 2, 2, 2]);
   });
+
+  test("pasa el idioma a cada análisis", async () => {
+    const idiomas: unknown[] = [];
+    const falso = async (_t: string, o?: { idioma?: string }) => {
+      idiomas.push(o?.idioma);
+      return {
+        veredicto: "no_determinable", motivos: [], url_analizada: null,
+        senales: [], clasificado: true, motivo: "m",
+      } as unknown as Analisis;
+    };
+    await ejecutarEvals({ modelo: "m", casos: CASOS.slice(0, 2), pausaMs: 0, idioma: "eu", analizar: falso });
+    assert.deepEqual(idiomas, ["eu", "eu"]);
+  });
+});
+
+describe("ejecutarEvals: tokens y tiempo límite", () => {
+  test("separa tokens de salida y de razonamiento, y pasa el tiempo límite", async () => {
+    const tiempos: unknown[] = [];
+    const falso = async (_t: string, o?: { timeoutMs?: number; alUso?: (u: object) => void }) => {
+      tiempos.push(o?.timeoutMs);
+      o?.alUso?.({
+        prompt_tokens: 100, completion_tokens: 40, total_tokens: 140,
+        completion_tokens_details: { reasoning_tokens: 25 },
+      });
+      return {
+        veredicto: "no_determinable", motivos: [], url_analizada: null,
+        senales: [], clasificado: true, motivo: "m",
+      } as unknown as Analisis;
+    };
+    const [e] = await ejecutarEvals({ modelo: "m", casos: CASOS.slice(0, 1), pausaMs: 0, timeoutMs: 30000, analizar: falso });
+    assert.deepEqual(tiempos, [30000]);
+    assert.equal(e.tokens, 140);
+    assert.equal(e.tokens_salida, 40);
+    assert.equal(e.tokens_razonamiento, 25);
+  });
 });
 
 describe("rutaConjuntoPermitida", () => {
@@ -143,17 +178,32 @@ describe("rutaConjuntoPermitida", () => {
 });
 
 describe("leerArgumentosEval", () => {
-  test("solo admite --modelo y --repeticiones: no hay forma de pasarle otro conjunto", () => {
+  test("solo admite --modelo, --repeticiones, --idioma y --timeout-ms: no hay forma de pasarle otro conjunto", () => {
     assert.deepEqual(leerArgumentosEval(["--modelo", "m", "--repeticiones", "3"]), {
       modelo: "m",
       repeticiones: 3,
+      idioma: "es",
+      timeoutMs: undefined,
     });
-    assert.deepEqual(leerArgumentosEval([]), { modelo: undefined, repeticiones: 1 });
+    assert.deepEqual(leerArgumentosEval([]), {
+      modelo: undefined,
+      repeticiones: 1,
+      idioma: "es",
+      timeoutMs: undefined,
+    });
+    assert.deepEqual(leerArgumentosEval(["--idioma", "ca", "--timeout-ms", "20000"]), {
+      modelo: undefined,
+      repeticiones: 1,
+      idioma: "ca",
+      timeoutMs: 20000,
+    });
     for (const argv of [
       ["--conjunto", "/tmp/test.json"],
       ["--modelo", "m", "~/sello-b-evals-holdout/test.json"],
       ["--repeticiones", "0"],
       ["--modelo"],
+      ["--idioma", "xx"],
+      ["--timeout-ms", "0"],
     ]) {
       assert.throws(() => leerArgumentosEval(argv), Error, argv.join(" "));
     }

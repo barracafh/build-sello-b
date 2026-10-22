@@ -3,12 +3,7 @@ import assert from "node:assert/strict";
 import { combinar, senales } from "./senales";
 import { verificar } from "./verificar";
 import { leerRespuesta } from "./veredicto";
-import {
-  enlaceWhatsApp,
-  neutralizarTexto,
-  resumenParaFamilia,
-  textoParaFamilia,
-} from "./compartir";
+import { enlaceWhatsApp, resumenParaFamilia, textoParaFamilia } from "./compartir";
 import ejemplos from "../../datos/mensajes-ejemplo.json";
 import ficha from "../../ficha.json";
 
@@ -36,7 +31,7 @@ const resultadoDe = (texto: string) => {
 
 // Solo pueden ir vivas la web de la herramienta y webs oficiales sin esquema.
 const enlacesVivos = (texto: string) =>
-  [...texto.matchAll(/https?:\/\/\S+/g)].map((m) => m[0]).filter((u) => u !== ficha.url);
+  [...texto.matchAll(/https?:\/\/\S+/g)].map((m) => m[0]).filter((u) => !u.startsWith(`${ficha.url}?lang=`));
 
 describe("resumen para la familia de cada ejemplo", () => {
   for (const caso of ejemplos as Ejemplo[]) {
@@ -65,34 +60,37 @@ describe("resumen para la familia de cada ejemplo", () => {
         oficial_verificado: "está en la lista de webs oficiales",
       }[caso.esperado];
       assert.ok(frase && resumen.includes(frase), resumen);
-      assert.ok(resumen.includes("no es un servicio oficial"));
+      assert.ok(resumen.includes("Herramienta experimental. No es un servicio oficial."));
     });
   }
 });
 
-describe("texto para la familia con el mensaje", () => {
-  for (const caso of ejemplos as Ejemplo[]) {
-    test(`${caso.id}: lleva el mensaje y el resultado, sin direcciones vivas`, () => {
-      const mensaje = textoDeEjemplo(caso);
-      const texto = textoParaFamilia(mensaje, resultadoDe(mensaje));
-      assert.ok(texto.startsWith("Me ha llegado este mensaje:"));
-      assert.ok(texto.includes(resumenParaFamilia(resultadoDe(mensaje))));
-      // Las primeras palabras del mensaje, tal cual.
-      assert.ok(texto.includes(caso.texto.slice(0, 12)), caso.id);
+describe("texto para la familia sin el mensaje pegado", () => {
+  // Marca inventada: si aparece en lo que se comparte, se ha colado el mensaje.
+  const CANARIO = "CANARIO-LAB82";
+  const casos = {
+    no_oficial: "F01",
+    no_determinable: "L01",
+    oficial_verificado: "L05",
+  };
+
+  for (const [veredicto, id] of Object.entries(casos)) {
+    const caso = (ejemplos as Ejemplo[]).find((e) => e.id === id && e.esperado === veredicto);
+
+    test(`${veredicto}: no lleva el mensaje, sí el 017 y el aviso`, () => {
+      assert.ok(caso, id);
+      const mensaje = `${CANARIO} ${textoDeEjemplo(caso)}`;
+      const respuesta = resultadoDe(mensaje);
+      assert.equal(respuesta.veredicto, veredicto);
+      const texto = textoParaFamilia(respuesta);
+      assert.ok(!texto.includes(CANARIO), texto);
+      assert.ok(!decodeURIComponent(enlaceWhatsApp(texto)).includes(CANARIO));
+      assert.ok(!texto.includes("Me ha llegado"));
+      assert.ok(texto.includes("017"), texto);
+      assert.ok(texto.includes("Herramienta experimental. No es un servicio oficial."), texto);
       assert.deepEqual(enlacesVivos(texto), []);
-      // Ningún dominio con puntos normales salvo la web de la herramienta y las oficiales del resumen.
-      const cita = texto.split("\n\n")[1];
-      assert.doesNotMatch(cita, /[a-z0-9-]\.[a-z]{2,}\b/i, cita);
     });
   }
-});
-
-test("neutralizarTexto desactiva URL, dominios sueltos y correos", () => {
-  assert.equal(
-    neutralizarTexto(`Pague en https://dgt-multas.com/x. O en sede.dgt.gob.es o escriba a ${junto("a", "@", "correos.com")}`),
-    "Pague en hxxps://dgt-multas[.]com/x. O en sede[.]dgt[.]gob[.]es o escriba a a@correos[.]com",
-  );
-  assert.equal(neutralizarTexto("Pague 411,00 € hoy. Gracias."), "Pague 411,00 € hoy. Gracias.");
 });
 
 test("un veredicto desconocido se comparte como duda", () => {
@@ -149,4 +147,28 @@ test("si el mensaje cita la web oficial, no dice que no se pulse", () => {
 
 test("enlaceWhatsApp codifica el texto", () => {
   assert.equal(enlaceWhatsApp("a b\n&c"), "https://wa.me/?text=a%20b%0A%26c");
+});
+
+describe("resumen en otro idioma", () => {
+  const respuesta = {
+    veredicto: "no_oficial",
+    motivos: [],
+    url_analizada: "hxxps://dgt-multas[.]com",
+    remitente_analizado: null,
+    entidad: "DGT",
+    web_oficial: "https://sede.dgt.gob.es/",
+  };
+
+  test("el enlace a la herramienta lleva ?lang", () => {
+    assert.ok(resumenParaFamilia(respuesta, "eu").includes(`${ficha.url}?lang=eu`));
+    assert.ok(resumenParaFamilia(respuesta).includes(`${ficha.url}?lang=es`));
+  });
+
+  test("usa los textos del idioma y conserva el 017, la entidad y la dirección", () => {
+    const texto = textoParaFamilia(respuesta, "ca");
+    assert.ok(!texto.includes("Me ha llegado"));
+    for (const fijo of ["017", "DGT", "hxxps://dgt-multas[.]com", "sede.dgt.gob.es", "No és un servei oficial."]) {
+      assert.ok(texto.includes(fijo), fijo);
+    }
+  });
 });
