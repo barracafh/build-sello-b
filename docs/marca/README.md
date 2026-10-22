@@ -5,8 +5,8 @@
 | Archivo | Para qué |
 | --- | --- |
 | `everda-marca.svg` · `.png` (512 px) | La marca sola: avatar, icono, diapositiva. |
-| `everda-logo.svg` · `.png` | Marca y nombre en negro, sobre fondo claro. |
-| `everda-logo-blanco.svg` · `.png` | Marca y nombre en blanco, sobre fondo oscuro. |
+| `everda-logo.png` | Marca y nombre en negro, sobre fondo claro. |
+| `everda-logo-blanco.png` | Marca y nombre en blanco, sobre fondo oscuro. |
 
 Los SVG llevan las letras en curvas, así que no dependen de tener Geist instalada. Los PNG tienen fondo transparente.
 
