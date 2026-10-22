@@ -34,7 +34,7 @@ const DE_URL: Record<string, Senal> = {
   },
   posible_imitacion_de_marca: {
     codigo: "enlace_parecido",
-    nivel: "naranja",
+    nivel: "roja",
     texto: "El enlace se parece al nombre de un organismo oficial.",
   },
   imitacion_de_marca: {

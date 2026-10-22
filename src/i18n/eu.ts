@@ -196,8 +196,7 @@ export const eu = {
       "gob.es-en amaitzen da, administrazioentzat gordea, baina ez dakigu zein erakunderena den.",
     marca_como_subdominio: "Hasieran webgune ofizial baten izena erabiltzen du, baina benetako webgunea beste bat da.",
     imitacion_de_marca: "Erakunde ofizial baten izena imitatzen du eta beste iruzur-seinale batzuk ditu.",
-    posible_imitacion_de_marca:
-      "Erakunde ofizial baten izenaren antza du, baina ezin dugu ziurtatu faltsua denik.",
+    posible_imitacion_de_marca: "Erakunde ofizial baten izenaren antza du, baina ez da haren webgunea. Iruzurtzat hartu.",
     dominio_desconocido: "Ez dago gure webgune ofizialen zerrendan.",
     homografo: "Izenak beste alfabeto bateko letrak erabiltzen ditu webgune ofizial baten antza izateko.",
     indicador_publicado: "Erakunde ofizial batek ohartarazi du helbide hau iruzurra dela.",

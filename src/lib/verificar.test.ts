@@ -67,8 +67,20 @@ describe("§5.3 sin red", () => {
   esperar("portal.seg-socioal.cfd", "no_oficial", "imitacion_de_marca");
   esperar("http://192.168.0.1", "no_oficial", "ip_como_host");
   esperar("http://0x7f.1/", "no_oficial", "ip_como_host");
-  esperar("ugt.es", "no_determinable", "posible_imitacion_de_marca");
+  esperar("ugt.es", "no_oficial", "posible_imitacion_de_marca");
   esperar("http://[broken", "no_determinable", "url_no_valida");
+});
+
+// Decisión del equipo, más estricta que contexto.md §5.2 paso 10: una URL que se
+// parece a una oficial (cambia algún carácter o usa la marca en otro dominio) es
+// fraude sin necesitar otra señal. Una web desconocida sigue siendo no determinable.
+describe("una URL parecida a una oficial es fraude", () => {
+  esperar("https://dgr.es/multa", "no_oficial", "posible_imitacion_de_marca");
+  esperar("https://seg-sociall.es/", "no_oficial", "posible_imitacion_de_marca");
+  esperar("https://dgt-multas.com/", "no_oficial", "posible_imitacion_de_marca");
+  esperar("https://mi-pueblo-ejemplo.com/", "no_determinable", "dominio_desconocido");
+  esperar("https://ayuntamiento-villaejemplo.es/", "no_determinable", "dominio_desconocido");
+  esperar("https://sede.dgt.gob.es/es/", "oficial_verificado", "en_allowlist");
 });
 
 describe("otros", () => {

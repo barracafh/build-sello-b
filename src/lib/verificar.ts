@@ -296,7 +296,9 @@ function verificarEnlace(texto: string): Resultado {
     return devolver("no_oficial", ["marca_como_subdominio"], imitada.entidad);
   }
 
-  // 9. Marca en un registrable ajeno: solo concluye con una segunda señal.
+  // 9. Marca en un registrable ajeno, o un nombre a uno o dos caracteres de una
+  // marca. Decisión del equipo, más estricta que contexto.md §5.2 paso 10: el
+  // parecido basta para concluir, sin exigir una segunda señal.
   const sufijo = analisis.publicSuffix ?? "";
   const nombres = host.slice(0, host.length - etiquetas(sufijo).length);
   const marca = MARCAS.find((m) => nombres.some((n) => n.includes(m)));
@@ -306,7 +308,7 @@ function verificarEnlace(texto: string): Resultado {
     if (TLD_BARATOS.includes(sufijo) || PALABRAS_CONTENIDO.test(sinEnlace)) {
       return devolver("no_oficial", ["imitacion_de_marca"], entidad);
     }
-    return devolver("no_determinable", ["posible_imitacion_de_marca"], entidad);
+    return devolver("no_oficial", ["posible_imitacion_de_marca"], entidad);
   }
 
   // 10.
