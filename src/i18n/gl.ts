@@ -177,7 +177,8 @@ export const gl = {
     sin_enlace: "Non atopamos ningunha ligazón na mensaxe.",
     web_oficial_citada:
       "A mensaxe cita un enderezo que si é unha web oficial. Iso non proba quen a envía: entra ti tecleando o enderezo.",
-    url_no_valida: "A ligazón non ten un formato que poidamos ler.",
+    url_no_valida:
+      "A ligazón está incompleta ou rota: non a premas; escribe ti o enderezo do organismo.",
     ip_como_host:
       "A ligazón leva a un número en vez de a un nome de web, algo que as webs oficiais non fan.",
     credenciales_en_url:
