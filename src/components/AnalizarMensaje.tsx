@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { ExternalLink, ImageUp, Link2, Phone } from "lucide-react";
+import { flushSync } from "react-dom";
+import { ExternalLink, ImageUp, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ruta } from "@/config/sitio";
 import { Badge } from "@/components/ui/badge";
@@ -10,11 +11,14 @@ import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { BarraComprobado } from "@/components/BarraComprobado";
 import { CompartirFamilia } from "@/components/CompartirFamilia";
+import { Desmentidos } from "@/components/Desmentidos";
 import { Fuentes } from "@/components/Fuentes";
 import { MensajeSenalado } from "@/components/MensajeSenalado";
 import { CargaResultado } from "@/components/CargaResultado";
 import { RETRASO_MS, esperaAntesDeMostrar } from "@/lib/carga";
+import { formularioPlegado } from "@/lib/formulario";
 import { textoParaFamilia } from "@/lib/compartir";
 import { avisosIncibe, horario017, linea017 } from "@/datos/incibe";
 import { EJEMPLOS_PANEL, NOMBRES_EJEMPLOS, tipoDeEjemplo } from "@/datos/ejemplos";
@@ -22,7 +26,6 @@ import {
   deEntidad,
   fichaDe,
   leerRespuesta,
-  mesDe,
   miles,
   webOficial,
   type Respuesta,
@@ -142,7 +145,6 @@ export function AnalizarMensaje({
   // Solo los errores del mensaje marcan el campo como no válido; los de red, no.
   const [error, setError] = useState<{ texto: string; delCampo: boolean } | null>(null);
   const [enviando, setEnviando] = useState(false);
-  const [avisoEnlace, setAvisoEnlace] = useState<string | null>(null);
   // El esqueleto sale solo si tarda más de RETRASO_MS; aquí, cuándo apareció.
   const [inicioCarga, setInicioCarga] = useState<number | null>(null);
   const inicioCargaRef = useRef<number | null>(null);
@@ -189,12 +191,22 @@ export function AnalizarMensaje({
     setRespuesta(null);
     setError(null);
     setEnviando(false);
-    setAvisoEnlace(null);
   }
 
   // Al empezar de nuevo, el foco vuelve al campo y el enlace deja de llevar el mensaje.
   function cargar(texto: string) {
     cambiar(texto);
+    quitarDelEnlace();
+    campoRef.current?.focus();
+  }
+
+  // «Comprobar otro mensaje»: vuelve el formulario con el texto comprobado, para
+  // corregirlo o cambiarlo. Se pinta antes de mover el foco al campo.
+  function volverAlFormulario() {
+    flushSync(() => {
+      setRespuesta(null);
+      setError(null);
+    });
     quitarDelEnlace();
     campoRef.current?.focus();
   }
@@ -238,7 +250,6 @@ export function AnalizarMensaje({
 
   async function comprobar(texto: string) {
     setRespuesta(null);
-    setAvisoEnlace(null);
     if (texto.trim().length === 0) {
       setError({ texto: "Escribe o pega un mensaje antes de comprobar.", delCampo: true });
       return;
@@ -301,18 +312,16 @@ export function AnalizarMensaje({
     return () => window.removeEventListener("hashchange", desdeEnlace);
   }, []);
 
-  async function copiarEnlace() {
+  async function copiarEnlace(): Promise<string> {
     const params = new URLSearchParams({ [CLAVE_ENLACE]: mensaje });
     const enlace = `${window.location.origin}${window.location.pathname}${window.location.search}#${params}`;
     // También en la barra de direcciones, por si el portapapeles no deja copiar.
     history.replaceState(null, "", enlace);
     try {
       await navigator.clipboard.writeText(enlace);
-      setAvisoEnlace("Enlace copiado. Quien lo abra verá este mensaje y su resultado.");
+      return "Enlace copiado. Quien lo abra verá este mensaje y su resultado.";
     } catch {
-      setAvisoEnlace(
-        "No hemos podido copiarlo. El enlace ya está en la barra de direcciones: cópialo desde ahí.",
-      );
+      return "No hemos podido copiarlo. El enlace ya está en la barra de direcciones: cópialo desde ahí.";
     }
   }
 
@@ -357,6 +366,7 @@ export function AnalizarMensaje({
     .map((d) => ({ nombre: d.editor, url: new URL(d.url).origin }))
     .filter((f, i, todas) => todas.findIndex((o) => o.url === f.url) === i);
   const cercaDelLimite = mensaje.length >= AVISO_LIMITE;
+  const plegado = formularioPlegado(respuesta);
 
   return (
     // En escritorio, dos columnas: formulario y resultado a la izquierda; ejemplos a la derecha.
@@ -369,127 +379,131 @@ export function AnalizarMensaje({
       )}
     >
       <div className="lg:col-start-1 lg:row-start-1">
-        {intro}
-        <form
-          onSubmit={analizar}
-          aria-describedby={`${id}-privacidad`}
-          className={intro ? "mt-10" : undefined}
-        >
-          <label htmlFor={`${id}-mensaje`} className="block text-xl font-medium">
-            Pega aquí el mensaje que te ha llegado
-          </label>
-          <p id={`${id}-ayuda`} className="mt-1 text-(--text-secondary)">
-            Puede ser un SMS, un correo o el enlace de una web. Incluye el
-            remitente y el enlace tal como aparecen.{" "}
-            <strong className="font-semibold text-foreground">
-              No pulses el enlace.
-            </strong>
-          </p>
-          <Textarea
-            ref={campoRef}
-            id={`${id}-mensaje`}
-            name="mensaje"
-            aria-describedby={cn(
-              `${id}-ayuda`,
-              cercaDelLimite && `${id}-contador`,
-              error && `${id}-error`,
-            )}
-            aria-invalid={error?.delCampo || undefined}
-            value={mensaje}
-            onChange={(event) => cambiar(event.target.value)}
-            rows={6}
-            spellCheck={false}
-            autoComplete="off"
-            placeholder="DGT: Dispone de 24 horas para pagar su multa. Consulte en el siguiente enlace: hxxps://…"
-            className="mt-4 min-h-44 px-4 py-3 text-lg leading-relaxed md:text-lg [overflow-wrap:anywhere]"
-          />
-          {cercaDelLimite && (
-            <p
-              id={`${id}-contador`}
-              className={cn(
-                "mt-2 text-base tabular-nums",
-                mensaje.length > LIMITE
-                  ? "font-medium text-destructive"
-                  : "text-(--text-secondary)",
+        {plegado && <BarraComprobado onOtro={volverAlFormulario} />}
+        {/* Plegado sigue montado: así conserva el texto y el campo puede recibir el foco. */}
+        <div hidden={plegado}>
+          {intro}
+          <form
+            onSubmit={analizar}
+            aria-describedby={`${id}-privacidad`}
+            className={intro ? "mt-10" : undefined}
+          >
+            <label htmlFor={`${id}-mensaje`} className="block text-xl font-medium">
+              Pega aquí el mensaje que te ha llegado
+            </label>
+            <p id={`${id}-ayuda`} className="mt-1 text-(--text-secondary)">
+              Puede ser un SMS, un correo o el enlace de una web. Incluye el
+              remitente y el enlace tal como aparecen.{" "}
+              <strong className="font-semibold text-foreground">
+                No pulses el enlace.
+              </strong>
+            </p>
+            <Textarea
+              ref={campoRef}
+              id={`${id}-mensaje`}
+              name="mensaje"
+              aria-describedby={cn(
+                `${id}-ayuda`,
+                cercaDelLimite && `${id}-contador`,
+                error && `${id}-error`,
               )}
-            >
-              {miles(mensaje.length)} de {miles(LIMITE)} caracteres como máximo
-            </p>
-          )}
-          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-            {/* El selector nativo queda oculto; se abre con el botón, que sí se ve y tiene foco. */}
-            <Input
-              ref={imagenRef}
-              id={`${id}-imagen`}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              tabIndex={-1}
-              aria-hidden="true"
-              className="hidden"
-              onChange={(event) => leerCaptura(event.target.files?.[0])}
+              aria-invalid={error?.delCampo || undefined}
+              value={mensaje}
+              onChange={(event) => cambiar(event.target.value)}
+              rows={6}
+              spellCheck={false}
+              autoComplete="off"
+              placeholder="DGT: Dispone de 24 horas para pagar su multa. Consulte en el siguiente enlace: hxxps://…"
+              className="mt-4 min-h-44 px-4 py-3 text-lg leading-relaxed md:text-lg [overflow-wrap:anywhere]"
             />
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              disabled={leyendo || enviando}
-              focusableWhenDisabled
-              aria-describedby={`${id}-imagen-ayuda`}
-              onClick={() => imagenRef.current?.click()}
-              className="h-12 gap-2 px-5 text-lg max-sm:w-full"
-            >
-              <ImageUp aria-hidden="true" className="size-5" />
-              {leyendo ? "Leyendo la imagen…" : "Subir una captura"}
-            </Button>
-            <p id={`${id}-imagen-ayuda`} className="min-w-0 flex-[1_1_200px] text-base text-(--text-secondary)">
-              PNG, JPG o WebP de hasta 4 MB. Sacamos el texto para que lo revises.
-            </p>
-          </div>
-          <p role="status" className="sr-only">
-            {leyendo ? "Leyendo la imagen…" : ""}
-          </p>
-          {error && (
-            <p
-              id={`${id}-error`}
-              role="alert"
-              className="mt-2 font-medium text-destructive"
-            >
-              {error.texto}
-            </p>
-          )}
-          <Button
-            ref={comprobarRef}
-            type="submit"
-            // Si el resultado trae su propia acción principal (ir a la web
-            // oficial), esta pasa a secundaria: una sola por pantalla.
-            variant={web ? "outline" : "sunset"}
-            size="lg"
-            disabled={enviando || leyendo}
-            // Sin perder el foco mientras comprueba (un botón deshabilitado lo suelta).
-            focusableWhenDisabled
-            className="mt-6 h-14 px-6 text-lg max-sm:w-full"
-          >
-            {enviando ? (
-              <>
-                <Spinner />
-                Comprobando…
-              </>
-            ) : (
-              "Comprobar el mensaje"
+            {cercaDelLimite && (
+              <p
+                id={`${id}-contador`}
+                className={cn(
+                  "mt-2 text-base tabular-nums",
+                  mensaje.length > LIMITE
+                    ? "font-medium text-destructive"
+                    : "text-(--text-secondary)",
+                )}
+              >
+                {miles(mensaje.length)} de {miles(LIMITE)} caracteres como máximo
+              </p>
             )}
-          </Button>
-          {/* Un solo anuncio al empezar. El veredicto lo lee el lector al recibir
-              el foco su titular, y los errores ya son role="alert": aquí no se repiten. */}
-          <p aria-live="polite" className="sr-only">
-            {enviando ? "Comprobando el mensaje" : ""}
-          </p>
-          <p
-            id={`${id}-privacidad`}
-            className="mt-3 text-base text-(--text-secondary)"
-          >
-            No guardamos lo que pegas ni las imágenes, ni abrimos sus enlaces.
-          </p>
-        </form>
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+              {/* El selector nativo queda oculto; se abre con el botón, que sí se ve y tiene foco. */}
+              <Input
+                ref={imagenRef}
+                id={`${id}-imagen`}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                tabIndex={-1}
+                aria-hidden="true"
+                className="hidden"
+                onChange={(event) => leerCaptura(event.target.files?.[0])}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                disabled={leyendo || enviando}
+                focusableWhenDisabled
+                aria-describedby={`${id}-imagen-ayuda`}
+                onClick={() => imagenRef.current?.click()}
+                className="h-12 gap-2 px-5 text-lg max-sm:w-full"
+              >
+                <ImageUp aria-hidden="true" className="size-5" />
+                {leyendo ? "Leyendo la imagen…" : "Subir una captura"}
+              </Button>
+              <p id={`${id}-imagen-ayuda`} className="min-w-0 flex-[1_1_200px] text-base text-(--text-secondary)">
+                PNG, JPG o WebP de hasta 4 MB. Sacamos el texto para que lo revises.
+              </p>
+            </div>
+            <p role="status" className="sr-only">
+              {leyendo ? "Leyendo la imagen…" : ""}
+            </p>
+            {error && (
+              <p
+                id={`${id}-error`}
+                role="alert"
+                className="mt-2 font-medium text-destructive"
+              >
+                {error.texto}
+              </p>
+            )}
+            <Button
+              ref={comprobarRef}
+              type="submit"
+              // Si el resultado trae su propia acción principal (ir a la web
+              // oficial), esta pasa a secundaria: una sola por pantalla.
+              variant={web ? "outline" : "sunset"}
+              size="lg"
+              disabled={enviando || leyendo}
+              // Sin perder el foco mientras comprueba (un botón deshabilitado lo suelta).
+              focusableWhenDisabled
+              className="mt-6 h-14 px-6 text-lg max-sm:w-full"
+            >
+              {enviando ? (
+                <>
+                  <Spinner />
+                  Comprobando…
+                </>
+              ) : (
+                "Comprobar el mensaje"
+              )}
+            </Button>
+            {/* Un solo anuncio al empezar. El veredicto lo lee el lector al recibir
+                el foco su titular, y los errores ya son role="alert": aquí no se repiten. */}
+            <p aria-live="polite" className="sr-only">
+              {enviando ? "Comprobando el mensaje" : ""}
+            </p>
+            <p
+              id={`${id}-privacidad`}
+              className="mt-3 text-base text-(--text-secondary)"
+            >
+              No guardamos lo que pegas ni las imágenes, ni abrimos sus enlaces.
+            </p>
+          </form>
+        </div>
       </div>
 
       {conEjemplos && (
@@ -535,253 +549,243 @@ export function AnalizarMensaje({
       <div aria-busy={mostrarCarga} className="empty:hidden lg:col-start-1 lg:row-start-2">
       {mostrarCarga && <CargaResultado transcurrido={transcurrido} />}
       {respuesta && ficha && (
-        // Tres bloques: el veredicto y por qué, qué hacer ahora y las fuentes.
+        // Tres bloques: el veredicto y por qué, qué hacer ahora y las fuentes. En
+        // escritorio y sin ejemplos, a dos columnas para que el veredicto y qué
+        // hacer quepan sin bajar (LAB-69); en el móvil, uno debajo de otro.
         <section
           aria-labelledby={`${id}-resultado`}
-          className="[&>*+*]:mt-8"
-        >
-          {/* 1 · Veredicto: cabecera teñida según el resultado y, debajo, el porqué. */}
-          <Card render={<article />} className="gap-0 py-0 text-lg">
-            <div className={cn("px-6 py-6 md:px-8 md:py-8", ficha.fondo)}>
-              <h2
-                ref={tituloRef}
-                id={`${id}-resultado`}
-                tabIndex={-1}
-                className="scroll-mt-6 text-[clamp(30px,5vw,44px)] leading-[1.12] tracking-[-0.03em] outline-none"
-              >
-                <Badge
-                  className={cn(
-                    "h-auto justify-start gap-2 bg-background px-3 py-1.5 text-left font-sans text-xl font-semibold tracking-normal whitespace-normal text-foreground ring-1 ring-foreground/10 [&>svg]:size-6!",
-                    ficha.colorIcono,
-                  )}
-                >
-                  <ficha.icono aria-hidden="true" />
-                  {ficha.etiqueta}
-                </Badge>
-                <span className="sr-only">. </span>
-                <span className="mt-4 block">
-                  {ficha.titular({ deEntidad: de, hayEnlace: !soloRemitente && !!respuesta.url_analizada })}
-                </span>
-              </h2>
-              <p className="mt-4 text-xl font-semibold">{ficha.entradilla}</p>
-            </div>
-
-            <div className="px-6 py-6 md:px-8 md:py-8 [&>*+*]:mt-8">
-              <div>
-                <h3 className="text-xl font-semibold">Por qué lo decimos</h3>
-                <p className="mt-2">
-                  {frase}
-                  {respuesta.motivos.includes("sin_cifrado") &&
-                    " Eso sí, el enlace no está cifrado (http)."}
-                </p>
-                {respuesta.veredicto === "no_oficial" && respuesta.entidad_suplantada && (
-                  <p className="mt-2 text-(--text-secondary)">
-                    Intenta hacerse pasar por: {respuesta.entidad_suplantada}
-                  </p>
-                )}
-                {respuesta.clasificado && respuesta.señales.length > 0 && (
-                  <ul className="mt-4 grid gap-3" aria-label="Señales encontradas">
-                    {respuesta.señales.map((s) => {
-                      const nivel = respuesta.senales.find((x) => x.codigo === s.codigo)?.nivel;
-                      return (
-                        <li key={s.codigo} className="flex flex-wrap items-start gap-x-3 gap-y-1">
-                          {nivel && (
-                            <Badge
-                              className={cn(
-                                "h-auto px-2.5 py-1 text-base font-semibold",
-                                nivel === "roja"
-                                  ? "bg-destructive/10 text-foreground"
-                                  : "bg-(--warning) text-(--warning-foreground)",
-                              )}
-                            >
-                              {nivel === "roja" ? "Señal roja" : "Señal naranja"}
-                            </Badge>
-                          )}
-                          <span className="min-w-0 flex-[1_1_220px] [overflow-wrap:anywhere]">
-                            <span className="font-semibold">
-                              {titulosSenal[s.codigo] ?? "Otra señal"}.
-                            </span>{" "}
-                            {s.evidencia}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-                {!respuesta.clasificado && respuesta.senales.length > 0 && (
-                  <ul className="mt-4 grid gap-3" aria-label="Señales encontradas">
-                    {respuesta.senales.map((senal) => (
-                      <li key={senal.codigo} className="flex flex-wrap items-start gap-x-3 gap-y-1">
-                        {/* Texto en foreground o warning: el rojo sobre su tinte no llega a AA. */}
-                        <Badge
-                          className={cn(
-                            "h-auto px-2.5 py-1 text-base font-semibold",
-                            senal.nivel === "roja"
-                              ? "bg-destructive/10 text-foreground"
-                              : "bg-(--warning) text-(--warning-foreground)",
-                          )}
-                        >
-                          {senal.nivel === "roja" ? "Señal roja" : "Señal naranja"}
-                        </Badge>
-                        <span className="min-w-0 flex-[1_1_220px]">{senal.texto}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {(soloRemitente ? respuesta.remitente_analizado : respuesta.url_analizada) && (
-                  // Neutralizada y como texto: la dirección analizada nunca es un enlace.
-                  <p className="mt-4 text-(--text-secondary)">
-                    {soloRemitente
-                      ? "Remitente del mensaje"
-                      : webCitada
-                        ? "Dirección citada"
-                        : "Dirección del mensaje"}{" "}
-                    (no la abras):{" "}
-                    <code className="font-mono text-foreground [overflow-wrap:anywhere]">
-                      {soloRemitente ? respuesta.remitente_analizado : respuesta.url_analizada}
-                    </code>
-                  </p>
-                )}
-              </div>
-
-              <MensajeSenalado
-                id={`${id}-senalado`}
-                texto={analizado}
-                fragmentos={respuesta.fragmentos}
-              />
-
-            </div>
-
-            {web && (
-              // Una sola tarjeta con el sol por vista: la web oficial, el dato que
-              // más importa. A sangre, sin márgenes, cerrando el bloque del veredicto.
-              <section
-                aria-labelledby={`${id}-web`}
-                className="flex flex-col gap-3 bg-brand-yellow px-6 py-6 md:px-8 md:py-8"
-              >
-                <h3 id={`${id}-web`} className="font-medium">
-                  {de ? `La web oficial ${de} es` : "La web oficial es"}
-                </h3>
-                <p className="font-mono text-2xl leading-snug [overflow-wrap:anywhere] md:text-3xl">
-                  {web.direccion}
-                </p>
-                <a
-                  href={web.href}
-                  className={cn(
-                    buttonVariants({ variant: "sunset", size: "lg" }),
-                    "mt-2 h-14 w-fit gap-2 px-6 text-lg max-sm:w-full",
-                  )}
-                >
-                  Ir a la web oficial
-                  <ExternalLink aria-hidden="true" className="size-5" />
-                </a>
-              </section>
-            )}
-          </Card>
-
-          {respuesta.desmentidos.length > 0 && (
-            // Señal de apoyo: enlaza los desmentidos, nunca la dirección analizada.
-            <Card
-              render={<section aria-labelledby={`${id}-desmentidos`} />}
-              className="gap-3 px-6 py-6 text-lg md:px-8 md:py-8"
-            >
-              <h3 id={`${id}-desmentidos`} className="text-xl font-semibold">
-                Ya lo han desmentido
-              </h3>
-              <p className="text-base text-(--text-secondary)">
-                Verificadores de noticias han publicado sobre mensajes parecidos a este.
-                {respuesta.veredicto !== "no_oficial" &&
-                  " Eso no prueba por sí solo que este sea falso."}
-              </p>
-              <ul className="grid gap-2">
-                {respuesta.desmentidos.map((d) => (
-                  <li key={d.url}>
-                    <a
-                      href={d.url}
-                      className="flex min-h-11 items-center justify-between gap-4 rounded-lg px-3 py-2 ring-1 ring-foreground/10 transition-colors outline-none hover:bg-muted focus-visible:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
-                    >
-                      <span className="min-w-0 [overflow-wrap:anywhere]">
-                        <span className="block font-medium">{d.editor}</span>
-                        <span className="block text-base text-(--text-secondary)">
-                          «{d.calificacion}»
-                          {mesDe(d.fecha) && ` · ${mesDe(d.fecha)}`}
-                        </span>
-                      </span>
-                      <span aria-hidden="true">↗</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </Card>
+          data-resultado
+          className={cn(
+            "max-lg:[&>*+*]:mt-8",
+            conEjemplos
+              ? "lg:[&>*+*]:mt-8"
+              : "lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-8",
           )}
-
-          {/* 2 · Qué hacer ahora: fondo beige (naranja de marca al 10 %), pasos
-              numerados y, si toca, la línea 017. */}
-          {(ficha.pasos.length > 0 || ficha.ofrece017 || hayRoja) && (
-            <Card
-              render={<section aria-labelledby={`${id}-pasos`} />}
-              className="gap-0 bg-(--brand-orange)/10 py-0 text-lg ring-0"
-            >
-              {ficha.pasos.length > 0 && (
-                <div className="px-6 py-6 md:px-8 md:py-8">
-                  <h3 id={`${id}-pasos`} className="text-xl font-semibold">
-                    Qué hacer ahora
-                  </h3>
-                  <ol className="mt-5 grid gap-5">
-                    {ficha.pasos.map((paso, i) => (
-                      <li
-                        key={paso}
-                        className="grid grid-cols-[24px_minmax(0,1fr)] gap-x-3 md:grid-cols-[32px_minmax(0,1fr)] md:gap-x-4"
-                      >
-                        <span
-                          aria-hidden="true"
-                          // 24 px como mínimo: así cuenta como texto grande (3:1) sobre el beige.
-                          className="text-[24px] leading-[1.1] font-light text-brand tabular-nums md:text-[26px]"
-                        >
-                          {i + 1}
-                        </span>
-                        <p>{paso}</p>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              )}
-
-              {(ficha.ofrece017 || hayRoja) && (
-                <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-t border-(--brand-orange)/25 px-6 py-6 md:px-8">
-                  <div className="min-w-0 flex-[1_1_260px]">
-                    <p className="text-base text-(--text-secondary)">
-                      ¿Dudas o ya has dado datos?
-                    </p>
-                    <p className="mt-1 leading-snug font-medium">
-                      Línea 017 de INCIBE, gratuita y confidencial
-                    </p>
-                    <p className="mt-1 text-base text-(--text-secondary)">
-                      {horario017}
-                    </p>
-                  </div>
-                  <a
-                    href="tel:017"
+        >
+          <div className="[&>*+*]:mt-8">
+            {/* 1 · Veredicto: cabecera teñida según el resultado y, debajo, el porqué. */}
+            <Card render={<article />} className="gap-0 py-0 text-lg">
+              <div className={cn("px-6 py-6 md:px-8 md:py-8", ficha.fondo)}>
+                <h2
+                  ref={tituloRef}
+                  id={`${id}-resultado`}
+                  tabIndex={-1}
+                  className="scroll-mt-6 text-[clamp(30px,5vw,44px)] leading-[1.12] tracking-[-0.03em] outline-none"
+                >
+                  <Badge
                     className={cn(
-                      buttonVariants({ variant: "outline", size: "lg" }),
-                      "h-12 gap-2 px-5 text-lg max-md:w-full",
+                      "h-auto justify-start gap-2 bg-background px-3 py-1.5 text-left font-sans text-xl font-semibold tracking-normal whitespace-normal text-foreground ring-1 ring-foreground/10 [&>svg]:size-6!",
+                      ficha.colorIcono,
                     )}
                   >
-                    <Phone aria-hidden="true" className="size-5" />
-                    Llamar al 017
-                  </a>
+                    <ficha.icono aria-hidden="true" />
+                    {ficha.etiqueta}
+                  </Badge>
+                  <span className="sr-only">. </span>
+                  <span className="mt-4 block">
+                    {ficha.titular({ deEntidad: de, hayEnlace: !soloRemitente && !!respuesta.url_analizada })}
+                  </span>
+                </h2>
+                <p className="mt-4 text-xl font-semibold">{ficha.entradilla}</p>
+              </div>
+
+              <div className="px-6 py-6 md:px-8 md:py-8 [&>*+*]:mt-8">
+                <div>
+                  <h3 className="text-xl font-semibold">Por qué lo decimos</h3>
+                  <p className="mt-2">
+                    {frase}
+                    {respuesta.motivos.includes("sin_cifrado") &&
+                      " Eso sí, el enlace no está cifrado (http)."}
+                  </p>
+                  {respuesta.veredicto === "no_oficial" && respuesta.entidad_suplantada && (
+                    <p className="mt-2 text-(--text-secondary)">
+                      Intenta hacerse pasar por: {respuesta.entidad_suplantada}
+                    </p>
+                  )}
+                  {respuesta.clasificado && respuesta.señales.length > 0 && (
+                    <ul className="mt-4 grid gap-3" aria-label="Señales encontradas">
+                      {respuesta.señales.map((s) => {
+                        const nivel = respuesta.senales.find((x) => x.codigo === s.codigo)?.nivel;
+                        return (
+                          <li key={s.codigo} className="flex flex-wrap items-start gap-x-3 gap-y-1">
+                            {nivel && (
+                              <Badge
+                                className={cn(
+                                  "h-auto px-2.5 py-1 text-base font-semibold",
+                                  nivel === "roja"
+                                    ? "bg-destructive/10 text-foreground"
+                                    : "bg-(--warning) text-(--warning-foreground)",
+                                )}
+                              >
+                                {nivel === "roja" ? "Señal roja" : "Señal naranja"}
+                              </Badge>
+                            )}
+                            <span className="min-w-0 flex-[1_1_220px] [overflow-wrap:anywhere]">
+                              <span className="font-semibold">
+                                {titulosSenal[s.codigo] ?? "Otra señal"}.
+                              </span>{" "}
+                              {s.evidencia}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                  {!respuesta.clasificado && respuesta.senales.length > 0 && (
+                    <ul className="mt-4 grid gap-3" aria-label="Señales encontradas">
+                      {respuesta.senales.map((senal) => (
+                        <li key={senal.codigo} className="flex flex-wrap items-start gap-x-3 gap-y-1">
+                          {/* Texto en foreground o warning: el rojo sobre su tinte no llega a AA. */}
+                          <Badge
+                            className={cn(
+                              "h-auto px-2.5 py-1 text-base font-semibold",
+                              senal.nivel === "roja"
+                                ? "bg-destructive/10 text-foreground"
+                                : "bg-(--warning) text-(--warning-foreground)",
+                            )}
+                          >
+                            {senal.nivel === "roja" ? "Señal roja" : "Señal naranja"}
+                          </Badge>
+                          <span className="min-w-0 flex-[1_1_220px]">{senal.texto}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {(soloRemitente ? respuesta.remitente_analizado : respuesta.url_analizada) && (
+                    // Neutralizada y como texto: la dirección analizada nunca es un enlace.
+                    <p className="mt-4 text-(--text-secondary)">
+                      {soloRemitente
+                        ? "Remitente del mensaje"
+                        : webCitada
+                          ? "Dirección citada"
+                          : "Dirección del mensaje"}{" "}
+                      (no la abras):{" "}
+                      <code className="font-mono text-foreground [overflow-wrap:anywhere]">
+                        {soloRemitente ? respuesta.remitente_analizado : respuesta.url_analizada}
+                      </code>
+                    </p>
+                  )}
                 </div>
+
+                <MensajeSenalado
+                  id={`${id}-senalado`}
+                  texto={analizado}
+                  fragmentos={respuesta.fragmentos}
+                />
+
+              </div>
+
+              {web && (
+                // Una sola tarjeta con el sol por vista: la web oficial, el dato que
+                // más importa. A sangre, sin márgenes, cerrando el bloque del veredicto.
+                <section
+                  aria-labelledby={`${id}-web`}
+                  className="flex flex-col gap-3 bg-brand-yellow px-6 py-6 md:px-8 md:py-8"
+                >
+                  <h3 id={`${id}-web`} className="font-medium">
+                    {de ? `La web oficial ${de} es` : "La web oficial es"}
+                  </h3>
+                  <p className="font-mono text-2xl leading-snug [overflow-wrap:anywhere] md:text-3xl lg:text-2xl">
+                    {web.direccion}
+                  </p>
+                  <a
+                    href={web.href}
+                    className={cn(
+                      buttonVariants({ variant: "sunset", size: "lg" }),
+                      "mt-2 h-14 w-fit gap-2 px-6 text-lg max-sm:w-full",
+                    )}
+                  >
+                    Ir a la web oficial
+                    <ExternalLink aria-hidden="true" className="size-5" />
+                  </a>
+                </section>
               )}
             </Card>
-          )}
+
+            {respuesta.desmentidos.length > 0 && (
+              <Desmentidos
+                id={`${id}-desmentidos`}
+                veredicto={respuesta.veredicto}
+                desmentidos={respuesta.desmentidos}
+              />
+            )}
+          </div>
+
+          {/* Fija al bajar solo si cabe entera: en pantallas bajas taparía el contenido. */}
+          <div className="[&>*+*]:mt-8 [@media(min-width:64rem)_and_(min-height:56rem)]:sticky [@media(min-width:64rem)_and_(min-height:56rem)]:top-8">
+            {/* 2 · Qué hacer ahora: fondo beige (naranja de marca al 10 %), pasos
+                numerados y, si toca, la línea 017. */}
+            {(ficha.pasos.length > 0 || ficha.ofrece017 || hayRoja) && (
+              <Card
+                render={<section aria-labelledby={`${id}-pasos`} />}
+                className="gap-0 bg-(--brand-orange)/10 py-0 text-lg ring-0"
+              >
+                {ficha.pasos.length > 0 && (
+                  <div className="px-6 py-6 md:px-8 md:py-8">
+                    <h3 id={`${id}-pasos`} className="text-xl font-semibold">
+                      Qué hacer ahora
+                    </h3>
+                    <ol className="mt-5 grid gap-5">
+                      {ficha.pasos.map((paso, i) => (
+                        <li
+                          key={paso}
+                          className="grid grid-cols-[24px_minmax(0,1fr)] gap-x-3 md:grid-cols-[32px_minmax(0,1fr)] md:gap-x-4"
+                        >
+                          <span
+                            aria-hidden="true"
+                            // 24 px como mínimo: así cuenta como texto grande (3:1) sobre el beige.
+                            className="text-[24px] leading-[1.1] font-light text-brand tabular-nums md:text-[26px]"
+                          >
+                            {i + 1}
+                          </span>
+                          <p>{paso}</p>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+
+                {(ficha.ofrece017 || hayRoja) && (
+                  <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-t border-(--brand-orange)/25 px-6 py-6 md:px-8">
+                    <div className="min-w-0 flex-[1_1_260px]">
+                      <p className="text-base text-(--text-secondary)">
+                        ¿Dudas o ya has dado datos?
+                      </p>
+                      <p className="mt-1 leading-snug font-medium">
+                        Línea 017 de INCIBE, gratuita y confidencial
+                      </p>
+                      <p className="mt-1 text-base text-(--text-secondary)">
+                        {horario017}
+                      </p>
+                    </div>
+                    <a
+                      href="tel:017"
+                      className={cn(
+                        buttonVariants({ variant: "outline", size: "lg" }),
+                        "h-12 gap-2 px-5 text-lg max-md:w-full",
+                      )}
+                    >
+                      <Phone aria-hidden="true" className="size-5" />
+                      Llamar al 017
+                    </a>
+                  </div>
+                )}
+              </Card>
+            )}
+
+            <CompartirFamilia
+              texto={textoParaFamilia(mensaje, respuesta)}
+              onCopiarEnlace={copiarEnlace}
+            />
+          </div>
 
           {/* 3 · Fuentes oficiales: en el azul de Import@ss, como los enlaces del pie. */}
           <section
             aria-label="Fuentes y datos de la comprobación"
-            className="rounded-xl bg-(--azul-importass) px-6 py-6 text-background md:px-8 md:py-8"
+            className="rounded-xl bg-(--azul-importass) px-6 py-6 text-background md:px-8 md:py-8 lg:col-span-2"
           >
             <Fuentes fuentes={fuentes} verificadores={verificadores} />
-            <ul className="mt-6 text-base text-background/90">
+            <ul className="mt-6 flex flex-wrap gap-x-8 text-base text-background/90">
               <li>
                 Reputación del enlace:{" "}
                 {respuesta.reputacion === "no_consultada" || !respuesta.reputacion
@@ -796,52 +800,10 @@ export function AnalizarMensaje({
               </li>
             </ul>
           </section>
-
-          <div>
-            <div className="flex flex-wrap gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                onClick={copiarEnlace}
-                className="h-12 gap-2 px-5 text-lg max-sm:w-full"
-              >
-                <Link2 aria-hidden="true" className="size-5" />
-                Copiar enlace a este resultado
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                onClick={() => cargar("")}
-                className="h-12 px-5 text-lg max-sm:w-full"
-              >
-                Comprobar otro mensaje
-              </Button>
-            </div>
-            <p className="mt-3 text-base text-(--text-secondary)">
-              El mensaje va dentro del enlace y no llega a nuestro servidor, pero
-              quien tenga el enlace podrá leerlo. No lo compartas si lleva datos
-              personales.
-            </p>
-            <p role="status" className="mt-2 text-base font-medium empty:mt-0">
-              {avisoEnlace}
-            </p>
-          </div>
         </section>
       )}
       </div>
 
-      {respuesta && (
-        // Abajo del todo, a lo ancho: debajo del resultado y de los ejemplos.
-        <div className="lg:col-span-2 lg:row-start-3">
-          <CompartirFamilia
-            titulo="Mándaselo a tu familia"
-            explicacion="Va el mensaje que has comprobado, con sus enlaces desactivados, y el resultado. Quita antes lo que sea personal."
-            texto={textoParaFamilia(mensaje, respuesta)}
-          />
-        </div>
-      )}
     </div>
   );
 }

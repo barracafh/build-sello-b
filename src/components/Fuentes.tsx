@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+
 export type Source = { nombre: string; url: string };
 
 const sinProtocolo = (url: string) =>
@@ -37,18 +39,24 @@ export function Fuentes({
   verificadores?: readonly Source[];
 }) {
   return (
-    <aside aria-label="Fuentes" className="text-base">
-      <h3 className="text-xl font-semibold">
-        Fuentes oficiales
-      </h3>
-      <Lista fuentes={fuentes} />
+    // Con verificadores, en escritorio van al lado de las fuentes para no alargar la página.
+    <aside
+      aria-label="Fuentes"
+      className={cn("text-base", verificadores.length > 0 && "lg:grid lg:grid-cols-2 lg:gap-x-8")}
+    >
+      <div>
+        <h3 className="text-xl font-semibold">
+          Fuentes oficiales
+        </h3>
+        <Lista fuentes={fuentes} />
+      </div>
       {verificadores.length > 0 && (
-        <>
-          <h3 className="mt-6 text-xl font-semibold">
+        <div className="max-lg:mt-6">
+          <h3 className="text-xl font-semibold">
             Verificadores
           </h3>
           <Lista fuentes={verificadores} />
-        </>
+        </div>
       )}
     </aside>
   );
