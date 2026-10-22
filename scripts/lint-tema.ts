@@ -40,7 +40,7 @@ const RE_SOMBRA_ARB = /(?<![\w-])(?:[a-z0-9-]+:)*(?:drop-)?shadow-\[/;
 const RE_FUENTE_ARB = /(?<![\w-])(?:[a-z0-9-]+:)*font-\[/;
 const RE_DARK = /(?:^|[\s"'`{(])(?:[a-z0-9-]+:)*dark:|prefers-color-scheme:\s*dark/;
 const RE_DEGRADADO =
-  /(?<![\w-])(?:[a-z0-9-]+:)*bg-(?:gradient|linear|radial|conic)-|(?:repeating-)?(?:linear|radial|conic)-gradient\(/;
+  /(?<![\w-])(?:[a-z0-9-]+:)*bg-(?:gradient-|linear-|radial(?![\w])|conic(?![\w]))|(?:repeating-)?(?:linear|radial|conic)-gradient\(/;
 const RE_SOMBRA = /(?<![\w-])(?:[a-z0-9-]+:)*(?:drop-)?shadow(?:-[^\s"'`]*)?|box-shadow\s*:|boxShadow\s*:/g;
 const RE_FUENTE = /next\/font|font-family|fontFamily/;
 const RE_CONTROL = /<(?:button|input|textarea)(?![\w-])/;

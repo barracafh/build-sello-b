@@ -57,6 +57,11 @@ test("dark: y prefers-color-scheme", () => {
 test("gradient: clases y funciones CSS", () => {
   assert.deepEqual(reglas(PAGINA, `<p className="bg-gradient-to-r" />`), ["gradient"]);
   assert.deepEqual(reglas(PAGINA, `<p className="bg-linear-to-b bg-radial-[at_top]" />`), ["gradient"]);
+  assert.deepEqual(reglas(PAGINA, `<p className="bg-linear-to-r" />`), ["gradient"]);
+  assert.deepEqual(reglas(PAGINA, `<p className="bg-radial" />`), ["gradient"]);
+  assert.deepEqual(reglas(PAGINA, `<p className="bg-conic" />`), ["gradient"]);
+  assert.deepEqual(reglas(PAGINA, `<p className="hover:bg-radial bg-conic/50" />`), ["gradient"]);
+  assert.deepEqual(reglas(PAGINA, `<p className="bg-conical bg-radialx" />`), []);
   assert.deepEqual(reglas(PAGINA, `a { background: linear-gradient(var(--a), var(--b)); }`), ["gradient"]);
 });
 
