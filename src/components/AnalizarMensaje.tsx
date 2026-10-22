@@ -19,6 +19,8 @@ type Veredicto = "oficial_verificado" | "no_oficial" | "no_determinable";
 
 type Senal = { codigo: string; nivel: "roja" | "naranja"; texto: string };
 
+type SenalFinal = { codigo: string; evidencia: string; fuente: string };
+
 type Respuesta = {
   veredicto: Veredicto;
   motivos: string[];
@@ -27,6 +29,11 @@ type Respuesta = {
   fuente?: string;
   url_analizada: string | null;
   senales: Senal[];
+  // Solo si ha clasificado el modelo (el texto no era solo un enlace).
+  motivo?: string;
+  señales?: SenalFinal[];
+  entidad_suplantada?: string | null;
+  clasificado?: boolean;
   reputacion: string;
   rdap: string;
 };
@@ -59,6 +66,34 @@ const frases: Record<string, string> = {
   posible_imitacion_de_marca: "Se parece al nombre de un organismo oficial, pero no podemos asegurar que sea falsa.",
   dominio_desconocido: "No es una web que tengamos en nuestra lista de webs oficiales.",
   en_allowlist: "La dirección está en nuestra lista de webs oficiales.",
+};
+
+// Título en castellano llano de cada señal del clasificador.
+const titulosSenal: Record<string, string> = {
+  pide_dinero: "Pide dinero",
+  pide_datos: "Pide datos personales o bancarios",
+  amenaza: "Amenaza con consecuencias graves",
+  urgencia: "Mete prisa",
+  ortografia: "Faltas o símbolos raros",
+  remitente_falso: "Remitente que no cuadra",
+  enlace_sospechoso: "Enlace sospechoso",
+  enlace_no_listado: "Enlace que no conocemos",
+  enlace_acortado: "Enlace acortado",
+  enlace_parecido: "Enlace parecido a uno oficial",
+  enlace_imita_oficial: "Enlace que imita a uno oficial",
+  instruccion_qr: "Pide escanear un código QR",
+  instruccion_rara: "Pide responder, descargar o llamar",
+  devolucion_con_enlace: "Devolución con enlace para cobrar",
+  aviso_informativo: "Parece un aviso informativo",
+};
+
+// Los apartados de contexto.md en los que se apoyan las señales.
+const contextoMd = (señales: SenalFinal[] = []) => {
+  const apartados = [...new Set(señales.flatMap((s) => s.fuente.match(/§\d+(?:\.\d+)?/g) ?? []))];
+  return {
+    nombre: `Criterios de Sello (contexto.md${apartados.length ? ` ${apartados.join(", ")}` : ""})`,
+    url: "https://github.com/barracafh/build-sello-b/blob/main/contexto.md",
+  };
 };
 
 const pasosPorVeredicto: Record<Veredicto, string[]> = {
@@ -252,6 +287,15 @@ export function AnalizarMensaje() {
   );
 }
 
+const MOTIVO_NO_DISPONIBLE = "clasificador no disponible";
+
+function motivoVisible(r: Respuesta): string {
+  if (r.motivo === MOTIVO_NO_DISPONIBLE) {
+    return "No hemos podido analizar el texto del mensaje ahora mismo, así que no podemos confirmar nada. Las señales que ves salen de reglas fijas.";
+  }
+  return r.motivo ?? "";
+}
+
 function Resultado({
   respuesta,
   titleId,
@@ -291,9 +335,16 @@ function Resultado({
           {titulares[veredicto]}
         </h2>
         <p className="mt-3">
-          {frase}
+          {respuesta.clasificado
+            ? motivoVisible(respuesta)
+            : frase}
           {sinCifrado && " Eso sí, el enlace no está cifrado (http)."}
         </p>
+        {respuesta.entidad_suplantada && (
+          <p className="mt-3 text-base text-(--text-secondary)">
+            Parece que intenta hacerse pasar por: {respuesta.entidad_suplantada}
+          </p>
+        )}
         <p className="mt-3 text-base text-(--text-secondary)">
           Enlace analizado (no pulsable):{" "}
           <code className="font-mono text-foreground [overflow-wrap:anywhere]">
@@ -302,7 +353,33 @@ function Resultado({
         </p>
       </div>
 
-      {respuesta.senales.length > 0 && (
+      {respuesta.clasificado && (respuesta.señales?.length ?? 0) > 0 && (
+        <section aria-labelledby={`${titleId}-senales`}>
+          <h3 id={`${titleId}-senales`} className="text-lg leading-[1.35] font-medium">
+            Señales encontradas
+          </h3>
+          <ul className="mt-3 grid gap-3 text-base">
+            {respuesta.señales!.map((s) => {
+              const nivel = respuesta.senales.find((x) => x.codigo === s.codigo)?.nivel;
+              return (
+                <li key={s.codigo} className="flex flex-wrap items-start gap-x-3 gap-y-1">
+                  {nivel && (
+                    <Badge variant={nivel === "roja" ? "destructive" : "secondary"}>
+                      {nivel === "roja" ? "Señal roja" : "Señal naranja"}
+                    </Badge>
+                  )}
+                  <span className="min-w-0 flex-[1_1_220px] [overflow-wrap:anywhere]">
+                    <span className="font-medium">{titulosSenal[s.codigo] ?? "Otra señal"}.</span>{" "}
+                    {s.evidencia}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      {!respuesta.clasificado && respuesta.senales.length > 0 && (
         <section aria-labelledby={`${titleId}-senales`}>
           <h3 id={`${titleId}-senales`} className="text-lg leading-[1.35] font-medium">
             Señales encontradas
@@ -398,6 +475,7 @@ function Resultado({
       <Fuentes
         fuentes={[
           ...(fuente && entidad ? [{ nombre: entidad, url: fuente }] : []),
+          ...(respuesta.clasificado ? [contextoMd(respuesta.señales)] : []),
           avisosIncibe,
           linea017,
         ]}
