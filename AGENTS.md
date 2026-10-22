@@ -28,6 +28,7 @@ Todas las herramientas de la plataforma usan Sol, el sistema visual de Reforma D
 - Color: el rojo `brand` es un acento (números de paso, icono), no un color de botón ni de texto largo. Una acción principal por pantalla, `Button` con `variant="sunset"`; el resto, `outline` o `secondary`. Un enlace con aspecto de botón es `<a className={buttonVariants({ variant: "sunset" })}>`, no un `Button`. Una sola tarjeta con el sol (amarillo) por vista: la del dato que más importa.
 - Respuestas: compón como `src/app/page.tsx`: la pregunta como titular, pasos numerados, tarjetas para requisitos, plazos o coste, «Dónde se hace» con el enlace a la sede y `<Fuentes />`.
 - Sin modo oscuro, sin degradados nuevos y sin sombras salvo en lo que flota. Sin logotipos de Reforma Digital ni de la Administración: cada herramienta se presenta con el icono y el nombre de `ficha.json`.
+- Ejecuta `bun run lint:tema`: el build falla si no se usa el tema (colores, fuentes, radios, sombras o degradados propios, `dark:`, `<button>`/`<input>`/`<textarea>` sueltos o cambios en `tema.css`). Una línea solo se exime con `// tema-ok: <motivo>` o `/* tema-ok: <motivo> */`.
 - Contraste AA, foco visible, controles nativos (`button`, `select`, `input`, `label`) y `prefers-reduced-motion`. Sin scroll horizontal a 320 px.
 
 ## Reglas de la plataforma
