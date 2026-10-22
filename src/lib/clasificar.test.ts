@@ -150,6 +150,8 @@ describe("clasificarMensaje", () => {
     assert.equal(llamadas, 1);
     assert.equal(opciones.temperatura, 0);
     assert.equal(opciones.formatoJson, true);
+    // El razonamiento era lo que pasaba de 8 s (LAB-73).
+    assert.equal(opciones.razonar, false);
     assert.ok(opciones.signal instanceof AbortSignal);
     assert.equal(r.veredicto, "no_oficial");
   });
