@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { site } from "@/config/sitio";
 
 // La de Next sale en inglés y sin <main>, así que «Saltar al contenido» no
-// llevaba a nada.
+// llevaba a nada. El aviso y «Avísanos» (regla 5) viven en el pie de page.tsx,
+// que aquí no se pinta: se repiten en un <aside> propio.
 export default function NoEncontrada() {
   return (
     <>
@@ -31,6 +33,23 @@ export default function NoEncontrada() {
           Volver al verificador
         </Link>
       </main>
+
+      <aside aria-label="Aviso" className="bg-muted text-base">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-(--page-gutter) py-8 md:px-8">
+          <p className="text-(--text-secondary)">
+            Herramienta experimental. No es un servicio oficial.
+          </p>
+          <a
+            href={site.feedbackUrl}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "lg" }),
+              "h-auto min-h-12 px-5 py-2 text-base whitespace-normal",
+            )}
+          >
+            ¿Algo está mal? Avísanos
+          </a>
+        </div>
+      </aside>
     </>
   );
 }
