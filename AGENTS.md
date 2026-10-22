@@ -7,7 +7,7 @@ Este repo es la herramienta de un equipo para la plataforma de atención ciudada
 - Next.js (App Router) y Tailwind, con Bun: `bun install`, `bun run dev`, `bun run build`.
 - La app vive en `/<equipo>`, el campo `equipo` de `ficha.json`: en local, `http://localhost:3000/<equipo>`; publicada, `https://build.barraca.house/<equipo>`. No cambies `equipo`: de él salen la ruta y el sitio en la plataforma.
 - `<Link>` añade esa ruta solo. Para `fetch` e imágenes de `public/`, también con `next/image`, usa `ruta()` de `src/config/sitio.ts`: `fetch(ruta("/api/ia"))` y `<Image src={ruta("/foto.png")} ... />`.
-- Cada push a `main` se publica solo. Trabajad sobre `main`, con `git pull --rebase` antes de cada push: las ramas no tienen vista previa que podáis abrir.
+- Cada push a `main` se publica solo. Trabajad sobre `main`, con `git pull --rebase` antes de cada push: las ramas no tienen vista previa en build.barraca.house. Los worktrees del Mac mini sí tienen un preview en la tailnet (`bun run dev` imprime `Preview: <url>`).
 - `bun run build` tiene que pasar antes de cada push. Si falla, no se publica.
 
 ## IA y claves
@@ -39,3 +39,6 @@ Todas las herramientas de la plataforma usan Sol, el sistema visual de Reforma D
 5. Se conservan el aviso «Herramienta experimental. No es un servicio oficial.» y el botón «¿Algo está mal? Avísanos».
 6. `ficha.json` describe la herramienta: nombre, frase, icono, fuentes y `datos` (`simulados`, o `reales` si son datos públicos).
 7. `datos/`, `comun/`, `contexto.md` y `SETUP.md` son material de la organización: no los editéis. Vuestros datos van en otra carpeta, por ejemplo `src/datos/`.
+## Preview en PRs y reportes
+
+Todo PR y todo comentario que informe de trabajo incluye la URL `Preview:` del worktree (la que imprime `bun run dev`). El PR usa `.github/pull_request_template.md`.
