@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { NOMBRES_EJEMPLOS, tipoDeEjemplo } from "@/datos/ejemplos";
+import { EJEMPLOS_PANEL, NOMBRES_EJEMPLOS, tipoDeEjemplo } from "@/datos/ejemplos";
 import ejemplos from "../../datos/mensajes-ejemplo.json";
 import { VEREDICTOS, deEntidad, fichaDe, leerRespuesta, mesDe, miles, webOficial } from "./veredicto";
 
@@ -179,4 +179,9 @@ test("cada ejemplo dice si es fraude o legítimo y espera un veredicto conocido"
 test("miles", () => {
   assert.equal(miles(2000), "2.000");
   assert.equal(miles(950), "950");
+});
+
+test("el panel enseña un ejemplo de cada veredicto", () => {
+  const esperados = EJEMPLOS_PANEL.map((id) => ejemplos.find((caso) => caso.id === id)?.esperado);
+  assert.deepEqual(esperados.sort(), ["no_determinable", "no_oficial", "oficial_verificado"]);
 });
