@@ -1,3 +1,4 @@
+import { combinar, senales } from "@/lib/senales";
 import { verificar } from "@/lib/verificar";
 
 const LIMITE = 2000;
@@ -21,8 +22,11 @@ export async function POST(request: Request) {
   if (texto.length > LIMITE) return error("«texto» supera los 2.000 caracteres");
 
   // Marcadores hasta que existan Safe Browsing y RDAP.
+  const url = verificar(texto);
+  const lista = senales(texto, url);
   return Response.json({
-    ...verificar(texto),
+    ...combinar(url, lista, texto),
+    senales: lista,
     reputacion: "no_consultada",
     rdap: "no_disponible",
   });

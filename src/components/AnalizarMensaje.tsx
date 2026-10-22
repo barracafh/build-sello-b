@@ -17,6 +17,8 @@ const LIMITE = 2000;
 
 type Veredicto = "oficial_verificado" | "no_oficial" | "no_determinable";
 
+type Senal = { codigo: string; nivel: "roja" | "naranja"; texto: string };
+
 type Respuesta = {
   veredicto: Veredicto;
   motivos: string[];
@@ -24,6 +26,7 @@ type Respuesta = {
   entidad?: string;
   fuente?: string;
   url_analizada: string | null;
+  senales: Senal[];
   reputacion: string;
   rdap: string;
 };
@@ -42,6 +45,7 @@ const iconos = {
 
 // Frase corta para el ciudadano; el código de `motivos` nunca se muestra solo.
 const frases: Record<string, string> = {
+  contenido_fraudulento: "El mensaje usa el nombre de un organismo oficial y tiene señales claras de fraude.",
   sin_enlace: "No hemos encontrado ningún enlace en el mensaje.",
   url_no_valida: "El enlace no tiene un formato que podamos leer.",
   ip_como_host: "El enlace lleva a un número en vez de a un nombre de web, algo que las webs oficiales no hacen.",
@@ -259,6 +263,7 @@ function Resultado({
   const frase =
     frases[motivos.find((m) => frases[m]) ?? "dominio_desconocido"];
   const sinCifrado = motivos.includes("sin_cifrado");
+  const hayRoja = respuesta.senales.some((s) => s.nivel === "roja");
 
   return (
     <>
@@ -295,6 +300,24 @@ function Resultado({
           </code>
         </p>
       </div>
+
+      {respuesta.senales.length > 0 && (
+        <section aria-labelledby={`${titleId}-senales`}>
+          <h3 id={`${titleId}-senales`} className="text-lg leading-[1.35] font-medium">
+            Señales encontradas
+          </h3>
+          <ul className="mt-3 grid gap-3 text-base">
+            {respuesta.senales.map((s) => (
+              <li key={s.codigo} className="flex flex-wrap items-start gap-x-3 gap-y-1">
+                <Badge variant={s.nivel === "roja" ? "destructive" : "secondary"}>
+                  {s.nivel === "roja" ? "Señal roja" : "Señal naranja"}
+                </Badge>
+                <span className="min-w-0 flex-[1_1_220px]">{s.texto}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {web_oficial && (
         <Card
@@ -334,7 +357,7 @@ function Resultado({
         ))}
       </ol>
 
-      {veredicto !== "oficial_verificado" && (
+      {(veredicto !== "oficial_verificado" || hayRoja) && (
         <Card
           render={<section />}
           className="flex-row flex-wrap items-center justify-between gap-x-6 gap-y-4 px-6 py-6 text-base"
