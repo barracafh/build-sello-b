@@ -9,16 +9,9 @@ export const MINIMO_MS = 400;
 export const AVISO_LENTO_MS = 4000;
 const PASO_MS = 1500;
 
-// Frases genéricas y ciertas: no hay porcentajes ni pasos que el servidor no haga.
-export const PASOS = [
-  "Revisando el enlace…",
-  "Buscando señales de estafa…",
-  "Consultando fuentes oficiales…",
-] as const;
-
-/** Paso que se enseña tras `ms` milisegundos comprobando. */
-export const pasoEn = (ms: number) =>
-  PASOS[Math.min(PASOS.length - 1, Math.floor(ms / PASO_MS))];
+/** Paso que se enseña tras `ms` milisegundos comprobando; las frases, en `carga.pasos` (src/i18n/). */
+export const pasoEn = <T>(ms: number, pasos: readonly T[]) =>
+  pasos[Math.min(pasos.length - 1, Math.floor(ms / PASO_MS))];
 
 export const esLenta = (ms: number) => ms >= AVISO_LENTO_MS;
 

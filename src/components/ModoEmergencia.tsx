@@ -12,16 +12,20 @@ import {
   type AccionId,
   type Paso,
 } from "@/datos/pasos-emergencia";
+import { diccionario, type Diccionario, type Idioma } from "@/i18n";
+
+type Textos = Diccionario["emergencia"];
 
 const ID_PASOS = "pasos-emergencia";
 
-const FUENTES = [
+// «INCIBE» y «017» no se traducen: solo la descripción de cada fuente.
+const fuentes = (t: Textos) => [
   {
-    nombre: "INCIBE · Línea de ayuda en ciberseguridad 017",
+    nombre: `INCIBE · ${t.fuentes.linea} 017`,
     url: "https://www.incibe.es/linea-de-ayuda-en-ciberseguridad",
   },
   {
-    nombre: "INCIBE · Reporte de fraude",
+    nombre: `INCIBE · ${t.fuentes.reporte}`,
     url: "https://www.incibe.es/ciudadania/ayuda/reporte-de-fraude",
   },
 ];
@@ -29,7 +33,8 @@ const FUENTES = [
 // En escritorio, acciones a la izquierda (fijas al hacer scroll) y pasos a la
 // derecha. En móvil, una columna y un botón flotante que lleva a los pasos
 // mientras no se ven.
-export function ModoEmergencia() {
+export function ModoEmergencia({ idioma = "es" }: { idioma?: Idioma }) {
+  const t = diccionario(idioma).emergencia;
   const [abierto, setAbierto] = useState(false);
   const [seleccion, setSeleccion] = useState<Set<AccionId>>(new Set());
   const [pasosALaVista, setPasosALaVista] = useState(false);
@@ -68,13 +73,13 @@ export function ModoEmergencia() {
     return (
       <div className="flex flex-col gap-4 rounded-r-xl border-l-4 border-brand bg-muted px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="font-semibold text-foreground">¿Ya has actuado?</p>
+          <p className="font-semibold text-foreground">{t.yaHasActuado}</p>
           <p className="mt-1 text-(--text-secondary)">
-            Cuéntanos qué pasó y te decimos qué hacer ahora.
+            {t.cuentanos}
           </p>
         </div>
         <Button variant="outline" size="lg" onClick={() => setAbierto(true)} className="shrink-0">
-          Ya he pulsado →
+          {t.yaHePulsado}
         </Button>
       </div>
     );
@@ -84,11 +89,11 @@ export function ModoEmergencia() {
     <div>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="font-heading text-3xl leading-tight">¿Qué hiciste?</h2>
+          <h2 className="font-heading text-3xl leading-tight">{t.queHiciste}</h2>
           <p className="mt-2 text-(--text-secondary)">
-            Marca todo lo que corresponda.{" "}
-            <span className="lg:hidden">Los pasos aparecen debajo.</span>
-            <span className="hidden lg:inline">Los pasos aparecen a la derecha.</span>
+            {t.marca}{" "}
+            <span className="lg:hidden">{t.pasosDebajo}</span>
+            <span className="hidden lg:inline">{t.pasosDerecha}</span>
           </p>
         </div>
         <Button
@@ -99,19 +104,19 @@ export function ModoEmergencia() {
           }}
           className="shrink-0"
         >
-          Cerrar
+          {t.cerrar}
         </Button>
       </div>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-10">
-        <ul className="flex flex-col gap-3 lg:sticky lg:top-6" role="group" aria-label="Acciones realizadas">
-          {ACCIONES.map((accion) => {
-            const activo = seleccion.has(accion.id);
+        <ul className="flex flex-col gap-3 lg:sticky lg:top-6" role="group" aria-label={t.accionesAria}>
+          {ACCIONES.map((id) => {
+            const activo = seleccion.has(id);
             return (
-              <li key={accion.id}>
+              <li key={id}>
                 <button /* tema-ok: toggle de selección múltiple, no hay componente UI equivalente con aria-pressed */
                   type="button"
-                  onClick={() => toggleAccion(accion.id)}
+                  onClick={() => toggleAccion(id)}
                   aria-pressed={activo}
                   className={cn(
                     "flex min-h-11 w-full items-start gap-3 rounded-xl border-2 px-4 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand motion-reduce:transition-none",
@@ -130,8 +135,8 @@ export function ModoEmergencia() {
                     {activo && <Check className="size-3.5" strokeWidth={3} />}
                   </span>
                   <span className="min-w-0">
-                    <span className="block font-medium text-foreground">{accion.label}</span>
-                    <span className="block text-(--text-secondary)">{accion.descripcion}</span>
+                    <span className="block font-medium text-foreground">{t.acciones[id].label}</span>
+                    <span className="block text-(--text-secondary)">{t.acciones[id].descripcion}</span>
                   </span>
                 </button>
               </li>
@@ -146,43 +151,43 @@ export function ModoEmergencia() {
           className="scroll-mt-6 outline-none"
         >
           <p className="sr-only" aria-live="polite">
-            {pasos.length > 0 ? `${pasos.length} pasos para tu caso.` : ""}
+            {pasos.length > 0 ? t.anuncio(pasos.length) : ""}
           </p>
           {pasos.length === 0 ? (
             <div className="rounded-xl border-2 border-dashed border-border px-6 py-10 text-center">
-              <p className="font-medium text-foreground">Aquí verás qué hacer, en orden.</p>
+              <p className="font-medium text-foreground">{t.vacio}</p>
               <p className="mt-1 text-(--text-secondary)">
-                <span className="lg:hidden">Marca arriba lo que hiciste.</span>
-                <span className="hidden lg:inline">Marca a la izquierda lo que hiciste.</span>
+                <span className="lg:hidden">{t.marcaArriba}</span>
+                <span className="hidden lg:inline">{t.marcaIzquierda}</span>
               </p>
             </div>
           ) : (
             <div className="flex flex-col gap-8">
               <Card className="gap-0 py-0 text-base">
                 <div className="flex items-baseline justify-between gap-4 border-b border-border px-5 py-4">
-                  <h3 className="text-lg font-semibold">Qué hacer ahora</h3>
+                  <h3 className="text-lg font-semibold">{t.queHacerAhora}</h3>
                   <span className="font-mono text-xs uppercase text-(--text-secondary)">
-                    {pasos.length} {pasos.length === 1 ? "paso" : "pasos"}
+                    {t.cuantosPasos(pasos.length)}
                   </span>
                 </div>
                 <ol className="flex flex-col">
                   {urgentes.length > 0 && (
-                    <Grupo titulo="Primero, ahora mismo">
+                    <Grupo titulo={t.grupos.primero}>
                       {urgentes.map((paso, i) => (
-                        <PasoItem key={paso.id} paso={paso} numero={i + 1} />
+                        <PasoItem key={paso.id} paso={paso} numero={i + 1} t={t} />
                       ))}
                     </Grupo>
                   )}
                   {despues.length > 0 && (
-                    <Grupo titulo={urgentes.length > 0 ? "Después" : "Qué hacer"}>
+                    <Grupo titulo={urgentes.length > 0 ? t.grupos.despues : t.grupos.queHacer}>
                       {despues.map((paso, i) => (
-                        <PasoItem key={paso.id} paso={paso} numero={urgentes.length + i + 1} />
+                        <PasoItem key={paso.id} paso={paso} numero={urgentes.length + i + 1} t={t} />
                       ))}
                     </Grupo>
                   )}
                 </ol>
               </Card>
-              <Fuentes fuentes={FUENTES} />
+              <Fuentes fuentes={fuentes(t)} idioma={idioma} />
             </div>
           )}
         </div>
@@ -201,7 +206,7 @@ export function ModoEmergencia() {
               "h-12 w-full bg-background text-base shadow-lg", // tema-ok: botón flotante, la sombra lo separa del contenido
             )}
           >
-            Ver tus {pasos.length} {pasos.length === 1 ? "paso" : "pasos"}
+            {t.verPasos(pasos.length)}
             <ArrowDown aria-hidden="true" />
           </a>
         </div>
@@ -219,7 +224,7 @@ function Grupo({ titulo, children }: { titulo: string; children: React.ReactNode
   );
 }
 
-function PasoItem({ paso, numero }: { paso: Paso; numero: number }) {
+function PasoItem({ paso, numero, t }: { paso: Paso; numero: number; t: Textos }) {
   return (
     <li className="flex gap-4">
       <span
@@ -234,7 +239,7 @@ function PasoItem({ paso, numero }: { paso: Paso; numero: number }) {
         {numero}
       </span>
       <div className="min-w-0 flex-1 pt-1">
-        <p className="text-foreground">{paso.texto}</p>
+        <p className="text-foreground">{t.pasos[paso.id]}</p>
         {paso.enlaces.length > 0 && (
           <ul className="mt-2 flex flex-col gap-1">
             {paso.enlaces.map((enlace) => (

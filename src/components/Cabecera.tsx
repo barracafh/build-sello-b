@@ -7,11 +7,10 @@ import { diccionario, type Idioma } from "@/i18n";
 
 export type Seccion = "verificar" | "juego";
 
-// `corto` es el nombre en el móvil, para que las dos quepan en una fila a 320 px.
-// Los nombres aún están solo en castellano (LAB-70).
-const SECCIONES: { id: Seccion; href: string; nombre: string; corto: string }[] = [
-  { id: "verificar", href: "/", nombre: "Comprobar un mensaje", corto: "Comprobar" },
-  { id: "juego", href: "/juego", nombre: "Juego: ¿estafa o no?", corto: "¿Estafa o no?" },
+// Los nombres de cada sección, en `cabecera.menu` (src/i18n/).
+const SECCIONES: { id: Seccion; href: string }[] = [
+  { id: "verificar", href: "/" },
+  { id: "juego", href: "/juego" },
 ];
 
 // Cabecera común: icono y nombre de ficha.json, la frase en el idioma elegido y el menú de secciones.
@@ -56,8 +55,8 @@ export function Cabecera({ activa, idioma = "es" }: { activa: Seccion; idioma?: 
                     seccion.id === activa && "border-foreground bg-muted font-semibold",
                   )}
                 >
-                  <span className="lg:hidden">{seccion.corto}</span>
-                  <span className="max-lg:hidden">{seccion.nombre}</span>
+                  <span className="lg:hidden">{t.cabecera.menu[seccion.id].corto}</span>
+                  <span className="max-lg:hidden">{t.cabecera.menu[seccion.id].nombre}</span>
                 </Link>
               </li>
             ))}

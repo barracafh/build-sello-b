@@ -50,9 +50,8 @@ export default async function Home({
         </div>
 
         <section aria-labelledby="emergencia-titulo" className="mt-12 border-t border-border pt-10">
-          {/* Modo emergencia: aún solo en castellano (LAB-70). */}
-          <p id="emergencia-titulo" className="sr-only">Si ya has actuado</p>
-          <ModoEmergencia />
+          <p id="emergencia-titulo" className="sr-only">{t.emergencia.seccion}</p>
+          <ModoEmergencia idioma={idioma} />
         </section>
       </main>
 

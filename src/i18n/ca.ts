@@ -1,5 +1,5 @@
 import { deEntidad } from "@/lib/veredicto";
-import type { ContextoTitular, Diccionario } from "./es";
+import { REMITENTE_CORREOS, type ContextoTitular, type Diccionario } from "./es";
 
 // «de la DGT», «del SEPE», «de Correos» com en castellà, però amb apòstrof
 // davant de vocal: «de l'Agencia Tributaria», «de l'INCIBE».
@@ -33,6 +33,10 @@ export const ca = {
     secciones: "Seccions",
     datosReales: "Dades públiques",
     datosSimulados: "Dades simulades",
+    menu: {
+      verificar: { nombre: "Comprova un missatge", corto: "Comprova" },
+      juego: { nombre: "Joc: estafa o no?", corto: "Estafa o no?" },
+    },
   },
   pagina: {
     titulo: "Aquest missatge és de veritat?",
@@ -263,6 +267,192 @@ export const ca = {
   },
   // «de març de 2025», «d'abril de 2025».
   mes: (mes: number, año: number) => `${MESOS[mes]} de ${año}`,
+  emergencia: {
+    seccion: "Si ja has actuat",
+    yaHasActuado: "Ja has actuat?",
+    cuentanos: "Explica'ns què ha passat i et direm què has de fer ara.",
+    yaHePulsado: "Ja l'he tocat →",
+    queHiciste: "Què vas fer?",
+    marca: "Marca tot el que correspongui.",
+    pasosDebajo: "Els passos apareixen a sota.",
+    pasosDerecha: "Els passos apareixen a la dreta.",
+    cerrar: "Tanca",
+    accionesAria: "Accions fetes",
+    anuncio: (n: number) => `${n} ${n === 1 ? "pas" : "passos"} per al teu cas.`,
+    vacio: "Aquí veuràs què has de fer, en ordre.",
+    marcaArriba: "Marca a dalt el que vas fer.",
+    marcaIzquierda: "Marca a l'esquerra el que vas fer.",
+    queHacerAhora: "Què has de fer ara",
+    cuantosPasos: (n: number) => `${n} ${n === 1 ? "pas" : "passos"}`,
+    grupos: { primero: "Primer, ara mateix", despues: "Després", queHacer: "Què has de fer" },
+    verPasos: (n: number) => `Veure els teus ${n} ${n === 1 ? "pas" : "passos"}`,
+    // Fuentes del modo emergencia: «INCIBE» y «017» los pone el componente.
+    fuentes: { linea: "Línia d'ajuda en ciberseguretat", reporte: "Notificació de frau" },
+    acciones: {
+      enlace: { label: "Vaig tocar l'enllaç", descripcion: "Vaig obrir la web, però no hi vaig posar res" },
+      tarjeta: { label: "Vaig posar les dades de la targeta o del banc", descripcion: "Número de targeta, CVV, compte…" },
+      clave: { label: "Vaig donar la contrasenya de Cl@ve o les dades d'accés", descripcion: "Usuari, contrasenya o codi rebut" },
+      instale: { label: "Vaig instal·lar alguna cosa o baixar un fitxer", descripcion: "Una app, un adjunt…" },
+      pague: { label: "Vaig pagar", descripcion: "Vaig fer una transferència o un càrrec" },
+    },
+    pasos: {
+      banco: "Truca ara al teu banc i demana que bloquegin la targeta o el compte. El telèfon és al revers de la targeta.",
+      "banco-pago": "Truca al teu banc, explica què ha passat i pregunta si et poden tornar els diners.",
+      capturas: "Fes una foto amb el mòbil al missatge que vas rebre, per tenir-lo guardat per si cal més endavant.",
+      "cambiar-clave": "Canvia la contrasenya de Cl@ve com més aviat millor. Escriu tu mateix l'adreça al navegador, no toquis cap enllaç.",
+      "revisar-dehu": "Entra a la teva bústia de notificacions i a la Carpeta Ciutadana escrivint tu mateix l'adreça, i mira si hi ha res estrany.",
+      "no-dispositivo": "No facis servir aquell telèfon o ordinador per entrar al banc ni per posar contrasenyes fins que algú de confiança el revisi.",
+      "no-enlace": "No tornis a tocar aquell enllaç ni truquis al número que sortia al missatge.",
+      denuncia: "Posa una denúncia a la Policia Nacional o a la Guàrdia Civil. Ho pots fer per internet o anant-hi en persona.",
+      "017": "Truca al 017, és gratuït. T'atenen cada dia de 8 del matí a 11 de la nit i t'expliquen exactament què has de fer.",
+      "reporte-incibe": "Avisa l'organisme oficial de ciberseguretat (INCIBE) del que ha passat.",
+    },
+  },
+  senalado: {
+    titulo: "Així es veu al teu missatge",
+    continuo: "Subratllat continu",
+    trazos: "Subratllat a ratlles",
+    roja: "senyal vermell",
+    naranja: "senyal taronja",
+  },
+  carga: {
+    pasos: ["Revisant l'enllaç…", "Buscant senyals d'estafa…", "Consultant fonts oficials…"],
+    lenta: "Això pot trigar uns segons més.",
+  },
+  juego: {
+    antetitulo: "Joc · 10 missatges",
+    titulo: "Estafa o no?",
+    intro:
+      "Cinc estafes reals avisades per l'INCIBE i cinc avisos de veritat. Llisca cap a l'esquerra si és una estafa i cap a la dreta si és de veritat.",
+    tipos: { sms: "SMS", email: "Correu", web: "Web" },
+    mensajeDe: (n: string, total: string) => `Missatge ${n} de ${total}`,
+    aciertos: (n: string) => `Encerts: ${n}`,
+    tarjeta: "targeta",
+    etiquetaTarjeta: (n: string, tipo: string) => `Missatge ${n}: ${tipo}`,
+    estafa: "Estafa",
+    deVerdad: "De veritat",
+    desliza: "Llisca la targeta",
+    flechas: (izquierda: string, derecha: string) =>
+      ` o fes servir les fletxes ${izquierda} i ${derecha} del teclat`,
+    bienVisto: "Ben vist!",
+    estaNo: "Aquesta no",
+    esEstafa: "És una estafa real que ha avisat l'INCIBE.",
+    esDeVerdad: "És un avís de veritat. Tot i això, no et fiïs del missatge: entra tu a la web oficial.",
+    lasPistas: "Les pistes",
+    webOficialEs: "La web oficial és",
+    fuente: "Font:",
+    webOficial: "Web oficial",
+    siguiente: "Missatge següent",
+    verResultado: "Veure el meu resultat",
+    resultado: (aciertos: string, total: string) => `N'has encertat ${aciertos} de ${total}`,
+    valoracion: {
+      perfecto: "Perfecte! No t'ha enganyat cap estafa.",
+      muyBien: "Molt bé. Repassa les que has fallat: són les que enganyen més.",
+      noEstaMal: "No està malament, però alguna estafa t'hauria enganyat.",
+      repasa: "Les estafes estan molt ben fetes. Repassa les pistes i torna-ho a provar.",
+    },
+    recuerda:
+      "Recorda: encara que un avís sigui de veritat, entra tu a la web oficial escrivint l'adreça. Un missatge no prova qui l'envia.",
+    tusRespuestas: "Les teves respostes",
+    acertada: "Encertada: ",
+    fallada: "Fallada: ",
+    respuestaEstafa: "estafa",
+    respuestaDeVerdad: "de veritat",
+    otraVez: "Torna a jugar",
+    comprobarReal: "Comprova un missatge real",
+    casos: {
+      F01: {
+        texto:
+          "AGENCIA TRIBUTARIA: S'ha ordenat el pagament 411,00¿ de la seva devolucio de l'IRPF de la renda 2023. mes informacio a la web:",
+        pistas: [
+          "Promet una devolució de diners i demana tocar un enllaç",
+          "L'enllaç no porta a sede.agenciatributaria.gob.es",
+          "La web falsa demana nom complet, número de targeta, data de caducitat, CVV i PIN; l'AEAT mai no demana dades de targeta per SMS",
+        ],
+      },
+      F02: {
+        texto:
+          "DGT: Disposa de 24 hores restants per pagar la seva multa del 13/06/2024. Consulti-ho a l'enllaç següent:",
+        pistas: [
+          "Fa pressa amb un termini de 24 hores per evitar un recàrrec",
+          "La DGT notifica les multes per carta certificada o per la DEV (Dirección Electrónica Vial), no amb enllaços de pagament en un SMS",
+          "L'àlies 'DGT' del remitent es pot falsificar",
+        ],
+      },
+      F03: {
+        texto:
+          "[CORREOS] Benvolgut client: El seu paquet no s'ha pogut lliurar el dd/mm perquè no s'han pagat les taxes de duana X,XX€: Segueixi les instruccions: [URL fraudulenta]",
+        pistas: [
+          "Demana pagar una quantitat petita (taxes de duana) amb un enllaç",
+          "Correos mai no demana dades bancàries ni pagaments per SMS o correu",
+          "Fa servir el nom de l'empresa dins d'un domini que no és correos.es",
+        ],
+      },
+      F04: {
+        texto:
+          "SEGURETAT SOCIAL: La seva targeta sanitària requereix una actualització. Si us plau actualitzi'l a través del lloc segur per mantenir els seus serveis: [URL maliciosa]",
+        pistas: [
+          "Demana 'actualitzar' dades amb un enllaç i amenaça amb perdre serveis",
+          "La Seguretat Social no demana actualitzar dades ni pagar deutes amb enllaços en SMS (INCIBE, avís del 19/08/2026)",
+          "Concordança incorrecta ('actualitzi'l', per a una targeta)",
+        ],
+      },
+      F05: {
+        texto:
+          "Assumpte: Ultim recordatori abans del recàrrec de la seva multa – Expedient n,º XXXXXXX",
+        pistas: [
+          "'La DGT MAI no notifica les multes per correu electrònic' (dgt.es)",
+          "Amenaça amb un recàrrec per fer pressa",
+          "El remitent no és del domini oficial de la DGT",
+        ],
+      },
+      L01: {
+        texto:
+          "AEAT: Té una notificació nova disponible. Pot consultar-la accedint pels seus propis mitjans a la Seu electrònica de l'Agència Tributària (sede.agenciatributaria.gob.es) o a la DEHú. Aquest missatge és només informatiu.",
+        pistas: [
+          "El text encaixa amb un avís oficial, però no prova qui l'envia: el remitent es pot falsificar. Per això no es confirma; es remet a la seu escrivint l'adreça",
+          "Només avisa que hi ha una notificació; no demana dades, pagaments ni targeta",
+          "No inclou cap enllaç per tocar: remet a la seu oficial .gob.es",
+        ],
+      },
+      L02: {
+        texto:
+          "Assumpte: Dirección Electrónica Vial – Té una notificació nova. L'informem que té una notificació nova a la seva Dirección Electrónica Vial (DEV). Per consultar-la, accedeixi a la Seu electrònica de la DGT (sede.dgt.gob.es) i identifiqui's amb DNI electrònic, certificat digital o Cl@ve.",
+        pistas: [
+          "El text encaixa amb un avís oficial, però no prova qui l'envia: el remitent es pot falsificar. Per això no es confirma; es remet a la seu escrivint l'adreça",
+          "Només el rep qui s'ha donat d'alta voluntàriament a la DEV",
+          "No conté imports, terminis de 24 hores ni enllaços de pagament",
+        ],
+      },
+      L03: {
+        texto:
+          `De: ${REMITENTE_CORREOS}. Assumpte: El teu enviament és de camí. Hola, el teu enviament amb referència PQ00000000000000000000 està en repartiment. El pots seguir al Localitzador d'Enviaments de www.correos.es o a l'app de Correos. Codi segur: XXXX-XXXX (requadre groc al final del missatge).`,
+        pistas: [
+          "El text encaixa amb un avís oficial, però no prova qui l'envia: el remitent es pot falsificar. Per això no es confirma; es remet a la seu escrivint l'adreça",
+          `El remitent és ${REMITENTE_CORREOS}, el que Correos indica per a les seves comunicacions oficials, encara que un remitent es pot falsificar`,
+          "Inclou un codi segur que es pot comprovar al verificador de correus de correos.es",
+        ],
+      },
+      L04: {
+        texto:
+          "Assumpte: DEHú – Avís de notificació nova. L'informem que té a la seva disposició una notificació nova de l'Agència Estatal d'Administració Tributària a la Dirección Electrónica Habilitada única. Hi pot accedir a dehu.redsara.es identificant-se amb Cl@ve, certificat o DNIe. Aquest és un avís de cortesia.",
+        pistas: [
+          "El text encaixa amb un avís oficial, però no prova qui l'envia: el remitent es pot falsificar. Per això no es confirma; es remet a la seu escrivint l'adreça",
+          "La DEHú envia 'avisos de cortesia' per correu quan arriba una notificació nova d'un organisme adherit",
+          "Remet al domini oficial dehu.redsara.es, que no és .gob.es però sí que és oficial",
+        ],
+      },
+      L05: {
+        texto:
+          "Pàgina 'Ajuda Sol·licitud de Cita en Atenció Primària – Portal del Pacient – Conselleria de Sanitat'. Per demanar cita amb el teu metge o infermeria d'atenció primària, introdueix el teu número SIP i la data de naixement i tria dia i hora.",
+        pistas: [
+          "L'URL és a la llista de dominis oficials (san.gva.es) i no porta paràmetres de redirecció",
+          "Domini san.gva.es, subdomini oficial de la Generalitat Valenciana",
+          "Demana el SIP i la data de naixement, però mai dades bancàries ni de targeta",
+        ],
+      },
+    },
+  },
   fuentes: {
     aria: "Fonts",
     oficiales: "Fonts oficials",

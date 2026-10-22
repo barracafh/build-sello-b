@@ -3,6 +3,16 @@
 // Los nombres oficiales (Agencia Tributaria, Seguridad Social, DGT, Correos,
 // INCIBE), el 017, las URL y los dominios no se traducen.
 import { deEntidad } from "@/lib/veredicto";
+import ejemplos from "../../datos/mensajes-ejemplo.json";
+
+// El texto y las tres primeras pistas de un caso de datos/mensajes-ejemplo.json.
+const caso = (id: string) => {
+  const { texto, pistas } = ejemplos.find((e) => e.id === id)!;
+  return { texto, pistas: pistas.slice(0, 3) };
+};
+
+/** Remitente oficial de Correos del caso L03, tal cual el fichero (no se escribe a mano). */
+export const REMITENTE_CORREOS = caso("L03").texto.match(/\S+@\S+\.com/)![0];
 
 const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 
@@ -14,6 +24,12 @@ export const es = {
     secciones: "Secciones",
     datosReales: "Datos públicos",
     datosSimulados: "Datos simulados",
+    // Secciones del menú; `corto` es el nombre en el móvil, para que las dos
+    // quepan en una fila a 320 px.
+    menu: {
+      verificar: { nombre: "Comprobar un mensaje", corto: "Comprobar" },
+      juego: { nombre: "Juego: ¿estafa o no?", corto: "¿Estafa o no?" },
+    },
   },
   pagina: {
     titulo: "¿Este mensaje es de verdad?",
@@ -254,6 +270,121 @@ export const es = {
     mejorNoPulses: (url: string) => `Mejor no pulses el enlace: ${url}`,
     mejorNoRespondas: "Mejor no respondas ni pulses nada.",
     entraTuCorto: "Entra tú escribiendo la dirección.",
+  },
+  emergencia: {
+    seccion: "Si ya has actuado",
+    yaHasActuado: "¿Ya has actuado?",
+    cuentanos: "Cuéntanos qué pasó y te decimos qué hacer ahora.",
+    yaHePulsado: "Ya he pulsado →",
+    queHiciste: "¿Qué hiciste?",
+    marca: "Marca todo lo que corresponda.",
+    pasosDebajo: "Los pasos aparecen debajo.",
+    pasosDerecha: "Los pasos aparecen a la derecha.",
+    cerrar: "Cerrar",
+    accionesAria: "Acciones realizadas",
+    anuncio: (n: number) => `${n} ${n === 1 ? "paso" : "pasos"} para tu caso.`,
+    vacio: "Aquí verás qué hacer, en orden.",
+    marcaArriba: "Marca arriba lo que hiciste.",
+    marcaIzquierda: "Marca a la izquierda lo que hiciste.",
+    queHacerAhora: "Qué hacer ahora",
+    cuantosPasos: (n: number) => `${n} ${n === 1 ? "paso" : "pasos"}`,
+    grupos: { primero: "Primero, ahora mismo", despues: "Después", queHacer: "Qué hacer" },
+    verPasos: (n: number) => `Ver tus ${n} ${n === 1 ? "paso" : "pasos"}`,
+    // Fuentes del modo emergencia: «INCIBE» y «017» los pone el componente.
+    fuentes: { linea: "Línea de ayuda en ciberseguridad", reporte: "Reporte de fraude" },
+    // Una por AccionId de src/datos/pasos-emergencia.ts.
+    acciones: {
+      enlace: { label: "Pulsé el enlace", descripcion: "Abrí la web, pero no introduje nada" },
+      tarjeta: { label: "Metí mis datos de tarjeta o bancarios", descripcion: "Número de tarjeta, CVV, cuenta…" },
+      clave: { label: "Di mi contraseña de Cl@ve o mis datos de acceso", descripcion: "Usuario, contraseña o código recibido" },
+      instale: { label: "Instalé algo o descargué un archivo", descripcion: "Una app, un adjunto…" },
+      pague: { label: "Pagué", descripcion: "Hice una transferencia o un cargo" },
+    },
+    // Uno por PasoId de src/datos/pasos-emergencia.ts.
+    pasos: {
+      banco: "Llama ahora a tu banco y diles que bloqueen la tarjeta o la cuenta. El teléfono está en el reverso de la tarjeta.",
+      "banco-pago": "Llama a tu banco, explícales lo que pasó y pregunta si pueden devolverte el dinero.",
+      capturas: "Haz una foto con el móvil al mensaje que recibiste, para tenerlo guardado por si hace falta después.",
+      "cambiar-clave": "Cambia tu contraseña de Cl@ve cuanto antes. Escribe tú mismo la dirección en el navegador, no pulses ningún enlace.",
+      "revisar-dehu": "Entra en tu buzón de notificaciones y en tu Carpeta Ciudadana escribiendo tú mismo la dirección, y mira si hay algo raro.",
+      "no-dispositivo": "No uses ese teléfono u ordenador para entrar al banco ni para poner contraseñas hasta que alguien de confianza lo revise.",
+      "no-enlace": "No vuelvas a pulsar ese enlace ni llames al número que aparecía en el mensaje.",
+      denuncia: "Pon una denuncia en la Policía Nacional o en la Guardia Civil. Puedes hacerlo por internet o yendo en persona.",
+      "017": "Llama al 017, es gratis. Te atienden todos los días de 8 de la mañana a 11 de la noche y te explican exactamente qué hacer.",
+      "reporte-incibe": "Avisa al organismo oficial de ciberseguridad (INCIBE) de lo que ha pasado.",
+    },
+  },
+  // Leyenda del mensaje con las trampas subrayadas (MensajeSenalado).
+  senalado: {
+    titulo: "Así se ve en tu mensaje",
+    continuo: "Subrayado continuo",
+    trazos: "Subrayado a trazos",
+    roja: "señal roja",
+    naranja: "señal naranja",
+  },
+  // Mientras se comprueba (CargaResultado). Frases genéricas y ciertas: no hay
+  // porcentajes ni pasos que el servidor no haga.
+  carga: {
+    pasos: ["Revisando el enlace…", "Buscando señales de estafa…", "Consultando fuentes oficiales…"],
+    lenta: "Esto puede tardar unos segundos más.",
+  },
+  juego: {
+    antetitulo: "Juego · 10 mensajes",
+    titulo: "¿Estafa o no?",
+    intro:
+      "Cinco estafas reales avisadas por INCIBE y cinco avisos de verdad. Desliza a la izquierda si es una estafa y a la derecha si es de verdad.",
+    tipos: { sms: "SMS", email: "Correo", web: "Web" },
+    mensajeDe: (n: string, total: string) => `Mensaje ${n} de ${total}`,
+    aciertos: (n: string) => `Aciertos: ${n}`,
+    tarjeta: "tarjeta",
+    etiquetaTarjeta: (n: string, tipo: string) => `Mensaje ${n}: ${tipo}`,
+    estafa: "Estafa",
+    deVerdad: "De verdad",
+    desliza: "Desliza la tarjeta",
+    // Solo con teclado; las flechas se pintan como teclas.
+    flechas: (izquierda: string, derecha: string) =>
+      ` o usa las flechas ${izquierda} y ${derecha} del teclado`,
+    bienVisto: "¡Bien visto!",
+    estaNo: "Esta no",
+    esEstafa: "Es una estafa real que ha avisado INCIBE.",
+    esDeVerdad: "Es un aviso de verdad. Aun así, no te fíes del mensaje: entra tú en la web oficial.",
+    lasPistas: "Las pistas",
+    webOficialEs: "La web oficial es",
+    fuente: "Fuente:",
+    webOficial: "Web oficial",
+    siguiente: "Siguiente mensaje",
+    verResultado: "Ver mi resultado",
+    resultado: (aciertos: string, total: string) => `Has acertado ${aciertos} de ${total}`,
+    valoracion: {
+      perfecto: "¡Perfecto! Ninguna estafa te ha colado.",
+      muyBien: "Muy bien. Repasa las que has fallado: son las que más engañan.",
+      noEstaMal: "No está mal, pero alguna estafa te habría colado.",
+      repasa: "Las estafas están muy bien hechas. Repasa las pistas y vuelve a probar.",
+    },
+    recuerda:
+      "Recuerda: aunque un aviso sea de verdad, entra tú en la web oficial escribiendo la dirección. Un mensaje no prueba quién lo envía.",
+    tusRespuestas: "Tus respuestas",
+    acertada: "Acertada: ",
+    fallada: "Fallada: ",
+    respuestaEstafa: "estafa",
+    respuestaDeVerdad: "de verdad",
+    otraVez: "Jugar otra vez",
+    comprobarReal: "Comprobar un mensaje real",
+    // Texto y tres pistas de cada caso de datos/mensajes-ejemplo.json; en
+    // castellano salen del fichero. Las faltas de los fraudes («411,00¿»,
+    // «sanitària», «Ultimo») son pistas: los otros idiomas las conservan.
+    casos: {
+      F01: caso("F01"),
+      F02: caso("F02"),
+      F03: caso("F03"),
+      F04: caso("F04"),
+      F05: caso("F05"),
+      L01: caso("L01"),
+      L02: caso("L02"),
+      L03: caso("L03"),
+      L04: caso("L04"),
+      L05: caso("L05"),
+    },
   },
   /** Mes y año de un desmentido: «marzo de 2025». `mes` va de 0 a 11. */
   mes: (mes: number, año: number) => `${MESES[mes]} de ${año}`,

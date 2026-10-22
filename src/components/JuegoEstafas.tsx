@@ -8,11 +8,12 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Fuentes } from "@/components/Fuentes";
 import { avisosIncibe } from "@/datos/incibe";
-import { NOMBRES_EJEMPLOS } from "@/datos/ejemplos";
+import { diccionario, type Diccionario, type Idioma } from "@/i18n";
 import {
   RONDAS,
   UMBRAL_DESLIZAR,
   barajar,
+  fuenteDe,
   respuestaDeArrastre,
   valoracion,
   type Ronda,
@@ -31,7 +32,9 @@ const reducirMovimiento = () => window.matchMedia("(prefers-reduced-motion: redu
 // Diez tarjetas, una cada vez, como en Tinder: a la izquierda «estafa», a la
 // derecha «de verdad». También con los botones o con las flechas del teclado.
 // No se guarda nada: las respuestas viven solo en el estado de la página.
-export function JuegoEstafas() {
+export function JuegoEstafas({ idioma = "es" }: { idioma?: Idioma }) {
+  const t = diccionario(idioma);
+  const j = t.juego;
   // Primero en el orden del fichero (igual en servidor y navegador); se baraja al montar.
   const [rondas, setRondas] = useState<readonly Ronda[]>(RONDAS);
   const [barajado, setBarajado] = useState(false);
@@ -132,7 +135,7 @@ export function JuegoEstafas() {
   }
 
   if (fin) {
-    const fuentes = [avisosIncibe, ...rondas.map((r) => r.fuente)].filter(
+    const fuentes = [avisosIncibe, ...rondas.map((r) => fuenteDe(r, t))].filter(
       (f, i, todas) => todas.findIndex((o) => o.url === f.url) === i,
     );
     return (
@@ -142,19 +145,17 @@ export function JuegoEstafas() {
             ref={finRef}
             id="juego-fin"
             tabIndex={-1}
-            className="font-heading text-[clamp(30px,5vw,44px)] leading-[1.12] outline-none"
+            className="font-heading text-[clamp(30px,5vw,44px)] leading-[1.12] tabular-nums outline-none"
           >
-            Has acertado <span className="tabular-nums">{aciertos}</span> de{" "}
-            <span className="tabular-nums">{rondas.length}</span>
+            {j.resultado(String(aciertos), String(rondas.length))}
           </h2>
-          <p className="mt-3 text-xl font-semibold">{valoracion(aciertos, rondas.length)}</p>
-          <p className="mt-2 text-(--text-secondary)">
-            Recuerda: aunque un aviso sea de verdad, entra tú en la web oficial
-            escribiendo la dirección. Un mensaje no prueba quién lo envía.
+          <p className="mt-3 text-xl font-semibold">
+            {j.valoracion[valoracion(aciertos, rondas.length)]}
           </p>
+          <p className="mt-2 text-(--text-secondary)">{j.recuerda}</p>
         </div>
 
-        <ol className="grid gap-3" aria-label="Tus respuestas">
+        <ol className="grid gap-3" aria-label={j.tusRespuestas}>
           {rondas.map((r) => {
             const tuya = respuestas.find((x) => x.id === r.id);
             const Icono = tuya?.acierto ? CircleCheck : CircleX;
@@ -168,9 +169,11 @@ export function JuegoEstafas() {
                   )}
                 />
                 <span>
-                  <span className="sr-only">{tuya?.acierto ? "Acertada: " : "Fallada: "}</span>
-                  {NOMBRES_EJEMPLOS[r.id] ?? r.id}:{" "}
-                  <span className="font-semibold">{r.esEstafa ? "estafa" : "de verdad"}</span>
+                  <span className="sr-only">{tuya?.acierto ? j.acertada : j.fallada}</span>
+                  {t.ejemplos[r.id]}:{" "}
+                  <span className="font-semibold">
+                    {r.esEstafa ? j.respuestaEstafa : j.respuestaDeVerdad}
+                  </span>
                 </span>
               </li>
             );
@@ -185,20 +188,20 @@ export function JuegoEstafas() {
             onClick={otraVez}
             className="h-14 px-6 text-lg max-sm:w-full"
           >
-            Jugar otra vez
+            {j.otraVez}
           </Button>
           <Link
-            href="/"
+            href={{ pathname: "/", query: { lang: idioma } }}
             className={cn(
               buttonVariants({ variant: "outline", size: "lg" }),
               "h-auto min-h-14 px-6 py-2 text-lg whitespace-normal max-sm:w-full",
             )}
           >
-            Comprobar un mensaje real
+            {j.comprobarReal}
           </Link>
         </div>
 
-        <Fuentes fuentes={fuentes} />
+        <Fuentes fuentes={fuentes} idioma={idioma} />
       </section>
     );
   }
@@ -214,13 +217,10 @@ export function JuegoEstafas() {
   return (
     <div className="text-lg">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <p className="font-medium">
-          Mensaje <span className="tabular-nums">{indice + 1}</span> de{" "}
-          <span className="tabular-nums">{rondas.length}</span>
+        <p className="font-medium tabular-nums">
+          {j.mensajeDe(String(indice + 1), String(rondas.length))}
         </p>
-        <p className="text-(--text-secondary)">
-          Aciertos: <span className="tabular-nums">{aciertos}</span>
-        </p>
+        <p className="text-(--text-secondary) tabular-nums">{j.aciertos(String(aciertos))}</p>
       </div>
       <div
         aria-hidden="true"
@@ -248,8 +248,8 @@ export function JuegoEstafas() {
               ref={tarjetaRef}
               tabIndex={-1}
               role="group"
-              aria-roledescription="tarjeta"
-              aria-label={`Mensaje ${indice + 1}: ${ronda.tipo}`}
+              aria-roledescription={j.tarjeta}
+              aria-label={j.etiquetaTarjeta(String(indice + 1), j.tipos[ronda.tipo])}
               onPointerDown={empezarArrastre}
               onPointerMove={arrastrar}
               onPointerUp={soltar}
@@ -268,9 +268,11 @@ export function JuegoEstafas() {
                   style={{ opacity: 1 - Math.max(haciaEstafa, haciaVerdad) }}
                   className="font-mono text-sm tracking-[0.06em] text-(--text-secondary) uppercase"
                 >
-                  {ronda.tipo}
+                  {j.tipos[ronda.tipo]}
                 </span>
-                <p className="mt-4 text-lg leading-relaxed [overflow-wrap:anywhere] md:text-xl">{ronda.texto}</p>
+                <p className="mt-4 text-lg leading-relaxed [overflow-wrap:anywhere] md:text-xl">
+                  {j.casos[ronda.id].texto}
+                </p>
                 {ronda.direccion && (
                   // Neutralizada y como texto: nunca un enlace.
                   <p className="mt-4">
@@ -287,14 +289,14 @@ export function JuegoEstafas() {
                 style={{ opacity: haciaEstafa }}
                 className="pointer-events-none absolute top-6 right-6 -rotate-12 rounded-lg border-3 border-destructive bg-background px-3 py-1 text-2xl font-bold tracking-wide text-destructive uppercase"
               >
-                Estafa
+                {j.estafa}
               </span>
               <span
                 aria-hidden="true"
                 style={{ opacity: haciaVerdad }}
                 className="pointer-events-none absolute top-6 left-6 rotate-12 rounded-lg border-3 border-iss-success-700 bg-background px-3 py-1 text-2xl font-bold tracking-wide text-iss-success-700 uppercase"
               >
-                De verdad
+                {j.deVerdad}
               </span>
             </div>
           </div>
@@ -311,7 +313,7 @@ export function JuegoEstafas() {
                 className={botonRespuesta}
               >
                 <X aria-hidden="true" className="size-6 text-destructive" />
-                Estafa
+                {j.estafa}
               </Button>
               <Button
                 type="button"
@@ -321,15 +323,23 @@ export function JuegoEstafas() {
                 className={botonRespuesta}
               >
                 <Check aria-hidden="true" className="size-6 text-iss-success-700" />
-                De verdad
+                {j.deVerdad}
               </Button>
             </div>
             {/* Con dedo no hay teclado: solo se habla de deslizar. */}
             <p className="mt-2 text-center text-base text-(--text-secondary) md:mt-3">
-              Desliza la tarjeta
+              {j.desliza}
               <span className="pointer-coarse:hidden">
-                {" "}o usa las flechas <kbd className="font-mono">←</kbd> y{" "}
-                <kbd className="font-mono">→</kbd> del teclado
+                {/* Las flechas, como teclas: el orden de la frase lo pone cada idioma. */}
+                {j.flechas("←", "→").split(/([←→])/).map((trozo, i) =>
+                  trozo === "←" || trozo === "→" ? (
+                    <kbd key={i} className="font-mono">
+                      {trozo}
+                    </kbd>
+                  ) : (
+                    trozo
+                  ),
+                )}
               </span>
               .
             </p>
@@ -340,6 +350,7 @@ export function JuegoEstafas() {
           ronda={ronda}
           respuesta={respuesta}
           ultima={indice === rondas.length - 1}
+          t={t}
           tituloRef={solucionRef}
           onSiguiente={siguiente}
         />
@@ -352,16 +363,20 @@ function Solucion({
   ronda,
   respuesta,
   ultima,
+  t,
   tituloRef,
   onSiguiente,
 }: {
   ronda: Ronda;
   respuesta: Respuesta;
   ultima: boolean;
+  t: Diccionario;
   tituloRef: RefObject<HTMLHeadingElement | null>;
   onSiguiente: () => void;
 }) {
   const Icono = respuesta.acierto ? CircleCheck : CircleX;
+  const j = t.juego;
+  const fuente = fuenteDe(ronda, t);
   return (
     <Card render={<section aria-labelledby="juego-solucion" />} className="mt-6 gap-0 py-0 text-lg">
       <div
@@ -380,27 +395,25 @@ function Solucion({
             aria-hidden="true"
             className={cn("size-8 shrink-0", respuesta.acierto ? "text-iss-success-700" : "text-destructive")}
           />
-          {respuesta.acierto ? "¡Bien visto!" : "Esta no"}
+          {respuesta.acierto ? j.bienVisto : j.estaNo}
         </h2>
         <p className="mt-2 text-xl">
-          {ronda.esEstafa
-            ? "Es una estafa real que ha avisado INCIBE."
-            : "Es un aviso de verdad. Aun así, no te fíes del mensaje: entra tú en la web oficial."}
+          {ronda.esEstafa ? j.esEstafa : j.esDeVerdad}
         </p>
       </div>
 
       <div className="px-6 py-6 md:px-8 [&>*+*]:mt-6">
         <div>
-          <h3 className="font-semibold">Las pistas</h3>
+          <h3 className="font-semibold">{j.lasPistas}</h3>
           <ul className="mt-3 grid list-disc gap-2 pl-6">
-            {ronda.pistas.slice(0, 3).map((pista) => (
+            {j.casos[ronda.id].pistas.map((pista) => (
               <li key={pista}>{pista}</li>
             ))}
           </ul>
         </div>
         {ronda.web && (
           <p>
-            La web oficial es{" "}
+            {j.webOficialEs}{" "}
             <a
               href={ronda.web.href}
               className="font-mono underline underline-offset-4 [overflow-wrap:anywhere]"
@@ -410,9 +423,9 @@ function Solucion({
           </p>
         )}
         <p className="text-base text-(--text-secondary)">
-          Fuente:{" "}
-          <a href={ronda.fuente.url} className="underline underline-offset-4">
-            {ronda.fuente.nombre}
+          {j.fuente}{" "}
+          <a href={fuente.url} className="underline underline-offset-4">
+            {fuente.nombre}
           </a>
         </p>
         <Button
@@ -422,7 +435,7 @@ function Solucion({
           onClick={onSiguiente}
           className="h-14 px-6 text-lg max-sm:w-full"
         >
-          {ultima ? "Ver mi resultado" : "Siguiente mensaje"}
+          {ultima ? j.verResultado : j.siguiente}
         </Button>
       </div>
     </Card>
