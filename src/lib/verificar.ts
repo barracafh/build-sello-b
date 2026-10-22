@@ -211,7 +211,7 @@ function verificarEnlace(texto: string): Resultado {
   try {
     url = new URL(enlace.conEsquema ? limpio : `http://${limpio}`);
   } catch {
-    return devolver("no_determinable", ["url_no_valida"]);
+    return devolver("no_oficial", ["url_no_valida"]);
   }
 
   // 2. IP (el parser ya pasa decimal/octal/hex a notación con puntos) y credenciales.

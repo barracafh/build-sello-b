@@ -15,6 +15,7 @@ import { Fuentes } from "@/components/Fuentes";
 import { MensajeSenalado } from "@/components/MensajeSenalado";
 import { CargaResultado } from "@/components/CargaResultado";
 import { RETRASO_MS, esperaAntesDeMostrar } from "@/lib/carga";
+import { analizarCaptura } from "@/lib/captura";
 import { textoParaFamilia } from "@/lib/compartir";
 import { avisosIncibe, linea017 } from "@/datos/incibe";
 import { EJEMPLOS_PANEL, tipoDeEjemplo } from "@/datos/ejemplos";
@@ -31,7 +32,7 @@ import ejemplos from "../../datos/mensajes-ejemplo.json";
 
 // El texto vive en el estado del navegador y se envía solo a /api/verificar,
 // que no lo guarda ni lo registra. Una captura va a /api/imagen, que devuelve
-// su texto para revisarlo aquí; la imagen tampoco se guarda.
+// su texto para comprobarlo; la imagen tampoco se guarda.
 //
 // Enlace para compartir: el mensaje va en el fragmento (#mensaje=…), que el
 // navegador nunca envía al servidor, así que no acaba en ningún log.
@@ -170,36 +171,26 @@ export function AnalizarMensaje({
     comprobarRef.current?.focus();
   }
 
-  // Una sola llamada por imagen elegida. El texto rellena el campo para que la
-  // persona lo revise antes de comprobarlo; la imagen no se conserva.
+  // Una sola lectura por imagen elegida. El texto rellena el campo y se comprueba
+  // solo; el botón queda para volver a comprobar tras editarlo. El foco no se
+  // mueve al campo (abriría el teclado del móvil): el resultado ya se lo lleva.
   async function leerCaptura(imagen: File | undefined) {
     if (imagenRef.current) imagenRef.current.value = "";
     if (!imagen) return;
     cambiar(mensaje);
     setLeyendo(true);
     const esta = peticion.current;
-    let texto: string | null = null;
-    // El servidor manda un `codigo`; el texto sale del diccionario.
-    let fallo: string = t.errores.imagen.ia;
-    try {
-      const cuerpo = new FormData();
-      cuerpo.set("imagen", imagen);
-      const res = await fetch(ruta("/api/imagen"), { method: "POST", body: cuerpo });
-      const datos = await res.json();
-      if (res.ok && typeof datos.texto === "string") texto = datos.texto;
-      else if (typeof datos.codigo === "string" && Object.hasOwn(t.errores.imagen, datos.codigo))
-        fallo = t.errores.imagen[datos.codigo as keyof Diccionario["errores"]["imagen"]];
-    } catch {
-      // Sin red o sin JSON: se queda el mensaje de error por defecto.
-    }
+    await analizarCaptura(imagen, {
+      vigente: () => esta === peticion.current,
+      mostrarTexto: (texto) => {
+        cambiar(texto);
+        quitarDelEnlace();
+      },
+      comprobar: (texto) => void comprobar(texto),
+      mostrarError: (texto) => setError({ texto, delCampo: false }),
+      idioma,
+    });
     setLeyendo(false);
-    if (esta !== peticion.current) return;
-    if (texto) cargar(texto);
-    else
-      setError({
-        texto: texto === "" ? t.errores.imagenSinTexto : fallo,
-        delCampo: false,
-      });
   }
 
   async function comprobar(texto: string) {
