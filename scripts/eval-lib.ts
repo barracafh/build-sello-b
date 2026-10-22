@@ -6,11 +6,10 @@ import { execSync } from "node:child_process";
 import { readFileSync, realpathSync } from "node:fs";
 import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { analizar } from "../src/lib/analizar";
-import { modeloClasificador } from "../src/lib/clasificar";
+import { analizar, type Analisis } from "../src/lib/analizar";
+import { MOTIVO_NO_DISPONIBLE, modeloClasificador } from "../src/lib/clasificar";
 import type { UsoIa } from "../src/lib/ia";
-import dev from "../src/datos/evals/dev.json";
-import { ARROBA } from "../src/datos/evals/dev";
+import { ARROBA, dev } from "../src/datos/evals/dev";
 
 export const VEREDICTOS = ["oficial_verificado", "no_oficial", "no_determinable"] as const;
 export type Veredicto = (typeof VEREDICTOS)[number];
@@ -36,7 +35,7 @@ export type Ejecucion = {
   latencia_ms: number;
   tokens: number | null;
   clasificado: boolean;
-  // El modelo no respondió y se usó la reserva.
+  // Se llamó al modelo y no respondió (ver `esReserva`). Cuenta como fallo.
   reserva: boolean;
   motivo: string | null;
 };
@@ -115,6 +114,7 @@ export function leerArgumentosEval(argv: string[]): { modelo?: string; repeticio
   return { modelo: valores.modelo, repeticiones };
 }
 
+// dev.ts devuelve el texto con la arroba real, el que ve el clasificador en producción.
 export const CASOS = dev as Caso[];
 // Los 10 mensajes de datos/mensajes-ejemplo.json, por su fuente.
 const EJEMPLOS = new Set(
@@ -175,7 +175,14 @@ export function calcularMetricas(ejecuciones: Ejecucion[]): Metricas {
   };
 }
 
-const MOTIVO_RESERVA = "clasificador no disponible";
+// Una reserva es una llamada al modelo sin respuesta (402, 429 agotado, tiempo,
+// JSON no válido). El motivo «clasificador no disponible» no basta: si las
+// señales deterministas ya dan no_oficial, combinarClasificacion responde sin el
+// modelo y con otro motivo. HelmCode informa de los tokens en toda respuesta,
+// así que una llamada sin tokens no tuvo respuesta. Una reserva cuenta como
+// fallo aunque el veredicto coincida: el hill-climb mide al modelo.
+export const esReserva = (r: Pick<Analisis, "clasificado" | "motivo">, tokens: number | null) =>
+  r.clasificado && (r.motivo === MOTIVO_NO_DISPONIBLE || tokens === null);
 
 export const PAUSA_MS = 1000;
 const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -200,16 +207,17 @@ export async function ejecutarEvals(opciones: {
       };
       const inicio = performance.now();
       const r = await analizarCaso(caso.texto, { modelo: opciones.modelo, alUso });
+      const reserva = esReserva(r, tokens);
       const e: Ejecucion = {
         id: caso.id,
         repeticion: rep,
         esperado: caso.esperado,
         obtenido: r.veredicto,
-        pasa: r.veredicto === caso.esperado,
+        pasa: !reserva && r.veredicto === caso.esperado,
         latencia_ms: Math.round(performance.now() - inicio),
         tokens,
         clasificado: r.clasificado,
-        reserva: r.clasificado && r.motivo === MOTIVO_RESERVA,
+        reserva,
         motivo: r.motivo ?? null,
       };
       salida.push(e);
@@ -270,7 +278,7 @@ Fecha: ${i.fecha} · commit: ${i.commit ?? "—"} · conjunto: \`${i.conjunto}\`
 - Falsos \`oficial_verificado\`: **${m.falsos_oficial_verificado}** ${si(m.gates.sin_falsos_oficial)} (puerta: 0)
 - Ejemplos de \`datos/mensajes-ejemplo.json\`: **${m.ejemplos_oficiales.aciertos}/${m.ejemplos_oficiales.total}** ${si(m.gates.ejemplos_10_de_10)} (puerta: 10/10)
 - \`no_oficial\` → \`no_determinable\`: ${m.no_oficial_a_no_determinable}
-- Respuestas de reserva (modelo no disponible): ${m.reservas}
+- Reservas (el modelo no respondió; cuentan como fallo): ${m.reservas}
 - Casos inestables entre repeticiones: ${m.casos_inestables.join(", ") || "ninguno"}
 
 | Clase | Precisión | Recall | Casos |

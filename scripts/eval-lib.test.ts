@@ -10,6 +10,7 @@ import {
   calcularMetricas,
   ejecutarEvals,
   ejecutarHoldout,
+  esReserva,
   leerArgumentosEval,
   rutaConjuntoPermitida,
   type Ejecucion,
@@ -170,8 +171,9 @@ describe("ejecutarHoldout", () => {
     ];
     writeFileSync(ruta, JSON.stringify(casos));
     const vistos: string[] = [];
-    const falso = async (texto: string): Promise<Analisis> => {
+    const falso = async (texto: string, op?: { alUso?: (u: { total_tokens: number }) => void }): Promise<Analisis> => {
       vistos.push(texto);
+      op?.alUso?.({ total_tokens: 10 });
       return {
         veredicto: texto.includes("UNO") ? "no_oficial" : "no_determinable",
         motivos: [], senales: [], clasificado: true, motivo: `motivo de ${texto}`,
@@ -209,5 +211,43 @@ describe("ejecutarHoldout", () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe("casos que ve el clasificador", () => {
+  test("llevan la arroba real: el runner carga dev.ts, no dev.json", async () => {
+    const vistos: string[] = [];
+    const falso = async (texto: string): Promise<Analisis> => {
+      vistos.push(texto);
+      return { veredicto: "no_determinable", motivos: [], senales: [], clasificado: false } as unknown as Analisis;
+    };
+    await ejecutarEvals({ modelo: "m", pausaMs: 0, analizar: falso });
+    assert.equal(vistos.length, CASOS.length);
+    assert.ok(vistos.every((t) => !t.includes("[@]")));
+    assert.ok(vistos.some((t) => t.includes("@")));
+  });
+});
+
+describe("esReserva", () => {
+  const r = (motivo: string, clasificado = true) =>
+    ({ veredicto: "no_oficial", motivos: [], senales: [], clasificado, motivo }) as unknown as Analisis;
+
+  test("una llamada al modelo sin respuesta es reserva, sea cual sea el motivo final", () => {
+    assert.equal(esReserva(r("clasificador no disponible"), 10), true);
+    // Las señales deterministas ya dan no_oficial: el motivo no delata el fallo.
+    assert.equal(esReserva(r("El mensaje tiene señales claras de suplantación."), null), true);
+    assert.equal(esReserva(r("motivo del modelo"), 2400), false);
+    // Sin llamada al modelo (texto que es solo un enlace) no hay reserva.
+    assert.equal(esReserva(r("", false), null), false);
+  });
+
+  test("una reserva cuenta como fallo aunque el veredicto coincida", async () => {
+    const falso = async (_t: string): Promise<Analisis> => r("El mensaje tiene señales claras de suplantación.");
+    const caso = CASOS.find((c) => c.esperado === "no_oficial")!;
+    const [e] = await ejecutarEvals({ modelo: "m", casos: [caso], analizar: falso });
+    assert.equal(e.reserva, true);
+    assert.equal(e.obtenido, "no_oficial");
+    assert.equal(e.pasa, false);
+    assert.equal(calcularMetricas([e]).reservas, 1);
   });
 });
