@@ -81,13 +81,6 @@ export const textoParaFamilia = (mensaje: string, respuesta: ParaCompartir) =>
     resumenParaFamilia(respuesta),
   ].join("\n\n");
 
-/** Para que la familia tenga la herramienta a mano antes de que llegue el SMS. */
-export const invitacionParaFamilia = () =>
-  [
-    "Si te llega un SMS o un correo de la DGT, Hacienda, Correos o la Seguridad Social y dudas, no pulses nada: pégalo aquí y te dice si es oficial.",
-    `${ficha.nombre} (herramienta experimental, no es un servicio oficial): ${ficha.url}`,
-  ].join("\n\n");
-
 /** Enlace de WhatsApp que abre el chat con el texto ya escrito. */
 export const enlaceWhatsApp = (texto: string) =>
   `https://wa.me/?text=${encodeURIComponent(texto)}`;

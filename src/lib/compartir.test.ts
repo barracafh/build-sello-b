@@ -5,7 +5,6 @@ import { verificar } from "./verificar";
 import { leerRespuesta } from "./veredicto";
 import {
   enlaceWhatsApp,
-  invitacionParaFamilia,
   neutralizarTexto,
   resumenParaFamilia,
   textoParaFamilia,
@@ -142,11 +141,6 @@ test("si el mensaje cita la web oficial, no dice que no se pulse", () => {
   });
   assert.match(resumen, /cita la web oficial, pero eso no prueba quién lo envía/);
   assert.doesNotMatch(resumen, /no pulses/);
-});
-
-test("la invitación lleva la web publicada y el aviso", () => {
-  assert.ok(invitacionParaFamilia().includes(ficha.url));
-  assert.ok(invitacionParaFamilia().includes("no es un servicio oficial"));
 });
 
 test("enlaceWhatsApp codifica el texto", () => {

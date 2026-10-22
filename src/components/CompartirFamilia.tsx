@@ -17,12 +17,10 @@ export function CompartirFamilia({
   titulo,
   explicacion,
   texto,
-  encabezado: Encabezado = "h3",
 }: {
   titulo: string;
   explicacion: string;
   texto: string;
-  encabezado?: "h2" | "h3";
 }) {
   const id = useId();
   const [aviso, setAviso] = useState<string | null>(null);
@@ -56,9 +54,10 @@ export function CompartirFamilia({
       render={<section aria-labelledby={`${id}-titulo`} />}
       className="gap-0 px-6 py-6 text-lg md:px-8 md:py-8"
     >
-      <Encabezado id={`${id}-titulo`} className="font-sans text-xl font-semibold">
+      {/* h2: va fuera del resultado, al mismo nivel que él. */}
+      <h2 id={`${id}-titulo`} className="font-sans text-xl font-semibold">
         {titulo}
-      </Encabezado>
+      </h2>
       <p className="mt-2 text-(--text-secondary)">{explicacion}</p>
 
       <label htmlFor={`${id}-texto`} className="mt-4 block font-medium">
