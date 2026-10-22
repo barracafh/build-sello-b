@@ -1,0 +1,23 @@
+# Accesibilidad (WCAG 2.2 AA): axe sobre cada ruta y estado del build de producción.
+name: a11y
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  a11y:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
+      - run: bun run a11y
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: a11y-test-results
+          path: test-results/
