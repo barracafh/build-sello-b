@@ -61,9 +61,14 @@ const DE_URL: Record<string, Senal> = {
 
 const L = String.raw`(?<![\p{L}\d])`;
 const R = String.raw`(?![\p{L}\d])`;
-const regla = (cuerpo: string) => new RegExp(`${L}(?:${cuerpo})${R}`, "iu");
-const cerca = (a: string, b: string, n = 50) =>
-  new RegExp(`(?:${a})[^.!?\\n]{0,${n}}(?:${b})|(?:${b})[^.!?\\n]{0,${n}}(?:${a})`, "iu");
+// Palabra completa: `pin` no entra en «opinión» ni `nie` en «nieto». Una raíz
+// de verbo se escribe con `\p{L}*` para aceptar sus terminaciones.
+const palabra = (cuerpo: string) => `${L}(?:${cuerpo})${R}`;
+const regla = (cuerpo: string) => new RegExp(palabra(cuerpo), "iu");
+const cerca = (a: string, b: string, n = 50) => {
+  const [x, y] = [palabra(a), palabra(b)];
+  return new RegExp(`${x}[^.!?\\n]{0,${n}}${y}|${y}[^.!?\\n]{0,${n}}${x}`, "iu");
+};
 
 // Una frase que dice lo que el organismo NO hace no es una petición.
 const NEGACION = /\b(nunca|jam[aá]s|no le (?:pedir|solicit)|no (?:pedimos|solicitamos))/i;
@@ -102,13 +107,13 @@ const DATOS = [
   regla(String.raw`cvv2?|cvc|contrase[ñn]a|password|iban`),
   regla(String.raw`n[uú]mero de (?:la )?tarjeta|datos (?:bancarios|de (?:la |su )?tarjeta)|fecha de caducidad`),
   cerca(
-    String.raw`facilit|env[ií]|indi(?:que|ca)|confirm|introduzca|introduce|proporcion|actualic|comunique`,
+    String.raw`facilit\p{L}*|env[ií]\p{L}*|indi(?:que|ca)|confirm\p{L}*|introduzca|introduce|proporcion\p{L}*|actualic\p{L}*|comunique`,
     String.raw`dni|nif|nie|pasaporte`,
     40,
   ),
   // El PIN solo cuenta si se pide o va junto a la tarjeta; «Cl@ve PIN» es un acceso oficial.
   cerca(
-    String.raw`facilit|env[ií]|indi(?:que|ca)|confirm|introduzca|introduce|proporcion|comunique`,
+    String.raw`facilit\p{L}*|env[ií]\p{L}*|indi(?:que|ca)|confirm\p{L}*|introduzca|introduce|proporcion\p{L}*|comunique`,
     String.raw`pin`,
     25,
   ),

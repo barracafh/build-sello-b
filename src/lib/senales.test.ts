@@ -148,6 +148,22 @@ describe("6. dinero, pagos y datos sensibles", () => {
     assert.equal(veredicto(casos[1]), "no_determinable");
     assert.equal(veredicto(casos[2]), "oficial_verificado");
   });
+  test("«pin» y «nie» dentro de otra palabra no cuentan", () => {
+    const frases = [
+      "Agencia Tributaria: confirme su opinión sobre la atención recibida en la sede.",
+      "Seguridad Social: indique su opinión en la encuesta de la sede.",
+      "Correos: confirme la entrega en Espinardo desde la sede.",
+      "DGT: use su tarjeta y pinche aquí para ver el expediente en la sede.",
+      "Seguridad Social: confirme los datos de su nieto en la sede.",
+    ];
+    for (const t of frases) {
+      assert.ok(!codigos(t).includes("pide_datos"), t);
+      assert.equal(veredicto(t), "no_determinable", t);
+    }
+  });
+  test("pedir el NIE sí cuenta", () => {
+    assert.equal(nivel("Por favor, facilite su NIE", "pide_datos"), "roja");
+  });
   test("pedir el PIN sí cuenta", () => {
     assert.equal(nivel("Facilite su PIN", "pide_datos"), "roja");
     assert.equal(nivel("Envíenos el PIN por SMS", "pide_datos"), "roja");
