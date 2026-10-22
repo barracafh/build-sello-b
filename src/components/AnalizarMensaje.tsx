@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Fuentes } from "@/components/Fuentes";
 import { avisosIncibe, horario017, linea017 } from "@/datos/incibe";
-import { NOMBRES_EJEMPLOS } from "@/datos/ejemplos";
+import { NOMBRES_EJEMPLOS, tipoDeEjemplo } from "@/datos/ejemplos";
 import {
   deEntidad,
   fichaDe,
@@ -53,6 +53,9 @@ const textoDeEjemplo = (caso: Ejemplo) => {
 const EJEMPLOS = (ejemplos as Ejemplo[]).map((caso) => ({
   id: caso.id,
   nombre: NOMBRES_EJEMPLOS[caso.id] ?? caso.id,
+  tipo: tipoDeEjemplo(caso.id),
+  // Lo que debería devolver, con la misma píldora que el resultado.
+  esperado: fichaDe(caso.esperado),
   texto: textoDeEjemplo(caso),
 }));
 
@@ -383,9 +386,25 @@ export function AnalizarMensaje({
                 type="button"
                 variant="outline"
                 onClick={() => probarEjemplo(ejemplo.texto)}
-                className="h-auto min-h-12 max-w-full px-4 py-2 text-base whitespace-normal lg:justify-start lg:text-left"
+                className={cn(
+                  "h-auto min-h-12 max-w-full flex-col items-start gap-1.5 border-l-4 px-4 py-2 text-left text-base whitespace-normal",
+                  ejemplo.tipo === "Fraude" ? "border-l-destructive" : "border-l-muted-foreground",
+                )}
               >
-                {ejemplo.nombre}
+                <span>{ejemplo.nombre}</span>
+                <span className="flex flex-wrap items-center gap-2 text-sm font-normal">
+                  {ejemplo.tipo && <span className="font-semibold">{ejemplo.tipo}</span>}
+                  <Badge
+                    className={cn(
+                      "h-auto gap-1.5 px-2 py-0.5 text-sm font-medium whitespace-normal [&>svg]:size-4!",
+                      ejemplo.esperado.tono,
+                    )}
+                  >
+                    <ejemplo.esperado.icono aria-hidden="true" />
+                    <span className="sr-only">Debería dar: </span>
+                    {ejemplo.esperado.etiqueta}
+                  </Badge>
+                </span>
               </Button>
             ))}
           </div>
