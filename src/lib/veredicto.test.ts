@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { NOMBRES_EJEMPLOS } from "@/datos/ejemplos";
+import { NOMBRES_EJEMPLOS, tipoDeEjemplo } from "@/datos/ejemplos";
 import ejemplos from "../../datos/mensajes-ejemplo.json";
 import { VEREDICTOS, deEntidad, fichaDe, leerRespuesta, mesDe, miles, webOficial } from "./veredicto";
 
@@ -146,6 +146,16 @@ test("mesDe", () => {
   assert.equal(mesDe("2025-03-01T00:00:00Z"), "marzo de 2025");
   assert.equal(mesDe("no es fecha"), null);
   assert.equal(mesDe(null), null);
+});
+
+test("cada ejemplo dice si es fraude o legítimo y espera un veredicto conocido", () => {
+  for (const caso of ejemplos) {
+    assert.ok(tipoDeEjemplo(caso.id), caso.id);
+    assert.ok(Object.hasOwn(VEREDICTOS, caso.esperado), caso.id);
+  }
+  assert.equal(tipoDeEjemplo("F01"), "Fraude");
+  assert.equal(tipoDeEjemplo("L05"), "Legítimo");
+  assert.equal(tipoDeEjemplo("X01"), null);
 });
 
 test("miles", () => {

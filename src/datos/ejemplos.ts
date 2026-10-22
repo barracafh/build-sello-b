@@ -1,5 +1,7 @@
-// Nombres de los ejemplos de datos/mensajes-ejemplo.json, por tema y sin
-// adelantar el veredicto. veredicto.test.ts comprueba que no falta ninguno.
+// Nombres de los ejemplos de datos/mensajes-ejemplo.json, por tema. El panel
+// es para demos y pruebas, así que junto al nombre ya se enseña si es fraude
+// o legítimo y qué veredicto se espera (LAB-52). veredicto.test.ts comprueba
+// que no falta ninguno.
 export const NOMBRES_EJEMPLOS: Readonly<Record<string, string>> = {
   F01: "Devolución de Hacienda (SMS)",
   F02: "Multa de la DGT (SMS)",
@@ -12,3 +14,10 @@ export const NOMBRES_EJEMPLOS: Readonly<Record<string, string>> = {
   L04: "Aviso de DEHú (correo)",
   L05: "Cita en el centro de salud (web)",
 };
+
+/** F01… son fraudes y L01… mensajes legítimos: lo dice el prefijo del id. */
+export function tipoDeEjemplo(id: string): "Fraude" | "Legítimo" | null {
+  if (id.startsWith("F")) return "Fraude";
+  if (id.startsWith("L")) return "Legítimo";
+  return null;
+}
