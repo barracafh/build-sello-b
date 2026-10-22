@@ -375,10 +375,10 @@ export function AnalizarMensaje({
           aria-describedby={`${id}-privacidad`}
           className={intro ? "mt-10" : undefined}
         >
-          <label htmlFor={`${id}-mensaje`} className="block text-xl font-medium">
+          <label htmlFor={`${id}-mensaje`} className="block text-lg font-medium">
             Pega aquí el mensaje que te ha llegado
           </label>
-          <p id={`${id}-ayuda`} className="mt-1 text-(--text-secondary)">
+          <p id={`${id}-ayuda`} className="mt-1 text-base text-(--text-secondary)">
             Puede ser un SMS, un correo o el enlace de una web. Incluye el
             remitente y el enlace tal como aparecen.{" "}
             <strong className="font-semibold text-foreground">
@@ -401,7 +401,8 @@ export function AnalizarMensaje({
             spellCheck={false}
             autoComplete="off"
             placeholder="DGT: Dispone de 24 horas para pagar su multa. Consulte en el siguiente enlace: hxxps://…"
-            className="mt-4 min-h-44 px-4 py-3 text-lg leading-relaxed md:text-lg [overflow-wrap:anywhere]"
+            // Fondo amarillo suave: aquí es donde se pega el mensaje.
+            className="mt-3 min-h-40 bg-brand-yellow/15 px-4 py-3 text-base leading-relaxed md:text-base [overflow-wrap:anywhere]"
           />
           {cercaDelLimite && (
             <p
@@ -416,18 +417,31 @@ export function AnalizarMensaje({
               {miles(mensaje.length)} de {miles(LIMITE)} caracteres como máximo
             </p>
           )}
-          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-            {/* El selector nativo queda oculto; se abre con el botón, que sí se ve y tiene foco. */}
-            <Input
-              ref={imagenRef}
-              id={`${id}-imagen`}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              tabIndex={-1}
-              aria-hidden="true"
-              className="hidden"
-              onChange={(event) => leerCaptura(event.target.files?.[0])}
-            />
+          {/* El selector nativo queda oculto; se abre con el botón, que sí se ve y tiene foco. */}
+          <Input
+            ref={imagenRef}
+            id={`${id}-imagen`}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            tabIndex={-1}
+            aria-hidden="true"
+            className="hidden"
+            onChange={(event) => leerCaptura(event.target.files?.[0])}
+          />
+          <p role="status" className="sr-only">
+            {leyendo ? "Leyendo la imagen…" : ""}
+          </p>
+          {error && (
+            <p
+              id={`${id}-error`}
+              role="alert"
+              className="mt-2 text-base font-medium text-destructive"
+            >
+              {error.texto}
+            </p>
+          )}
+          {/* Las dos acciones en una fila, también en el móvil (a partes iguales). */}
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:flex">
             <Button
               type="button"
               variant="outline"
@@ -436,48 +450,39 @@ export function AnalizarMensaje({
               focusableWhenDisabled
               aria-describedby={`${id}-imagen-ayuda`}
               onClick={() => imagenRef.current?.click()}
-              className="h-12 gap-2 px-5 text-lg max-sm:w-full"
+              className="h-12 gap-2 px-3 text-base sm:px-4"
             >
-              <ImageUp aria-hidden="true" className="size-5" />
-              {leyendo ? "Leyendo la imagen…" : "Subir una captura"}
+              {/* A 320 px no cabe con icono. */}
+              <ImageUp aria-hidden="true" className="size-5 max-[22.5rem]:hidden" />
+              {leyendo ? "Leyendo…" : "Subir captura"}
             </Button>
-            <p id={`${id}-imagen-ayuda`} className="min-w-0 flex-[1_1_200px] text-base text-(--text-secondary)">
-              PNG, JPG o WebP de hasta 4 MB. Sacamos el texto para que lo revises.
-            </p>
-          </div>
-          <p role="status" className="sr-only">
-            {leyendo ? "Leyendo la imagen…" : ""}
-          </p>
-          {error && (
-            <p
-              id={`${id}-error`}
-              role="alert"
-              className="mt-2 font-medium text-destructive"
+            <Button
+              ref={comprobarRef}
+              type="submit"
+              // Si el resultado trae su propia acción principal (ir a la web
+              // oficial), esta pasa a secundaria: una sola por pantalla.
+              variant={web ? "outline" : "sunset"}
+              size="lg"
+              disabled={enviando || leyendo}
+              // Sin perder el foco mientras comprueba (un botón deshabilitado lo suelta).
+              focusableWhenDisabled
+              className="h-12 px-3 text-base sm:px-5"
             >
-              {error.texto}
-            </p>
-          )}
-          <Button
-            ref={comprobarRef}
-            type="submit"
-            // Si el resultado trae su propia acción principal (ir a la web
-            // oficial), esta pasa a secundaria: una sola por pantalla.
-            variant={web ? "outline" : "sunset"}
-            size="lg"
-            disabled={enviando || leyendo}
-            // Sin perder el foco mientras comprueba (un botón deshabilitado lo suelta).
-            focusableWhenDisabled
-            className="mt-6 h-14 px-6 text-lg max-sm:w-full"
-          >
-            {enviando ? (
-              <>
-                <Spinner />
-                Comprobando…
-              </>
-            ) : (
-              "Comprobar el mensaje"
-            )}
-          </Button>
+              {enviando ? (
+                <>
+                  <Spinner />
+                  Comprobando…
+                </>
+              ) : (
+                <>
+                  Comprobar<span className="max-sm:hidden"> mensaje</span>
+                </>
+              )}
+            </Button>
+          </div>
+          <p id={`${id}-imagen-ayuda`} className="mt-2 text-base text-(--text-secondary)">
+            Captura en PNG, JPG o WebP, hasta 4 MB.
+          </p>
           {/* Un solo anuncio al empezar. El veredicto lo lee el lector al recibir
               el foco su titular, y los errores ya son role="alert": aquí no se repiten. */}
           <p aria-live="polite" className="sr-only">
@@ -485,7 +490,7 @@ export function AnalizarMensaje({
           </p>
           <p
             id={`${id}-privacidad`}
-            className="mt-3 text-base text-(--text-secondary)"
+            className="mt-1 text-base text-(--text-secondary)"
           >
             No guardamos lo que pegas ni las imágenes, ni abrimos sus enlaces.
           </p>
