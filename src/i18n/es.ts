@@ -10,6 +10,8 @@ export const es = {
   saltarContenido: "Saltar al contenido",
   selector: { etiqueta: "Idioma" },
   cabecera: {
+    frase: "Comprueba antes de confiar.",
+    secciones: "Secciones",
     datosReales: "Datos públicos",
     datosSimulados: "Datos simulados",
   },

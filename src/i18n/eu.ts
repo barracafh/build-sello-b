@@ -29,6 +29,8 @@ export const eu = {
   saltarContenido: "Joan edukira",
   selector: { etiqueta: "Hizkuntza" },
   cabecera: {
+    frase: "Egiaztatu fidatu aurretik.",
+    secciones: "Atalak",
     datosReales: "Datu publikoak",
     datosSimulados: "Datu simulatuak",
   },

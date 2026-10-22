@@ -4,6 +4,8 @@ import { JuegoEstafas } from "@/components/JuegoEstafas";
 import { Pie } from "@/components/Pie";
 import ficha from "../../../ficha.json";
 import { idiomaDePeticion } from "@/i18n/servidor";
+import { langHtml } from "@/i18n";
+import { IdiomaDocumento } from "@/components/IdiomaDocumento";
 
 export const metadata: Metadata = {
   title: `Juego: ¿estafa o no? · ${ficha.nombre}`,
@@ -14,6 +16,7 @@ export default async function Juego() {
   const idioma = await idiomaDePeticion();
   return (
     <>
+      <IdiomaDocumento lang={langHtml(idioma)} />
       <Cabecera activa="juego" idioma={idioma} />
 
       {/* Recorta a lo ancho de la página: la tarjeta sale volando sin scroll horizontal. */}

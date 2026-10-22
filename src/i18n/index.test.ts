@@ -1,5 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
+import ficha from "../../ficha.json";
 import { DICCIONARIOS, IDIOMAS, NOMBRES, langHtml, resolverIdioma } from "./index";
 
 describe("resolverIdioma", () => {
@@ -57,8 +58,10 @@ describe("idiomas", () => {
   });
 
   test("<html lang> usa la etiqueta BCP 47 de valencià", () => {
-    assert.equal(langHtml("va"), "ca-ES-valencia");
-    assert.equal(langHtml("eu"), "eu");
+    assert.deepEqual(
+      IDIOMAS.map((idioma) => langHtml(idioma)),
+      ["es", "ca", "ca-ES-valencia", "gl", "eu"],
+    );
   });
 });
 
@@ -71,6 +74,10 @@ const claves = (objeto: object, prefijo = ""): string[] =>
   );
 
 describe("diccionarios", () => {
+  test("la frase de la cabecera en castellano es la de ficha.json", () => {
+    assert.equal(DICCIONARIOS.es.cabecera.frase, ficha.frase);
+  });
+
   test("todos tienen las mismas claves que es", () => {
     const base = claves(DICCIONARIOS.es).sort();
     for (const idioma of IDIOMAS) assert.deepEqual(claves(DICCIONARIOS[idioma]).sort(), base);

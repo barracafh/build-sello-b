@@ -29,6 +29,8 @@ export const ca = {
   saltarContenido: "Salta al contingut",
   selector: { etiqueta: "Idioma" },
   cabecera: {
+    frase: "Comprova-ho abans de confiar-hi.",
+    secciones: "Seccions",
     datosReales: "Dades públiques",
     datosSimulados: "Dades simulades",
   },

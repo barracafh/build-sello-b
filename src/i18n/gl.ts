@@ -29,6 +29,8 @@ export const gl = {
   saltarContenido: "Ir ao contido",
   selector: { etiqueta: "Idioma" },
   cabecera: {
+    frase: "Compróbao antes de fiarte.",
+    secciones: "Seccións",
     datosReales: "Datos públicos",
     datosSimulados: "Datos simulados",
   },

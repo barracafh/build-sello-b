@@ -4,8 +4,9 @@ import { Cabecera } from "@/components/Cabecera";
 import { Pie } from "@/components/Pie";
 import { cn } from "@/lib/utils";
 import { mostrarCasosTest } from "@/lib/casos-test";
-import { diccionario } from "@/i18n";
+import { diccionario, langHtml } from "@/i18n";
 import { idiomaDePeticion } from "@/i18n/servidor";
+import { IdiomaDocumento } from "@/components/IdiomaDocumento";
 
 // El panel de ejemplos (para demos y pruebas) solo sale con ?casos-test=true;
 // sin él, el verificador ocupa todo el ancho.
@@ -24,6 +25,7 @@ export default async function Home({
 
   return (
     <>
+      <IdiomaDocumento lang={langHtml(idioma)} />
       <Cabecera activa="verificar" idioma={idioma} />
 
       <main
