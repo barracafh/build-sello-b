@@ -7,12 +7,15 @@ import { mostrarCasosTest } from "@/lib/casos-test";
 import { avisosIncibe, linea017 } from "@/datos/incibe";
 import { ExternalLink, Phone } from "lucide-react";
 import ficha from "../../ficha.json";
+import { SelectorIdioma } from "@/components/SelectorIdioma";
+import { diccionario, type Diccionario } from "@/i18n";
+import { idiomaDePeticion } from "@/i18n/servidor";
 
 // Columnas del pie: webs oficiales de datos/dominios-oficiales.json y la ayuda de INCIBE.
-const columnasPie = [
+const columnasPie = (t: Diccionario) => [
   {
     id: "organismos",
-    titulo: "Organismos oficiales",
+    titulo: t.pie.organismos,
     enlaces: [
       { nombre: "Agencia Tributaria", url: "https://sede.agenciatributaria.gob.es" },
       { nombre: "Seguridad Social", url: "https://sede.seg-social.gob.es" },
@@ -23,11 +26,11 @@ const columnasPie = [
   },
   {
     id: "ayuda",
-    titulo: "Información y ayuda",
+    titulo: t.pie.ayuda,
     enlaces: [
-      { nombre: "Llamar al 017", url: "tel:017" },
-      { nombre: "Línea 017 de INCIBE", url: linea017.url },
-      { nombre: "Avisos de INCIBE", url: avisosIncibe.url },
+      { nombre: t.pie.llamar017, url: "tel:017" },
+      { nombre: t.pie.linea017, url: linea017.url },
+      { nombre: t.pie.avisosIncibe, url: avisosIncibe.url },
     ],
   },
 ];
@@ -48,6 +51,9 @@ export default async function Home({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const conEjemplos = mostrarCasosTest((await searchParams)["casos-test"]);
+  const idioma = await idiomaDePeticion();
+  const t = diccionario(idioma);
+  const datos = ficha.datos === "reales" ? t.cabecera.datosReales : t.cabecera.datosSimulados;
 
   return (
     <>
@@ -68,9 +74,10 @@ export default async function Home({
               <span className="text-base text-(--text-secondary)">{ficha.frase}</span>
             </span>
           </span>
-          <Badge variant="outline">
-            {ficha.datos === "reales" ? "Datos públicos" : "Datos simulados"}
-          </Badge>
+          <span className="flex flex-wrap items-center gap-4">
+            <SelectorIdioma idioma={idioma} etiqueta={t.selector.etiqueta} />
+            <Badge variant="outline">{datos}</Badge>
+          </span>
         </div>
       </header>
 
@@ -83,10 +90,10 @@ export default async function Home({
         )}
       >
         <p className="font-mono text-sm tracking-[0.06em] text-(--text-secondary) uppercase">
-          Verificador de mensajes
+          {t.pagina.antetitulo}
         </p>
         <h1 className="mt-4 max-w-[760px] font-heading text-[clamp(36px,4.5vw,60px)] leading-[1.1] tracking-[-0.02em]">
-          ¿Este mensaje es de verdad?
+          {t.pagina.titulo}
         </h1>
         <span aria-hidden="true" className="mt-6 block h-1 w-16 rounded-full bg-brand" />
 
@@ -94,10 +101,7 @@ export default async function Home({
           <AnalizarMensaje
             conEjemplos={conEjemplos}
             intro={
-              <p className="max-w-[760px] text-(--text-secondary)">
-                Pega un SMS, un correo o una web que dice ser de la DGT,
-                Hacienda u otro organismo y te decimos si podemos confirmarlo.
-              </p>
+              <p className="max-w-[760px] text-(--text-secondary)">{t.pagina.intro}</p>
             }
           />
         </div>
@@ -120,13 +124,11 @@ export default async function Home({
               </span>
             </span>
             <p className="mt-6 max-w-[38ch] text-(--text-secondary)">
-              {ficha.nombre} es una herramienta independiente para ayudarte a
-              identificar posibles fraudes. Herramienta experimental. No es un
-              servicio oficial.
+              {t.pie.descripcion(ficha.nombre)} {t.pie.aviso}
             </p>
           </div>
 
-          {columnasPie.map((columna) => (
+          {columnasPie(t).map((columna) => (
             <nav
               key={columna.id}
               aria-labelledby={`pie-${columna.id}`}
@@ -154,10 +156,10 @@ export default async function Home({
 
           <section aria-labelledby="pie-herramienta" className="lg:border-l lg:border-border lg:pl-6">
             <h2 id="pie-herramienta" className="font-sans text-lg font-semibold">
-              Sobre la herramienta
+              {t.pie.sobre}
             </h2>
             <p className="mt-3 text-(--text-secondary)">
-              No guardamos lo que pegas ni abrimos sus enlaces.
+              {t.pie.privacidad}
             </p>
             <a
               href={site.feedbackUrl}
@@ -166,7 +168,7 @@ export default async function Home({
                 "mt-4 h-auto min-h-12 px-5 py-2 text-base whitespace-normal",
               )}
             >
-              ¿Algo está mal? Avísanos
+              {t.botonAviso}
             </a>
           </section>
         </div>
@@ -184,10 +186,10 @@ export default async function Home({
             </span>
             <ul className="flex flex-wrap items-center gap-y-2 text-(--text-secondary) [&>li+li]:border-l [&>li+li]:border-border [&>li+li]:pl-4 [&>li]:pr-4">
               <li>
-                Squad <span className="font-mono">{ficha.equipo}</span>
+                {t.pie.squad} <span className="font-mono">{ficha.equipo}</span>
               </li>
               <li>Build night BARRACA x SOTI</li>
-              <li>{ficha.datos === "reales" ? "Datos públicos" : "Datos simulados"}</li>
+              <li>{datos}</li>
             </ul>
           </div>
         </div>
