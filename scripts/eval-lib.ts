@@ -1,15 +1,17 @@
-// Núcleo de los evals: lo usan `bun run eval` y el hook de build en preview.
-// Llama a `analizar()`, el mismo pipeline que POST /api/verificar, en proceso y
-// de uno en uno: los límites de HelmCode son compartidos. Cuesta llamadas reales
-// a la API: no forma parte de `test` ni de un build normal.
+// Núcleo de `bun run eval`. Llama a `analizar()`, el mismo pipeline que
+// POST /api/verificar, en proceso y de uno en uno, con una pausa entre casos: los
+// límites de HelmCode son compartidos. Cuesta llamadas reales a la API: no forma
+// parte de `test` ni de `build`.
+import { execSync } from "node:child_process";
 import { analizar } from "../src/lib/analizar";
-import { MODELO_POR_DEFECTO } from "../src/lib/clasificar";
-import { listarModelos, type UsoIa } from "../src/lib/ia";
-import casos from "../src/datos/evals/casos.json";
+import { modeloClasificador } from "../src/lib/clasificar";
+import type { UsoIa } from "../src/lib/ia";
+import dev from "../src/datos/evals/dev.json";
 
 export const VEREDICTOS = ["oficial_verificado", "no_oficial", "no_determinable"] as const;
 export type Veredicto = (typeof VEREDICTOS)[number];
 
+// Conjunto dev de LAB-47 (src/datos/evals/README.md). El de prueba no está en el repo.
 export type Caso = {
   id: string;
   texto: string;
@@ -17,6 +19,8 @@ export type Caso = {
   motivo_esperado: string;
   fuente: string;
   sintetico: boolean;
+  canal: string;
+  etiqueta_origen: string;
 };
 
 export type Ejecucion = {
@@ -55,8 +59,7 @@ export type Metricas = {
 
 export type Informe = {
   modelo: string;
-  modelo_solicitado: string;
-  modelos_disponibles: string[];
+  conjunto: string;
   fecha: string;
   commit: string | null;
   repeticiones: number;
@@ -65,8 +68,12 @@ export type Informe = {
   metricas: Metricas;
 };
 
-export const CASOS = casos as Caso[];
-const ES_EJEMPLO_OFICIAL = (id: string) => /^[FL]0\d$/.test(id);
+export const CASOS = dev as Caso[];
+// Los 10 mensajes de datos/mensajes-ejemplo.json, por su fuente.
+const EJEMPLOS = new Set(
+  CASOS.filter((c) => c.fuente.startsWith("repo:mensajes-ejemplo:")).map((c) => c.id),
+);
+const ES_EJEMPLO_OFICIAL = (id: string) => EJEMPLOS.has(id);
 
 const razon = (a: number, b: number) => (b === 0 ? null : a / b);
 
@@ -121,38 +128,31 @@ export function calcularMetricas(ejecuciones: Ejecucion[]): Metricas {
   };
 }
 
-// Orden: la opción `--modelo`, luego `evals/config.json` y por último
-// HELMCODE_MODEL_CLASIFICADOR. `auto` es el primer id de /models que casa con
-// /deepseek.*flash/i. Sin ninguno de los tres: el id por defecto del código.
-export function resolverModelo(
-  { flag, config, entorno }: { flag?: string; config?: string; entorno?: string },
-  disponibles: string[],
-): string {
-  const pedido = flag || config || entorno || "auto";
-  if (pedido !== "auto") return pedido;
-  const flash = disponibles.find((id) => /deepseek.*flash/i.test(id));
-  if (flash) return flash;
-  if (disponibles.length === 0) return MODELO_POR_DEFECTO;
-  throw new Error("Ningún modelo de /models casa con /deepseek.*flash/i");
-}
-
 const MOTIVO_RESERVA = "clasificador no disponible";
+
+export const PAUSA_MS = 1000;
+const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export async function ejecutarEvals(opciones: {
   modelo: string;
   repeticiones?: number;
   casos?: Caso[];
+  pausaMs?: number;
+  analizar?: typeof analizar;
   alCaso?: (e: Ejecucion) => void;
 }): Promise<Ejecucion[]> {
   const salida: Ejecucion[] = [];
+  const analizarCaso = opciones.analizar ?? analizar;
   for (let rep = 1; rep <= (opciones.repeticiones ?? 1); rep++) {
     for (const caso of opciones.casos ?? CASOS) {
+      // Una llamada detrás de otra, con pausa: nunca en paralelo.
+      if (salida.length > 0) await esperar(opciones.pausaMs ?? PAUSA_MS);
       let tokens: number | null = null;
       const alUso = (u: UsoIa) => {
         tokens = (tokens ?? 0) + (u.total_tokens ?? (u.prompt_tokens ?? 0) + (u.completion_tokens ?? 0));
       };
       const inicio = performance.now();
-      const r = await analizar(caso.texto, { modelo: opciones.modelo, alUso });
+      const r = await analizarCaso(caso.texto, { modelo: opciones.modelo, alUso });
       const e: Ejecucion = {
         id: caso.id,
         repeticion: rep,
@@ -172,17 +172,20 @@ export async function ejecutarEvals(opciones: {
   return salida;
 }
 
+const commitLocal = () => {
+  try {
+    return execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim();
+  } catch {
+    return null;
+  }
+};
+
 export async function informeCompleto(opciones: {
-  flag?: string;
-  config?: string;
+  modelo?: string;
   repeticiones?: number;
   alCaso?: (e: Ejecucion) => void;
 }): Promise<Informe> {
-  const disponibles = await listarModelos();
-  const modelo = resolverModelo(
-    { flag: opciones.flag, config: opciones.config, entorno: process.env.HELMCODE_MODEL_CLASIFICADOR },
-    disponibles,
-  );
+  const modelo = opciones.modelo || modeloClasificador();
   const ejecuciones = await ejecutarEvals({
     modelo,
     repeticiones: opciones.repeticiones,
@@ -190,10 +193,9 @@ export async function informeCompleto(opciones: {
   });
   return {
     modelo,
-    modelo_solicitado: opciones.flag || opciones.config || process.env.HELMCODE_MODEL_CLASIFICADOR || "auto",
-    modelos_disponibles: disponibles,
+    conjunto: "src/datos/evals/dev.json",
     fecha: new Date().toISOString(),
-    commit: process.env.VERCEL_GIT_COMMIT_SHA ?? null,
+    commit: commitLocal(),
     repeticiones: opciones.repeticiones ?? 1,
     casos: CASOS.length,
     ejecuciones,
@@ -215,7 +217,7 @@ export function resumenMarkdown(informes: Informe[]): string {
     const si = (b: boolean) => (b ? "✅" : "❌");
     return `## ${i.modelo}
 
-Fecha: ${i.fecha} · commit: ${i.commit ?? "local"} · casos: ${i.casos} × ${i.repeticiones} · modelo pedido: \`${i.modelo_solicitado}\`
+Fecha: ${i.fecha} · commit: ${i.commit ?? "—"} · conjunto: \`${i.conjunto}\` · casos: ${i.casos} × ${i.repeticiones}
 
 - Accuracy: **${pct(m.accuracy)}** (${m.aciertos}/${m.total}) ${si(m.gates.accuracy_85)} (puerta: ≥ 85 %)
 - Falsos \`oficial_verificado\`: **${m.falsos_oficial_verificado}** ${si(m.gates.sin_falsos_oficial)} (puerta: 0)
@@ -237,7 +239,7 @@ ${matriz}
   };
   return `# Último eval
 
-Generado por \`bun run eval\`. Pipeline medido: \`analizar()\` (verificar + señales + clasificador), el mismo que usa \`POST /api/verificar\`.
+Generado por \`bun run eval\` en local (una pasada, en serie, 1 s entre casos). Pipeline medido: \`analizar()\` (verificar + señales + clasificador), el mismo que usa \`POST /api/verificar\`.
 
 ${informes.map(filas).join("\n")}`;
 }

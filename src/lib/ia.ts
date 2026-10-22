@@ -81,16 +81,3 @@ export async function completar(
     return data.choices[0].message.content;
   }
 }
-
-// GET <base>/models: los ids disponibles. Los errores nunca incluyen la clave.
-export async function listarModelos(signal?: AbortSignal): Promise<string[]> {
-  const { HELMCODE_API_KEY } = process.env;
-  if (!HELMCODE_API_KEY) throw new Error("Falta HELMCODE_API_KEY");
-  const res = await fetch(`${base()}/models`, {
-    headers: { authorization: `Bearer ${HELMCODE_API_KEY}` },
-    signal,
-  });
-  if (!res.ok) throw new Error(`HelmCode respondió ${res.status} al listar modelos`);
-  const data = (await res.json()) as { data?: { id?: unknown }[] };
-  return (data.data ?? []).flatMap((m) => (typeof m.id === "string" ? [m.id] : []));
-}
