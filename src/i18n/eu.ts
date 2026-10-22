@@ -35,10 +35,7 @@ export const eu = {
     datosSimulados: "Datu simulatuak",
   },
   pagina: {
-    antetitulo: "Mezu-egiaztatzailea",
     titulo: "Mezu hau benetakoa da?",
-    intro:
-      "Itsatsi DGTrena, Ogasunarena edo beste erakunde batena dela dioen SMS, mezu elektroniko edo webgune bat, eta baieztatu dezakegun esango dizugu.",
   },
   pie: {
     descripcion: (nombre: string) =>
@@ -97,10 +94,11 @@ export const eu = {
     },
   },
   analizar: {
-    etiquetaCampo: "Itsatsi hemen jaso duzun mezua",
-    ayudaCampo:
-      "SMS bat, mezu elektroniko bat edo webgune baten esteka izan daiteke. Sartu igorlea eta esteka agertzen diren bezala.",
-    noPulses: "Ez sakatu estekan.",
+    campo: {
+      antes: "Itsatsi hemen SMSa, mezu elektronikoa edo webgunea jaso duzun bezala, ",
+      negrita: "estekarik sakatu gabe",
+      despues: ", eta baieztatu dezakegun esango dizugu.",
+    },
     placeholder: "DGT: 24 ordu dituzu isuna ordaintzeko. Kontsultatu esteka honetan: hxxps://…",
     contador: (actual: string, maximo: string) => `${actual} / ${maximo} karaktere gehienez`,
     subirCaptura: "Igo argazkia",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { ExternalLink, ImageUp, Link2, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ruta } from "@/config/sitio";
@@ -85,15 +85,12 @@ const contextoMd = (señales: Respuesta["señales"], t: Diccionario) => {
   };
 };
 
-// `intro` va encima del formulario, en su columna: así el panel de ejemplos
-// arranca a la altura de la entradilla en escritorio. Los ejemplos solo se
-// enseñan con `conEjemplos`, que la página activa solo con ?casos-test=true.
+// Los ejemplos solo se enseñan con `conEjemplos`, que la página activa solo
+// con ?casos-test=true.
 export function AnalizarMensaje({
-  intro,
   conEjemplos = false,
   idioma = "es",
 }: {
-  intro?: ReactNode;
   conEjemplos?: boolean;
   idioma?: Idioma;
 }) {
@@ -333,25 +330,18 @@ export function AnalizarMensaje({
       )}
     >
       <div className="lg:col-start-1 lg:row-start-1">
-        {intro}
-        <form
-          onSubmit={analizar}
-          aria-describedby={`${id}-privacidad`}
-          className={intro ? "mt-10" : undefined}
-        >
-          <label htmlFor={`${id}-mensaje`} className="block text-lg font-medium">
-            {a.etiquetaCampo}
+        <form onSubmit={analizar} aria-describedby={`${id}-privacidad`}>
+          {/* Una sola frase: qué pegar, que no se pulse el enlace y qué hacemos. */}
+          <label htmlFor={`${id}-mensaje`} className="block max-w-[760px] text-base">
+            {a.campo.antes}
+            <strong className="font-semibold">{a.campo.negrita}</strong>
+            {a.campo.despues}
           </label>
-          <p id={`${id}-ayuda`} className="mt-1 text-base text-(--text-secondary)">
-            {a.ayudaCampo}{" "}
-            <strong className="font-semibold text-foreground">{a.noPulses}</strong>
-          </p>
           <Textarea
             ref={campoRef}
             id={`${id}-mensaje`}
             name="mensaje"
             aria-describedby={cn(
-              `${id}-ayuda`,
               cercaDelLimite && `${id}-contador`,
               error && `${id}-error`,
             )}
@@ -362,8 +352,8 @@ export function AnalizarMensaje({
             spellCheck={false}
             autoComplete="off"
             placeholder={a.placeholder}
-            // Fondo amarillo suave: aquí es donde se pega el mensaje.
-            className="mt-3 min-h-40 bg-brand-yellow/15 px-4 py-3 text-base leading-relaxed md:text-base [overflow-wrap:anywhere]"
+            // Fondo gris claro: el muted de Sol al 70 % sobre blanco da #f8f8f8, sin color nuevo.
+            className="mt-3 min-h-40 bg-muted/70 px-4 py-3 text-base leading-relaxed md:text-base [overflow-wrap:anywhere]"
           />
           {cercaDelLimite && (
             <p

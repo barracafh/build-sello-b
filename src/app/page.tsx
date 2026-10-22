@@ -36,10 +36,8 @@ export default async function Home({
           conEjemplos ? "max-w-5xl" : "max-w-[58rem]",
         )}
       >
-        <p className="font-mono text-sm tracking-[0.06em] text-(--text-secondary) uppercase">
-          {t.pagina.antetitulo}
-        </p>
-        <h1 className="mt-4 max-w-[760px] font-heading text-[clamp(36px,4.5vw,60px)] leading-[1.1] tracking-[-0.02em]">
+        {/* Sin antetítulo: el titular abre la página. */}
+        <h1 className="max-w-[760px] font-heading text-[clamp(34px,calc(4.5vw_-_2px),58px)] leading-[1.1] tracking-[-0.02em]">
           {t.pagina.titulo}
         </h1>
         <span aria-hidden="true" className="mt-6 block h-1 w-16 rounded-full bg-brand" />
@@ -48,7 +46,6 @@ export default async function Home({
           <AnalizarMensaje
             conEjemplos={conEjemplos}
             idioma={idioma}
-            intro={<p className="max-w-[760px] text-(--text-secondary)">{t.pagina.intro}</p>}
           />
         </div>
 

@@ -10,8 +10,6 @@ export const va = {
   pagina: {
     ...ca.pagina,
     titulo: "Este missatge és de veritat?",
-    intro:
-      "Apega un SMS, un correu o una web que diu ser de la DGT, d'Hisenda o d'un altre organisme i et direm si ho podem confirmar.",
   },
   pie: {
     ...ca.pie,
@@ -62,10 +60,11 @@ export const va = {
   },
   analizar: {
     ...ca.analizar,
-    etiquetaCampo: "Apega ací el missatge que t'ha arribat",
-    ayudaCampo:
-      "Pot ser un SMS, un correu o l'enllaç d'una web. Inclou el remitent i l'enllaç tal com apareixen.",
-    noPulses: "No toques l'enllaç.",
+    campo: {
+      antes: "Apega ací l'SMS, el correu o la web tal com t'ha arribat, ",
+      negrita: "sense tocar cap enllaç",
+      despues: ", i et direm si ho podem confirmar.",
+    },
     ayudaImagen: "Captura en PNG, JPG o WebP, fins a 4 MB.",
     privacidad: "No guardem el que apegues ni les imatges, ni obrim els seus enllaços.",
     ejemplos: "Vols provar amb un exemple?",
