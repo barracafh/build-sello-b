@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Fuentes } from "@/components/Fuentes";
+import { MensajeSenalado } from "@/components/MensajeSenalado";
 import { avisosIncibe, horario017, linea017 } from "@/datos/incibe";
 import { NOMBRES_EJEMPLOS, tipoDeEjemplo } from "@/datos/ejemplos";
 import {
@@ -129,6 +130,8 @@ export function AnalizarMensaje({
   const id = useId();
   const [mensaje, setMensaje] = useState("");
   const [respuesta, setRespuesta] = useState<Respuesta | null>(null);
+  // El texto que se comprobó: los fragmentos de la respuesta son posiciones en él.
+  const [analizado, setAnalizado] = useState("");
   // Solo los errores del mensaje marcan el campo como no válido; los de red, no.
   const [error, setError] = useState<{ texto: string; delCampo: boolean } | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -234,7 +237,10 @@ export function AnalizarMensaje({
     // Si el mensaje ha cambiado mientras tanto, esta respuesta ya no vale.
     if (esta !== peticion.current) return;
     setEnviando(false);
-    if (datos) setRespuesta(datos);
+    if (datos) {
+      setAnalizado(texto);
+      setRespuesta(datos);
+    }
     else setError({ texto: "No hemos podido comprobarlo. Inténtalo de nuevo.", delCampo: false });
   }
 
@@ -588,6 +594,12 @@ export function AnalizarMensaje({
                   </p>
                 )}
               </div>
+
+              <MensajeSenalado
+                id={`${id}-senalado`}
+                texto={analizado}
+                fragmentos={respuesta.fragmentos}
+              />
 
             </div>
 

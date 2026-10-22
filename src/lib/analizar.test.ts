@@ -52,4 +52,38 @@ describe("analizar", () => {
     );
     assert.equal(r.veredicto, "no_oficial");
   });
+
+  test("solo una URL sospechosa: subraya la URL entera, sin modelo", async () => {
+    const texto = "hxxps://dgt.es.multas-pago[.]com/x";
+    const r = await analizar(texto, { completar: sinRed });
+    assert.equal(r.clasificado, false);
+    assert.deepEqual(r.fragmentos, [{ inicio: 0, fin: texto.length, nivel: "roja", codigo: "enlace_imita_oficial" }]);
+  });
+
+  test("con el modelo caído, los fragmentos salen de las reglas", async () => {
+    const texto = "DGT: pague su multa en 24 horas hxxps://dgt-multas-pago[.]com/x";
+    const r = await analizar(texto, { completar: sinRed });
+    assert.ok(r.fragmentos.some((f) => f.nivel === "roja"));
+    assert.ok(r.fragmentos.some((f) => texto.slice(f.inicio, f.fin) === "24 horas"));
+  });
+
+  test("funde las citas del modelo con las de las reglas", async () => {
+    const texto = "Correos: su paquete está retenido. Abone las tasas hoy en correos-envio[.]top";
+    const r = await analizar(texto, {
+      completar: async () =>
+        JSON.stringify({
+          veredicto: "no_oficial",
+          motivo: "Pide un pago.",
+          señales: [
+            { codigo: "pide_dinero", evidencia: "e", fuente: "§5.4", fragmento: "Abone las tasas" },
+            { codigo: "amenaza", evidencia: "e", fuente: "§5.4", fragmento: "le detendremos" },
+          ],
+          entidad_suplantada: "Correos",
+          web_oficial: null,
+        }),
+    });
+    const vistos = r.fragmentos.map((f) => texto.slice(f.inicio, f.fin));
+    assert.ok(vistos.includes("Abone las tasas"), JSON.stringify(vistos));
+    assert.ok(!vistos.some((v) => v.includes("detendremos")));
+  });
 });
