@@ -45,6 +45,7 @@ const iconos = {
 
 // Frase corta para el ciudadano; el código de `motivos` nunca se muestra solo.
 const frases: Record<string, string> = {
+  contenido_sospechoso: "La web del enlace figura como oficial, pero el mensaje tiene señales de fraude: no podemos confirmarlo.",
   contenido_fraudulento: "El mensaje usa el nombre de un organismo oficial y tiene señales claras de fraude.",
   sin_enlace: "No hemos encontrado ningún enlace en el mensaje.",
   url_no_valida: "El enlace no tiene un formato que podamos leer.",

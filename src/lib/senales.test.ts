@@ -134,6 +134,25 @@ describe("6. dinero, pagos y datos sensibles", () => {
   test("«nunca le pediremos» no cuenta", () => {
     assert.ok(!codigos("Nunca le pediremos su contraseña ni el CVV.").includes("pide_datos"));
   });
+  test("«Cl@ve PIN» solo no cuenta (AEAT1, DEHU, AEAT4)", () => {
+    const casos = [
+      "Agencia Tributaria: notificación pendiente. Entre en la sede con Cl@ve PIN.",
+      "Tiene una notificación en la DEHú. Acceda con Cl@ve PIN.",
+      "Agencia Tributaria: acceda con Cl@ve PIN a https://sede.agenciatributaria.gob.es",
+      "Introduzca su Cl@ve PIN en la sede electrónica.",
+    ];
+    for (const t of casos) {
+      assert.ok(!codigos(t).includes("pide_datos"), t);
+    }
+    assert.equal(veredicto(casos[0]), "no_determinable");
+    assert.equal(veredicto(casos[1]), "no_determinable");
+    assert.equal(veredicto(casos[2]), "oficial_verificado");
+  });
+  test("pedir el PIN sí cuenta", () => {
+    assert.equal(nivel("Facilite su PIN", "pide_datos"), "roja");
+    assert.equal(nivel("Envíenos el PIN por SMS", "pide_datos"), "roja");
+    assert.equal(nivel("Número de tarjeta y PIN", "pide_datos"), "roja");
+  });
   test("tarjeta sanitaria no cuenta", () => {
     assert.ok(!codigos("Su tarjeta sanitaria está lista.").includes("pide_datos"));
   });
@@ -181,6 +200,23 @@ describe("combinar con el veredicto", () => {
       const r = verificar(t);
       assert.notEqual(combinar(r, senales(t, r), t).veredicto, "oficial_verificado");
     }
+  });
+  test("oficial_verificado con señal roja baja a no_determinable, nunca a no_oficial", () => {
+    const t = "Agencia Tributaria: pague su multa en https://sede.agenciatributaria.gob.es";
+    const r = verificar(t);
+    assert.equal(r.veredicto, "oficial_verificado");
+    const lista = senales(t, r);
+    assert.ok(lista.some((s) => s.nivel === "roja"));
+    const c = combinar(r, lista, t);
+    assert.equal(c.veredicto, "no_determinable");
+    assert.equal(c.motivos[0], "contenido_sospechoso");
+  });
+  test("paro suelto no cuenta como organismo", () => {
+    assert.equal(veredicto("Pague su multa por el paro del metro"), "no_determinable");
+    assert.equal(
+      veredicto("Prestación por desempleo: pague la tasa con tarjeta"),
+      "no_oficial",
+    );
   });
   test("aviso legítimo art. 41.6 sigue en no_determinable", () => {
     assert.equal(

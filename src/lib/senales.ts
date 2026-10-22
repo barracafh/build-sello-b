@@ -70,6 +70,8 @@ const NEGACION = /\b(nunca|jam[aá]s|no le (?:pedir|solicit)|no (?:pedimos|solic
 const sinNegaciones = (texto: string) =>
   texto.split(/(?<=[.!?\n])/).filter((f) => !NEGACION.test(f)).join(" ");
 
+const CLAVE_PIN = /cl[@a]ve\s+(?:permanente\s+)?pin/gi;
+
 const URGENCIA = [
   regla(String.raw`(?:24|48|72)\s?(?:horas|h)`),
   regla(String.raw`[uú]ltim[oa]\s+(?:aviso|recordatorio|oportunidad)`),
@@ -97,13 +99,20 @@ const DINERO = [
   ),
 ];
 const DATOS = [
-  regla(String.raw`cvv2?|cvc|pin|contrase[ñn]a|password|iban`),
+  regla(String.raw`cvv2?|cvc|contrase[ñn]a|password|iban`),
   regla(String.raw`n[uú]mero de (?:la )?tarjeta|datos (?:bancarios|de (?:la |su )?tarjeta)|fecha de caducidad`),
   cerca(
     String.raw`facilit|env[ií]|indi(?:que|ca)|confirm|introduzca|introduce|proporcion|actualic|comunique`,
     String.raw`dni|nif|nie|pasaporte`,
     40,
   ),
+  // El PIN solo cuenta si se pide o va junto a la tarjeta; «Cl@ve PIN» es un acceso oficial.
+  cerca(
+    String.raw`facilit|env[ií]|indi(?:que|ca)|confirm|introduzca|introduce|proporcion|comunique`,
+    String.raw`pin`,
+    25,
+  ),
+  cerca(String.raw`tarjeta|cvv|cvc`, String.raw`pin`, 25),
 ];
 const QR = [regla(String.raw`c[oó]digo qr|qr|escane(?:a|e|ar|en)`)];
 const INSTRUCCION = [
@@ -180,7 +189,7 @@ export function senales(texto: string, resultadoUrl: Resultado): Senal[] {
     poner({ codigo: "remitente_falso", nivel: "roja", texto: "El remitente usa el nombre de un servicio oficial con otra dirección." });
   }
 
-  const pedido = sinNegaciones(texto);
+  const pedido = sinNegaciones(texto).replace(CLAVE_PIN, "clave");
   if (algunaCoincide(DINERO, pedido)) {
     poner({ codigo: "pide_dinero", nivel: "roja", texto: "Pide dinero o el pago de una multa o tasa." });
   }
@@ -202,7 +211,7 @@ const ORGANISMOS = [
   regla(String.raw`aeat|agencia tributaria|agenciatributaria|hacienda`),
   regla(String.raw`dgt|direcci[oó]n general de tr[aá]fico|tr[aá]fico`),
   regla(String.raw`seguridad social|seg-social|tgss`),
-  regla(String.raw`sepe|servicio p[uú]blico de empleo|paro`),
+  regla(String.raw`sepe|servicio p[uú]blico de empleo|prestaci[oó]n por desempleo`),
   regla(String.raw`correos`),
 ];
 
@@ -211,12 +220,22 @@ export function suplantaOrganismo(texto: string, resultadoUrl: Resultado): boole
   return algunaCoincide(ORGANISMOS, `${limpiar(texto)} ${entidad}`);
 }
 
-// Una señal roja con suplantación de uno de los cinco organismos da `no_oficial`,
-// lleve enlace o no. En cualquier otro caso manda el veredicto de la URL.
+// Las señales solo empujan hacia `no_oficial`. Una roja con suplantación de uno de
+// los cinco organismos da `no_oficial`, lleve enlace o no. Si la URL es una
+// coincidencia exacta de la allowlist, el contenido sospechoso solo la baja a
+// `no_determinable`. En cualquier otro caso manda el veredicto de la URL.
 export function combinar(resultadoUrl: Resultado, lista: Senal[], texto: string): Resultado {
+  const roja = lista.some((s) => s.nivel === "roja");
+  if (roja && resultadoUrl.veredicto === "oficial_verificado") {
+    return {
+      ...resultadoUrl,
+      veredicto: "no_determinable",
+      motivos: ["contenido_sospechoso", ...resultadoUrl.motivos],
+    };
+  }
   if (
+    roja &&
     resultadoUrl.veredicto !== "no_oficial" &&
-    lista.some((s) => s.nivel === "roja") &&
     suplantaOrganismo(texto, resultadoUrl)
   ) {
     return {
