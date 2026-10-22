@@ -104,7 +104,12 @@ const PEDIR =
 // «debe», «para»… Listas cerradas: un sustantivo («pago», «importe», «tasa») no
 // basta, y sin raíces abiertas «pagina» o «paginación» no entran.
 const DINERO = [
-  regla(String.raw`paguen?|abonen?|ingresen?|transfieran?`),
+  regla(String.raw`paguen?|abonen?|transfieran?`),
+  // «ingrese» también es «entre» («ingrese en la sede»): solo cuenta con dinero detrás.
+  // La cifra admite espacios: «1 500 €», y `sinNegaciones` deja «1.500» como «1. 500».
+  regla(
+    String.raw`ingresen?(?:\s+[^\s.!?]+){0,2}?\s+(?:(?:(?:el|la)\s+)?(?:importe|cantidad|pago)|\d(?:[\d.,]|\s(?=\d))*\s?(?:€|euros?)|en\s+(?:la|su|esta)\s+cuenta)`,
+  ),
   regla(String.raw`(?:realice|efect[uú]e)\s+(?:el\s+)?(?:pago|ingreso|abono)`),
   regla(String.raw`(?:debe|tiene\s+que|deber[aá]|para|puede)\s+(?:pagar|abonar|ingresar|transferir)`),
 ];

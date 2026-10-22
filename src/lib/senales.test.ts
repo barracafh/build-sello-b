@@ -121,6 +121,22 @@ describe("6. dinero, pagos y datos sensibles", () => {
     assert.equal(nivel("Realice el pago de la tasa.", "pide_dinero"), "roja");
     assert.equal(nivel("Efectúe el ingreso antes del viernes.", "pide_dinero"), "roja");
   });
+  test("«ingrese» con dinero detrás → roja", () => {
+    assert.equal(nivel("Ingrese 50 € en la cuenta indicada.", "pide_dinero"), "roja");
+    assert.equal(nivel("Ingrese el importe antes del viernes.", "pide_dinero"), "roja");
+    assert.equal(nivel("Correos: ingrese 1.500,00 euros hoy.", "pide_dinero"), "roja");
+    assert.equal(nivel("Ingrese en la cuenta ES00 0000 0000 00 0000000000.", "pide_dinero"), "roja");
+  });
+  test("«ingrese» como entrar no cuenta", () => {
+    const frases = [
+      "Agencia Tributaria: ingrese en la sede con Cl@ve para consultar la notificación.",
+      "Seguridad Social: ingrese en su área personal.",
+    ];
+    for (const t of frases) {
+      assert.ok(!codigos(t).includes("pide_dinero"), t);
+      assert.equal(veredicto(t), "no_determinable", t);
+    }
+  });
   test("infinitivo tras obligación o finalidad → roja (F02)", () => {
     assert.equal(nivel("DGT: Dispone de 24 horas restantes para pagar su multa.", "pide_dinero"), "roja");
     assert.equal(nivel("Tiene que abonar la tasa.", "pide_dinero"), "roja");
