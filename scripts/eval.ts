@@ -3,40 +3,26 @@
 // con 1 s de pausa. Sin `--modelo`: HELMCODE_MODEL_CLASIFICADOR o deepseek-v4-flash.
 // Escribe evals/resultados/<fecha>-<modelo>.json (ignorado por git) y evals/ULTIMO.md.
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { IDIOMA_POR_DEFECTO, IDIOMAS, esIdioma } from "../src/i18n";
-import { informeCompleto, resumenMarkdown, tablaTexto, type Informe } from "./eval-lib";
+import {
+  informeCompleto,
+  leerArgumentosEval,
+  resumenMarkdown,
+  tablaTexto,
+  type Informe,
+} from "./eval-lib";
 
-const argumento = (nombre: string) => {
-  const i = process.argv.indexOf(`--${nombre}`);
-  return i >= 0 ? process.argv[i + 1] : undefined;
-};
-
-const repeticiones = Number(argumento("repeticiones") ?? 1);
-if (!Number.isInteger(repeticiones) || repeticiones < 1) {
-  console.error("--repeticiones debe ser un entero ≥ 1");
+let argumentos: ReturnType<typeof leerArgumentosEval>;
+try {
+  argumentos = leerArgumentosEval(process.argv.slice(2));
+} catch (e) {
+  console.error((e as Error).message);
   process.exit(2);
 }
 
-// --idioma pide el `motivo` en ese idioma; los veredictos deben salir iguales.
-const idioma = argumento("idioma") ?? IDIOMA_POR_DEFECTO;
-if (!esIdioma(idioma)) {
-  console.error(`--idioma debe ser uno de: ${IDIOMAS.join(", ")}`);
-  process.exit(2);
-}
-
-// --timeout-ms sube el tiempo límite para medir la latencia real (LAB-73). Esas
-// pasadas no miden lo que se publica: no entran en ULTIMO.md.
-const timeoutMs = argumento("timeout-ms") === undefined ? undefined : Number(argumento("timeout-ms"));
-if (timeoutMs !== undefined && !(Number.isInteger(timeoutMs) && timeoutMs > 0)) {
-  console.error("--timeout-ms debe ser un entero > 0");
-  process.exit(2);
-}
+const { idioma, timeoutMs } = argumentos;
 
 const informe = await informeCompleto({
-  modelo: argumento("modelo"),
-  idioma,
-  repeticiones,
-  timeoutMs,
+  ...argumentos,
   alCaso: (e) => console.error(`${e.id}: ${e.obtenido} (${e.pasa ? "ok" : "NO"})`),
 }).catch((e: Error) => {
   console.error(`No se pudo ejecutar el eval: ${e.message}`);

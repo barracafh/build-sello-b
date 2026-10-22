@@ -2,12 +2,15 @@
 // POST /api/verificar, en proceso y de uno en uno, con una pausa entre casos: los
 // límites de HelmCode son compartidos. Cuesta llamadas reales a la API: no forma
 // parte de `test` ni de `build`.
-import type { Idioma } from "../src/i18n";
+import { IDIOMA_POR_DEFECTO, IDIOMAS, esIdioma, type Idioma } from "../src/i18n";
 import { execSync } from "node:child_process";
-import { analizar } from "../src/lib/analizar";
-import { modeloClasificador } from "../src/lib/clasificar";
+import { readFileSync, realpathSync } from "node:fs";
+import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { analizar, type Analisis } from "../src/lib/analizar";
+import { MOTIVO_NO_DISPONIBLE, modeloClasificador } from "../src/lib/clasificar";
 import type { UsoIa } from "../src/lib/ia";
-import dev from "../src/datos/evals/dev.json";
+import { ARROBA, dev } from "../src/datos/evals/dev";
 
 export const VEREDICTOS = ["oficial_verificado", "no_oficial", "no_determinable"] as const;
 export type Veredicto = (typeof VEREDICTOS)[number];
@@ -36,7 +39,7 @@ export type Ejecucion = {
   tokens_salida?: number | null;
   tokens_razonamiento?: number | null;
   clasificado: boolean;
-  // El modelo no respondió y se usó la reserva.
+  // Se llamó al modelo y no respondió (ver `esReserva`). Cuenta como fallo.
   reserva: boolean;
   motivo: string | null;
 };
@@ -76,6 +79,65 @@ export type Informe = {
   metricas: Metricas;
 };
 
+// El harness solo puede leer conjuntos de src/datos/evals/ y nunca un test*.json:
+// el conjunto de prueba (LAB-47) vive fuera del repo y solo lo mide
+// `bun run eval:holdout`, con salida agregada.
+export const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const DIR_CONJUNTOS = resolve(RAIZ, "src/datos/evals");
+export const RUTA_DEV = "src/datos/evals/dev.json";
+
+const real = (ruta: string) => {
+  try {
+    return realpathSync(ruta);
+  } catch {
+    return ruta;
+  }
+};
+
+export function rutaConjuntoPermitida(ruta: string): boolean {
+  const absoluta = resolve(RAIZ, ruta);
+  // Se mira la ruta dada y a dónde apunta, por si es un enlace simbólico.
+  return [absoluta, real(absoluta)].every((r) => {
+    const rel = relative(real(DIR_CONJUNTOS), r);
+    const dentro = rel !== "" && !rel.startsWith("..") && !isAbsolute(rel);
+    const nombre = basename(r).toLowerCase();
+    return dentro && nombre.endsWith(".json") && !nombre.startsWith("test");
+  });
+}
+
+if (!rutaConjuntoPermitida(RUTA_DEV)) throw new Error(`Conjunto no permitido: ${RUTA_DEV}`);
+
+// `bun run eval` no acepta otro conjunto: solo --modelo y --repeticiones.
+const FLAGS_EVAL = ["--modelo", "--repeticiones", "--idioma", "--timeout-ms"];
+
+export function leerArgumentosEval(argv: string[]): {
+  modelo?: string;
+  repeticiones: number;
+  idioma: Idioma;
+  timeoutMs?: number;
+} {
+  const valores: Record<string, string> = {};
+  for (let i = 0; i < argv.length; i += 2) {
+    const [flag, valor] = [argv[i], argv[i + 1]];
+    if (!FLAGS_EVAL.includes(flag)) throw new Error(`Argumento no admitido: ${flag}`);
+    if (valor === undefined || valor.startsWith("--")) throw new Error(`${flag} necesita un valor`);
+    valores[flag.slice(2)] = valor;
+  }
+  const repeticiones = Number(valores.repeticiones ?? 1);
+  if (!Number.isInteger(repeticiones) || repeticiones < 1)
+    throw new Error("--repeticiones debe ser un entero ≥ 1");
+  // --idioma pide el `motivo` en ese idioma; los veredictos deben salir iguales.
+  const idioma = valores.idioma ?? IDIOMA_POR_DEFECTO;
+  if (!esIdioma(idioma)) throw new Error(`--idioma debe ser uno de: ${IDIOMAS.join(", ")}`);
+  // --timeout-ms sube el tiempo límite para medir la latencia real (LAB-73). Esas
+  // pasadas no miden lo que se publica: no entran en ULTIMO.md.
+  const timeoutMs = valores["timeout-ms"] === undefined ? undefined : Number(valores["timeout-ms"]);
+  if (timeoutMs !== undefined && !(Number.isInteger(timeoutMs) && timeoutMs > 0))
+    throw new Error("--timeout-ms debe ser un entero > 0");
+  return { modelo: valores.modelo, repeticiones, idioma, timeoutMs };
+}
+
+// dev.ts devuelve el texto con la arroba real, el que ve el clasificador en producción.
 export const CASOS = dev as Caso[];
 // Los 10 mensajes de datos/mensajes-ejemplo.json, por su fuente.
 const EJEMPLOS = new Set(
@@ -136,7 +198,14 @@ export function calcularMetricas(ejecuciones: Ejecucion[]): Metricas {
   };
 }
 
-const MOTIVO_RESERVA = "clasificador no disponible";
+// Una reserva es una llamada al modelo sin respuesta (402, 429 agotado, tiempo,
+// JSON no válido). El motivo «clasificador no disponible» no basta: si las
+// señales deterministas ya dan no_oficial, combinarClasificacion responde sin el
+// modelo y con otro motivo. HelmCode informa de los tokens en toda respuesta,
+// así que una llamada sin tokens no tuvo respuesta. Una reserva cuenta como
+// fallo aunque el veredicto coincida: el hill-climb mide al modelo.
+export const esReserva = (r: Pick<Analisis, "clasificado" | "motivo">, tokens: number | null) =>
+  r.clasificado && (r.motivo === MOTIVO_NO_DISPONIBLE || tokens === null);
 
 export const PAUSA_MS = 1000;
 const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -174,18 +243,19 @@ export async function ejecutarEvals(opciones: {
         idioma: opciones.idioma,
         timeoutMs: opciones.timeoutMs,
       });
+      const reserva = esReserva(r, tokens);
       const e: Ejecucion = {
         id: caso.id,
         repeticion: rep,
         esperado: caso.esperado,
         obtenido: r.veredicto,
-        pasa: r.veredicto === caso.esperado,
+        pasa: !reserva && r.veredicto === caso.esperado,
         latencia_ms: Math.round(performance.now() - inicio),
         tokens,
         tokens_salida: tokensSalida,
         tokens_razonamiento: tokensRazonamiento,
         clasificado: r.clasificado,
-        reserva: r.clasificado && r.motivo === MOTIVO_RESERVA,
+        reserva,
         motivo: r.motivo ?? null,
       };
       salida.push(e);
@@ -222,7 +292,7 @@ export async function informeCompleto(opciones: {
     modelo,
     ...(opciones.idioma && opciones.idioma !== "es" ? { idioma: opciones.idioma } : {}),
     ...(opciones.timeoutMs ? { timeout_ms: opciones.timeoutMs } : {}),
-    conjunto: "src/datos/evals/dev.json",
+    conjunto: RUTA_DEV,
     fecha: new Date().toISOString(),
     commit: commitLocal(),
     repeticiones: opciones.repeticiones ?? 1,
@@ -252,7 +322,7 @@ Fecha: ${i.fecha} · commit: ${i.commit ?? "—"} · conjunto: \`${i.conjunto}\`
 - Falsos \`oficial_verificado\`: **${m.falsos_oficial_verificado}** ${si(m.gates.sin_falsos_oficial)} (puerta: 0)
 - Ejemplos de \`datos/mensajes-ejemplo.json\`: **${m.ejemplos_oficiales.aciertos}/${m.ejemplos_oficiales.total}** ${si(m.gates.ejemplos_10_de_10)} (puerta: 10/10)
 - \`no_oficial\` → \`no_determinable\`: ${m.no_oficial_a_no_determinable}
-- Respuestas de reserva (modelo no disponible): ${m.reservas}
+- Reservas (el modelo no respondió; cuentan como fallo): ${m.reservas}
 - Casos inestables entre repeticiones: ${m.casos_inestables.join(", ") || "ninguno"}
 
 | Clase | Precisión | Recall | Casos |
@@ -288,4 +358,59 @@ export function tablaTexto(ejecuciones: Ejecucion[]): string {
   const anchos = cab.map((c, i) => Math.max(c.length, ...filas.map((f) => f[i].length)));
   const linea = (f: string[]) => f.map((c, i) => c.padEnd(anchos[i])).join("  ");
   return [linea(cab), ...filas.map(linea)].join("\n");
+}
+
+// Conjunto de prueba (`bun run eval:holdout <ruta>`, solo el Verifier). Lee el
+// archivo, lo pasa por el mismo pipeline y devuelve solo agregados: ni ids, ni
+// textos, ni lista de fallos, para que nada vuelva al bucle de hill-climb. No
+// escribe nada en disco. Los errores citan la posición del caso, nunca su contenido.
+function cargarHoldout(ruta: string): Caso[] {
+  let datos: unknown;
+  try {
+    datos = JSON.parse(readFileSync(ruta, "utf8"));
+  } catch {
+    // El mensaje de JSON.parse puede citar un trozo del archivo.
+    throw new Error("No se pudo leer el conjunto como JSON");
+  }
+  if (!Array.isArray(datos) || datos.length === 0) throw new Error("El conjunto no es una lista de casos");
+  return datos.map((c, i) => {
+    const valido =
+      typeof c?.id === "string" &&
+      typeof c?.texto === "string" &&
+      (VEREDICTOS as readonly unknown[]).includes(c?.esperado);
+    if (!valido) throw new Error(`Caso ${i + 1} no válido`);
+    return { ...c, texto: c.texto.replaceAll(ARROBA, "@") } as Caso;
+  });
+}
+
+export function resumenAgregado(modelo: string, casos: number, m: Metricas): string {
+  return [
+    `Modelo: ${modelo}`,
+    `Casos: ${casos}`,
+    `Accuracy: ${pct(m.accuracy)} (${m.aciertos}/${m.total})`,
+    ...VEREDICTOS.map(
+      (v) =>
+        `${v.padEnd(18)} precisión ${pct(m.por_clase[v].precision)}  recall ${pct(m.por_clase[v].recall)}  (${m.por_clase[v].soporte} casos)`,
+    ),
+    `Falsos oficial_verificado: ${m.falsos_oficial_verificado}`,
+    `no_oficial → no_determinable: ${m.no_oficial_a_no_determinable}`,
+    `Reservas: ${m.reservas}`,
+  ].join("\n");
+}
+
+export async function ejecutarHoldout(opciones: {
+  ruta: string;
+  modelo?: string;
+  pausaMs?: number;
+  analizar?: typeof analizar;
+}): Promise<string> {
+  const casos = cargarHoldout(opciones.ruta);
+  const modelo = opciones.modelo || modeloClasificador();
+  const ejecuciones = await ejecutarEvals({
+    modelo,
+    casos,
+    pausaMs: opciones.pausaMs,
+    analizar: opciones.analizar,
+  });
+  return resumenAgregado(modelo, casos.length, calcularMetricas(ejecuciones));
 }
