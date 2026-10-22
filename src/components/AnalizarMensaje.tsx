@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CompartirFamilia } from "@/components/CompartirFamilia";
 import { Fuentes } from "@/components/Fuentes";
+import { MensajeSenalado } from "@/components/MensajeSenalado";
 import { CargaResultado } from "@/components/CargaResultado";
 import { RETRASO_MS, esperaAntesDeMostrar } from "@/lib/carga";
 import { textoParaFamilia } from "@/lib/compartir";
@@ -136,6 +137,8 @@ export function AnalizarMensaje({
   const id = useId();
   const [mensaje, setMensaje] = useState("");
   const [respuesta, setRespuesta] = useState<Respuesta | null>(null);
+  // El texto que se comprobó: los fragmentos de la respuesta son posiciones en él.
+  const [analizado, setAnalizado] = useState("");
   // Solo los errores del mensaje marcan el campo como no válido; los de red, no.
   const [error, setError] = useState<{ texto: string; delCampo: boolean } | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -269,7 +272,10 @@ export function AnalizarMensaje({
       if (esta !== peticion.current) return;
     }
     setEnviando(false);
-    if (datos) setRespuesta(datos);
+    if (datos) {
+      setAnalizado(texto);
+      setRespuesta(datos);
+    }
     else setError({ texto: "No hemos podido comprobarlo. Inténtalo de nuevo.", delCampo: false });
   }
 
@@ -637,6 +643,12 @@ export function AnalizarMensaje({
                   </p>
                 )}
               </div>
+
+              <MensajeSenalado
+                id={`${id}-senalado`}
+                texto={analizado}
+                fragmentos={respuesta.fragmentos}
+              />
 
             </div>
 
