@@ -2,7 +2,7 @@
 // sin abrir ni seguir nada de lo que analiza, y sin guardar el texto.
 import { domainToUnicode } from "node:url";
 import { parse } from "tldts";
-import { desneutralizar, extraerEnlace, neutralizar } from "./url";
+import { desneutralizar, extraerEnlace, extraerEnlaceNoValido, hostValido, neutralizar } from "./url";
 import dominios from "../../datos/dominios-oficiales.json";
 import { incibe165, indicadores } from "../datos/indicadores";
 
@@ -195,6 +195,11 @@ export function verificar(texto: string): Resultado {
 }
 
 function verificarEnlace(texto: string): Resultado {
+  // Un enlace mal escrito es fraude sí o sí, aunque haya otro enlace correcto.
+  const roto = extraerEnlaceNoValido(texto);
+  if (roto) {
+    return { veredicto: "no_oficial", motivos: ["url_no_valida"], url_analizada: neutralizar(roto) };
+  }
   const enlace = extraerEnlace(texto);
   if (!enlace) {
     return { veredicto: "no_determinable", motivos: ["sin_enlace"], url_analizada: null };
@@ -219,6 +224,7 @@ function verificarEnlace(texto: string): Resultado {
   if (ES_IPV4.test(nombre) || nombre.startsWith("[")) {
     return devolver("no_oficial", ["ip_como_host"]);
   }
+  if (!hostValido(nombre)) return devolver("no_oficial", ["url_no_valida"]);
   if (url.username || url.password) {
     return devolver("no_oficial", ["credenciales_en_url"]);
   }

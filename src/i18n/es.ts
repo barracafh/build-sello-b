@@ -168,7 +168,7 @@ export const es = {
     sin_enlace: "No hemos encontrado ningún enlace en el mensaje.",
     web_oficial_citada:
       "El mensaje cita una dirección que sí es una web oficial. Eso no prueba quién lo envía: entra tecleando tú la dirección.",
-    url_no_valida: "El enlace no tiene un formato que podamos leer.",
+    url_no_valida: "El enlace está mal escrito. Las webs oficiales nunca mandan enlaces así: trátalo como un fraude.",
     ip_como_host:
       "El enlace lleva a un número en vez de a un nombre de web, algo que las webs oficiales no hacen.",
     credenciales_en_url:
@@ -202,6 +202,7 @@ export const es = {
       enlace_no_listado: "Enlace que no conocemos",
       enlace_acortado: "Enlace acortado",
       enlace_parecido: "Enlace parecido a uno oficial",
+      enlace_no_valido: "Enlace mal escrito",
       enlace_imita_oficial: "Enlace que imita a uno oficial",
       instruccion_qr: "Pide escanear un código QR",
       instruccion_rara: "Pide responder, descargar o llamar",

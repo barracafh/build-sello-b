@@ -13,6 +13,7 @@ const SEINALEEN_TESTUAK: Record<string, string> = {
   enlace_no_listado: "Esteka ez da ezagutzen dugun webgune ofizial batena.",
   enlace_acortado: "Esteka laburtuta dago eta ezkutatu egiten du nora daraman.",
   enlace_parecido: "Esteka erakunde ofizial baten izenaren antzekoa da.",
+  enlace_no_valido: "Esteka gaizki idatzita dago: ez darama inongo webgune ofizialera.",
   enlace_imita_oficial: "Estekak erakunde ofizial baten izena imitatzen du.",
   amenaza: "Ondorio larriekin mehatxatzen du, hala nola bahiturekin edo atxiloketekin.",
   urgencia: "Presaka jartzen zaitu epe labur batekin edo «azken abisu» batekin.",
@@ -181,7 +182,7 @@ export const eu = {
     sin_enlace: "Ez dugu estekarik aurkitu mezuan.",
     web_oficial_citada:
       "Mezuak aipatzen duen helbidea webgune ofizial bat da. Horrek ez du frogatzen nork bidaltzen duen: sartu zuk zeuk helbidea idatzita.",
-    url_no_valida: "Estekak ez du guk irakur dezakegun formaturik.",
+    url_no_valida: "Esteka gaizki idatzita dago. Webgune ofizialek ez dute inoiz horrelako estekarik bidaltzen: iruzurtzat hartu.",
     ip_como_host:
       "Estekak zenbaki batera eramaten du, ez webgune-izen batera, eta webgune ofizialek ez dute hori egiten.",
     credenciales_en_url:
@@ -214,6 +215,7 @@ export const eu = {
       enlace_no_listado: "Ezagutzen ez dugun esteka",
       enlace_acortado: "Esteka laburtua",
       enlace_parecido: "Ofizial baten antzeko esteka",
+      enlace_no_valido: "Gaizki idatzitako esteka",
       enlace_imita_oficial: "Ofizial bat imitatzen duen esteka",
       instruccion_qr: "QR kode bat eskaneatzeko eskatzen du",
       instruccion_rara: "Erantzuteko, deskargatzeko edo deitzeko eskatzen du",

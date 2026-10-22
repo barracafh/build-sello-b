@@ -71,6 +71,28 @@ describe("§5.3 sin red", () => {
   esperar("http://[broken", "no_oficial", "url_no_valida");
 });
 
+describe("una URL mal escrita es fraude sí o sí", () => {
+  for (const url of [
+    "htps://dgt.es/multa",
+    "http//dgt.es/multa",
+    "http:/dgt.es",
+    "https:// correos.es",
+    "https://dgt..es/pago",
+    "https://dgt/pago",
+    "https://-dgt.es",
+    "https://correos,es/pago",
+    "https://xyz.esx/pago",
+    "https://dgt.es:99999/",
+    "www.correos-es/pago",
+  ]) {
+    esperar(`Paga aquí ${url}`, "no_oficial", "url_no_valida");
+  }
+  esperar("Entra en https://sede.dgt.gob.es/es/ o en htps://dgt.es", "no_oficial", "url_no_valida");
+  esperar("https://sede.dgt.gob.es/es/", "oficial_verificado", "en_allowlist");
+  esperar("Quedamos a las 10.30, ¿vale?", "no_determinable", "sin_enlace");
+  esperar("Compatible con http/https.", "no_determinable", "sin_enlace");
+});
+
 describe("otros", () => {
   test("sin enlace", () => {
     const r = verificar("Hola, ¿qué tal?");

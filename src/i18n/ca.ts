@@ -13,6 +13,7 @@ const TEXTOS_SENALES: Record<string, string> = {
   enlace_no_listado: "L'enllaç no és de cap web oficial que coneguem.",
   enlace_acortado: "L'enllaç està escurçat i amaga on porta.",
   enlace_parecido: "L'enllaç s'assembla al nom d'un organisme oficial.",
+  enlace_no_valido: "L'enllaç està mal escrit: no porta a cap web oficial.",
   enlace_imita_oficial: "L'enllaç imita el nom d'un organisme oficial.",
   amenaza: "Amenaça amb conseqüències greus, com embargaments o detencions.",
   urgencia: "Fa pressa amb un termini curt o un «últim avís».",
@@ -179,7 +180,7 @@ export const ca = {
     sin_enlace: "No hem trobat cap enllaç al missatge.",
     web_oficial_citada:
       "El missatge cita una adreça que sí que és un web oficial. Això no demostra qui l'envia: entra-hi escrivint tu l'adreça.",
-    url_no_valida: "L'enllaç no té un format que puguem llegir.",
+    url_no_valida: "L'enllaç està mal escrit. Les webs oficials mai no envien enllaços així: tracta'l com un frau.",
     ip_como_host:
       "L'enllaç porta a un número en lloc d'un nom de web, cosa que els webs oficials no fan.",
     credenciales_en_url:
@@ -212,6 +213,7 @@ export const ca = {
       enlace_no_listado: "Enllaç que no coneixem",
       enlace_acortado: "Enllaç escurçat",
       enlace_parecido: "Enllaç semblant a un d'oficial",
+      enlace_no_valido: "Enllaç mal escrit",
       enlace_imita_oficial: "Enllaç que n'imita un d'oficial",
       instruccion_qr: "Demana escanejar un codi QR",
       instruccion_rara: "Demana respondre, descarregar o trucar",

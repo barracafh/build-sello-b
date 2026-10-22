@@ -52,6 +52,11 @@ const DE_URL: Record<string, Senal> = {
     nivel: "roja",
     texto: "El enlace lleva a un número en vez de a un nombre de web.",
   },
+  url_no_valida: {
+    codigo: "enlace_no_valido",
+    nivel: "roja",
+    texto: "El enlace está mal escrito: no lleva a ninguna web oficial.",
+  },
   credenciales_en_url: {
     codigo: "enlace_imita_oficial",
     nivel: "roja",

@@ -13,6 +13,7 @@ const TEXTOS_SINAIS: Record<string, string> = {
   enlace_no_listado: "A ligazón non é de ningunha web oficial que coñezamos.",
   enlace_acortado: "A ligazón está acurtada e agocha a onde leva.",
   enlace_parecido: "A ligazón aseméllase ao nome dun organismo oficial.",
+  enlace_no_valido: "A ligazón está mal escrita: non leva a ningunha web oficial.",
   enlace_imita_oficial: "A ligazón imita o nome dun organismo oficial.",
   amenaza: "Ameaza con consecuencias graves, como embargos ou detencións.",
   urgencia: "Mete présa cun prazo curto ou un «último aviso».",
@@ -177,7 +178,7 @@ export const gl = {
     sin_enlace: "Non atopamos ningunha ligazón na mensaxe.",
     web_oficial_citada:
       "A mensaxe cita un enderezo que si é unha web oficial. Iso non proba quen a envía: entra ti tecleando o enderezo.",
-    url_no_valida: "A ligazón non ten un formato que poidamos ler.",
+    url_no_valida: "A ligazón está mal escrita. As webs oficiais nunca mandan ligazóns así: trátaa como unha fraude.",
     ip_como_host:
       "A ligazón leva a un número en vez de a un nome de web, algo que as webs oficiais non fan.",
     credenciales_en_url:
@@ -210,6 +211,7 @@ export const gl = {
       enlace_no_listado: "Ligazón que non coñecemos",
       enlace_acortado: "Ligazón acurtada",
       enlace_parecido: "Ligazón parecida a unha oficial",
+      enlace_no_valido: "Ligazón mal escrita",
       enlace_imita_oficial: "Ligazón que imita unha oficial",
       instruccion_qr: "Pide escanear un código QR",
       instruccion_rara: "Pide responder, descargar ou chamar",

@@ -56,6 +56,37 @@ export function extraerEnlace(texto: string): Enlace | null {
   };
 }
 
+// Esquema mal escrito (`htps://`, `http//`, `http:/`, `https:// x`) seguido de algo
+// con punto: es un intento de enlace que ningún navegador abriría tal cual.
+const PATRON_ESQUEMA_ROTO =
+  /\b(h?[tx]{1,3}p{1,2}s?)(\s*[:;]\s*\/?\s*\/?\s*|\s*\/\s*\/?\s*)([^\s<>"']*[.,][a-z]{2}[^\s<>"']*)/gi;
+const ESQUEMA_BIEN = /^(?:https?|hxxps?):\/\/$/i;
+
+// Un enlace mal formado: esquema roto o `www.` sin un dominio que exista. Un
+// enlace así no sale de ninguna web oficial, así que se trata como fraude.
+export function extraerEnlaceNoValido(texto: string): string | null {
+  for (const m of texto.matchAll(PATRON_ESQUEMA_ROTO)) {
+    if (!ESQUEMA_BIEN.test(`${m[1]}${m[2]}`)) {
+      return m[0].replace(INICIO_RUIDO, "").replace(PUNTUACION_FINAL, "");
+    }
+  }
+  for (const m of texto.matchAll(/\S+/g)) {
+    const crudo = m[0].replace(INICIO_RUIDO, "").replace(PUNTUACION_FINAL, "");
+    if (/^www[.,]/i.test(crudo) && !esDominioSinEsquema(crudo)) return crudo;
+  }
+  return null;
+}
+
+// Un host válido: etiquetas LDH no vacías y un sufijo que existe en la PSL.
+export function hostValido(host: string): boolean {
+  const nombre = host.replace(/\.$/, "").toLowerCase();
+  const partes = nombre.split(".");
+  if (partes.length < 2) return false;
+  if (!partes.every((p) => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(p))) return false;
+  const r = parse(nombre, { allowPrivateDomains: true });
+  return Boolean(r.domain) && (r.isIcann === true || r.isPrivate === true);
+}
+
 export function extraerPrimeraUrl(texto: string): string | null {
   return extraerEnlace(texto)?.crudo ?? null;
 }
