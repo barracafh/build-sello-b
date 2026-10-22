@@ -19,7 +19,9 @@ export function Cabecera({ activa, idioma = "es" }: { activa: Seccion; idioma?: 
   const t = diccionario(idioma);
   return (
     <header className="border-b border-border bg-background">
-      <div className="mx-auto flex min-h-24 max-w-5xl flex-wrap items-center justify-between gap-4 px-(--page-gutter) py-4 md:px-8">
+      {/* gap-x-2, el mismo hueco que entre los botones del menú: así botones y
+          selector quedan a 8 px unos de otros. Entre filas (móvil), 16 px. */}
+      <div className="mx-auto flex min-h-24 max-w-5xl flex-wrap items-center justify-between gap-x-2 gap-y-4 px-(--page-gutter) py-4 md:px-8">
         {/* Icono y nombre de ficha.json: sin logotipos de la Administración. */}
         <span className="inline-flex items-center gap-4">
           <span
