@@ -1,8 +1,10 @@
 // Verificador determinista de URLs (contexto.md §5.2). Puro: sin red, sin DNS,
 // sin abrir ni seguir nada de lo que analiza, y sin guardar el texto.
+import { domainToUnicode } from "node:url";
 import { parse } from "tldts";
 import { desneutralizar, extraerEnlace, neutralizar } from "./url";
 import dominios from "../../datos/dominios-oficiales.json";
+import { incibe165, indicadores } from "../datos/indicadores";
 
 export type Veredicto = "oficial_verificado" | "no_oficial" | "no_determinable";
 
@@ -13,6 +15,12 @@ export type Resultado = {
   web_oficial?: string;
   entidad?: string;
   fuente?: string;
+  // Aviso público que da el dominio por fraudulento (INCIBE, Seguridad Social…).
+  indicador?: { nombre: string; url: string; fecha: string };
+  // Remitente de correo que motiva el veredicto, neutralizado (nunca un enlace).
+  remitente_analizado?: string;
+  // Aviso de INCIBE que respalda el caso, si lo hay.
+  aviso?: { nombre: string; url: string };
   url_analizada: string | null;
 };
 
@@ -78,9 +86,87 @@ const con = (entidad?: Entidad) =>
     ? { entidad: entidad.entidad, web_oficial: entidad.web_oficial, fuente: entidad.fuente }
     : {};
 
+// Esqueleto UTS #39 reducido: los confundibles cirílicos y griegos más usados,
+// a su letra latina.
+const CONFUNDIBLES: Record<string, string> = {
+  а: "a", в: "b", е: "e", ё: "e", к: "k", м: "m", н: "h", о: "o", р: "p", с: "c",
+  т: "t", у: "y", х: "x", і: "i", ї: "i", ј: "j", ѕ: "s", ԁ: "d", ɡ: "g", ӏ: "l",
+  α: "a", ε: "e", ι: "i", κ: "k", ν: "v", ο: "o", ρ: "p", τ: "t", υ: "u", χ: "x",
+};
+const esqueleto = (texto: string) =>
+  [...texto].map((c) => CONFUNDIBLES[c] ?? c).join("");
+const mezclaAlfabetos = (etiqueta: string) =>
+  /\p{Script=Latin}/u.test(etiqueta) &&
+  /[\p{Script=Cyrillic}\p{Script=Greek}]/u.test(etiqueta);
+
+const entradaDe = (host: string[]) =>
+  entradas
+    .filter((e) => terminaEn(host, e.partes))
+    .sort((a, b) => b.partes.length - a.partes.length)[0];
+
+const indicadorDe = (registrable: string) =>
+  indicadores.find((i) => i.dominio === registrable);
+
 const ES_IPV4 = /^\d{1,3}(?:\.\d{1,3}){3}$/;
 
+// Remitentes de correo: el nombre del servicio con un dominio ajeno es señal de
+// fraude; un dominio de la lista no prueba nada, porque el remitente se puede
+// falsificar.
+// La marca cuenta por token completo: `seg-social` es la secuencia `seg`,
+// `social`, así que `enclave-hotel` o `sepes` no coinciden con `clave` ni `sepe`.
+const tokens = (texto: string) => texto.split(/[.\-_]/).filter(Boolean);
+const marcaEnTokens = (partes: string[]) =>
+  MARCAS.find((marca) => contiene(partes, marca.split("-")));
+const AVISOS_POR_MARCA: Record<string, { nombre: string; url: string }> = {
+  carpetaciudadana: incibe165,
+};
+
+function remitentesAjenos(texto: string) {
+  const motivos: string[] = [];
+  let entidad: Entidad | undefined;
+  let analizado: string | undefined;
+  let aviso: { nombre: string; url: string } | undefined;
+  for (const token of texto.split(/\s+/)) {
+    const m = /^([^@/\s]+)@([^@/\s]+\.[^@/\s]+)$/.exec(
+      desneutralizar(token).replace(/^[([{<"'«“]+/, "").replace(/[.,;:!?)}>»”]+$/, "").toLowerCase(),
+    );
+    if (!m) continue;
+    const [, local, dominio] = m;
+    const host = etiquetas(dominio);
+    const registrable = parse(dominio, { allowPrivateDomains: true }).domain ?? dominio;
+    if (indicadorDe(registrable)) motivos.push("indicador_publicado");
+    if (entradaDe(host)) continue;
+    const marca = marcaEnTokens([...tokens(local), ...host.flatMap(tokens)]);
+    if (marca) {
+      motivos.push("remitente_dominio_ajeno");
+      entidad ??= entidadDeMarca(marca);
+      analizado ??= neutralizar(`${local}@${dominio}`);
+      aviso ??= AVISOS_POR_MARCA[marca];
+    }
+  }
+  return motivos.length > 0
+    ? { motivos: [...new Set(motivos)], entidad, analizado, aviso }
+    : null;
+}
+
 export function verificar(texto: string): Resultado {
+  const base = verificarEnlace(texto);
+  const remitente = remitentesAjenos(texto);
+  if (!remitente) return base;
+  if (base.veredicto === "no_oficial") {
+    return { ...base, motivos: [...new Set([...base.motivos, ...remitente.motivos])] };
+  }
+  return {
+    ...base,
+    veredicto: "no_oficial",
+    motivos: [...remitente.motivos, ...base.motivos.filter((m) => m !== "sin_enlace")],
+    ...(base.web_oficial ? {} : con(remitente.entidad)),
+    ...(remitente.analizado ? { remitente_analizado: remitente.analizado } : {}),
+    ...(remitente.aviso ? { aviso: remitente.aviso } : {}),
+  };
+}
+
+function verificarEnlace(texto: string): Resultado {
   const enlace = extraerEnlace(texto);
   if (!enlace) {
     return { veredicto: "no_determinable", motivos: ["sin_enlace"], url_analizada: null };
@@ -119,6 +205,35 @@ export function verificar(texto: string): Resultado {
     return devolver("no_determinable", ["acortador_no_resuelto"]);
   }
 
+  // Un dominio que un organismo ha publicado como fraude no depende de nada más.
+  const indicador = indicadorDe(registrable);
+  if (indicador) {
+    const { fuente: f, fecha } = indicador;
+    const sufijoInd = analisis.publicSuffix ?? "";
+    const nombresInd = host.slice(0, host.length - etiquetas(sufijoInd).length);
+    const marcaInd = MARCAS.find((m) => nombresInd.some((n) => n.includes(m)));
+    const imita = marcaInd !== undefined || nombresInd.some(parecidoAMarca);
+    return {
+      ...devolver(
+        "no_oficial",
+        imita ? ["indicador_publicado", "imitacion_de_marca"] : ["indicador_publicado"],
+        marcaInd ? entidadDeMarca(marcaInd) : undefined,
+      ),
+      indicador: { nombre: f.nombre, url: f.url, fecha },
+    };
+  }
+
+  // 4. Homógrafos: el esqueleto del host Unicode coincide con la allowlist y el host no.
+  const avisos0: string[] = [];
+  if (nombre.includes("xn--")) {
+    const unicode = domainToUnicode(nombre);
+    if (unicode.split(".").some(mezclaAlfabetos)) avisos0.push("mezcla_de_alfabetos");
+    const parecido = entradaDe(etiquetas(esqueleto(unicode)));
+    if (parecido && !entradaDe(host)) {
+      return devolver("no_oficial", ["homografo", ...avisos0], parecido.entidad);
+    }
+  }
+
   // 5. Plataformas compartidas: solo vale el host exacto de la allowlist.
   const plataforma = PLATAFORMAS.some((p) => terminaEn(host, etiquetas(p)));
   const exacta = entradas.find((e) => e.dominio === nombre);
@@ -128,11 +243,7 @@ export function verificar(texto: string): Resultado {
 
   // 6. Allowlist: dominio exacto o subdominio por etiquetas completas.
   // Gana la entrada más específica (`san.gva.es` antes que `gva.es`).
-  const propia =
-    exacta ??
-    entradas
-      .filter((e) => terminaEn(host, e.partes))
-      .sort((a, b) => b.partes.length - a.partes.length)[0];
+  const propia = exacta ?? entradaDe(host);
   if (propia) {
     const avisos: string[] = [];
     if (enlace.conEsquema && url.protocol === "http:") avisos.push("sin_cifrado");
