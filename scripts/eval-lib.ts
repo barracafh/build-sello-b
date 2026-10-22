@@ -32,6 +32,9 @@ export type Ejecucion = {
   pasa: boolean;
   latencia_ms: number;
   tokens: number | null;
+  // De `tokens`, los de la respuesta y, dentro de ellos, los de razonamiento (LAB-73).
+  tokens_salida?: number | null;
+  tokens_razonamiento?: number | null;
   clasificado: boolean;
   // El modelo no respondió y se usó la reserva.
   reserva: boolean;
@@ -62,6 +65,8 @@ export type Informe = {
   modelo: string;
   /** Idioma del `motivo` (LAB-68); sin él, castellano. */
   idioma?: Idioma;
+  /** Tiempo límite forzado con --timeout-ms; sin él, el del clasificador. */
+  timeout_ms?: number;
   conjunto: string;
   fecha: string;
   commit: string | null;
@@ -142,6 +147,8 @@ export async function ejecutarEvals(opciones: {
   repeticiones?: number;
   casos?: Caso[];
   pausaMs?: number;
+  // Solo para diagnosticar latencias (LAB-73): sin él, el del clasificador.
+  timeoutMs?: number;
   analizar?: typeof analizar;
   alCaso?: (e: Ejecucion) => void;
 }): Promise<Ejecucion[]> {
@@ -152,11 +159,21 @@ export async function ejecutarEvals(opciones: {
       // Una llamada detrás de otra, con pausa: nunca en paralelo.
       if (salida.length > 0) await esperar(opciones.pausaMs ?? PAUSA_MS);
       let tokens: number | null = null;
+      let tokensSalida: number | null = null;
+      let tokensRazonamiento: number | null = null;
       const alUso = (u: UsoIa) => {
         tokens = (tokens ?? 0) + (u.total_tokens ?? (u.prompt_tokens ?? 0) + (u.completion_tokens ?? 0));
+        if (u.completion_tokens !== undefined) tokensSalida = (tokensSalida ?? 0) + u.completion_tokens;
+        const razonamiento = u.completion_tokens_details?.reasoning_tokens;
+        if (razonamiento !== undefined) tokensRazonamiento = (tokensRazonamiento ?? 0) + razonamiento;
       };
       const inicio = performance.now();
-      const r = await analizarCaso(caso.texto, { modelo: opciones.modelo, alUso, idioma: opciones.idioma });
+      const r = await analizarCaso(caso.texto, {
+        modelo: opciones.modelo,
+        alUso,
+        idioma: opciones.idioma,
+        timeoutMs: opciones.timeoutMs,
+      });
       const e: Ejecucion = {
         id: caso.id,
         repeticion: rep,
@@ -165,6 +182,8 @@ export async function ejecutarEvals(opciones: {
         pasa: r.veredicto === caso.esperado,
         latencia_ms: Math.round(performance.now() - inicio),
         tokens,
+        tokens_salida: tokensSalida,
+        tokens_razonamiento: tokensRazonamiento,
         clasificado: r.clasificado,
         reserva: r.clasificado && r.motivo === MOTIVO_RESERVA,
         motivo: r.motivo ?? null,
@@ -188,6 +207,7 @@ export async function informeCompleto(opciones: {
   modelo?: string;
   idioma?: Idioma;
   repeticiones?: number;
+  timeoutMs?: number;
   alCaso?: (e: Ejecucion) => void;
 }): Promise<Informe> {
   const modelo = opciones.modelo || modeloClasificador();
@@ -195,11 +215,13 @@ export async function informeCompleto(opciones: {
     modelo,
     idioma: opciones.idioma,
     repeticiones: opciones.repeticiones,
+    timeoutMs: opciones.timeoutMs,
     alCaso: opciones.alCaso,
   });
   return {
     modelo,
     ...(opciones.idioma && opciones.idioma !== "es" ? { idioma: opciones.idioma } : {}),
+    ...(opciones.timeoutMs ? { timeout_ms: opciones.timeoutMs } : {}),
     conjunto: "src/datos/evals/dev.json",
     fecha: new Date().toISOString(),
     commit: commitLocal(),
@@ -252,7 +274,7 @@ ${informes.map(filas).join("\n")}`;
 }
 
 export function tablaTexto(ejecuciones: Ejecucion[]): string {
-  const cab = ["id", "esperado", "obtenido", "ok", "ms", "tokens"];
+  const cab = ["id", "esperado", "obtenido", "ok", "ms", "tokens", "salida", "razon."];
   const filas = ejecuciones.map((e) => [
     `${e.id}${e.repeticion > 1 ? `#${e.repeticion}` : ""}`,
     e.esperado,
@@ -260,6 +282,8 @@ export function tablaTexto(ejecuciones: Ejecucion[]): string {
     e.pasa ? "sí" : "NO",
     String(e.latencia_ms),
     e.tokens === null ? "—" : String(e.tokens),
+    e.tokens_salida == null ? "—" : String(e.tokens_salida),
+    e.tokens_razonamiento == null ? "—" : String(e.tokens_razonamiento),
   ]);
   const anchos = cab.map((c, i) => Math.max(c.length, ...filas.map((f) => f[i].length)));
   const linea = (f: string[]) => f.map((c, i) => c.padEnd(anchos[i])).join("  ");

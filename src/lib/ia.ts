@@ -14,6 +14,8 @@ export type UsoIa = {
   prompt_tokens?: number;
   completion_tokens?: number;
   total_tokens?: number;
+  // Parte de completion_tokens que el modelo gasta razonando, si la informa.
+  completion_tokens_details?: { reasoning_tokens?: number };
 };
 
 export type OpcionesIa = {
