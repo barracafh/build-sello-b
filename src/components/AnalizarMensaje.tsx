@@ -95,6 +95,15 @@ const textoDeEjemplo = (caso: Ejemplo) => {
   return url ? `${caso.texto} ${url}` : caso.texto;
 };
 
+const tipos: Record<string, string> = { sms: "SMS", email: "correo", web: "web" };
+
+// «F01» solo no dice nada al oírlo: el nombre accesible empieza igual y añade qué es.
+const nombreDeEjemplo = (caso: Ejemplo) => {
+  const entidad = caso.entidad_suplantada ?? ("entidad" in caso ? caso.entidad : null);
+  const tipo = tipos[caso.tipo] ?? caso.tipo;
+  return entidad ? `${caso.id}: ${tipo} de ${entidad}` : `${caso.id}: ${tipo}`;
+};
+
 const linea017 = {
   nombre: "Línea 017 de INCIBE",
   url: "https://www.incibe.es/linea-de-ayuda-en-ciberseguridad",
@@ -152,10 +161,11 @@ export function AnalizarMensaje() {
     }
   }
 
-  function cargar(texto: string) {
+  function cargar(texto: string, anuncio = "") {
     setMensaje(texto);
     setRespuesta(null);
     setError(null);
+    setAviso(anuncio);
   }
 
   return (
@@ -223,7 +233,7 @@ export function AnalizarMensaje() {
             type="button"
             variant="outline"
             size="lg"
-            onClick={() => cargar("")}
+            onClick={() => cargar("", "Campo del mensaje vacío.")}
             className="h-11 px-5 text-base max-sm:w-full"
           >
             Borrar
@@ -244,7 +254,13 @@ export function AnalizarMensaje() {
               key={caso.id}
               type="button"
               variant="outline"
-              onClick={() => cargar(textoDeEjemplo(caso as Ejemplo))}
+              aria-label={nombreDeEjemplo(caso as Ejemplo)}
+              onClick={() =>
+                cargar(
+                  textoDeEjemplo(caso as Ejemplo),
+                  `Ejemplo ${caso.id} cargado en el campo del mensaje.`,
+                )
+              }
               className="h-11 px-4 text-base"
             >
               {caso.id}
