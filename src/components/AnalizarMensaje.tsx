@@ -78,6 +78,38 @@ const frases: Record<string, string> = {
   en_allowlist: "La dirección está en nuestra lista de webs oficiales.",
 };
 
+// Título en castellano llano de cada señal del clasificador (LAB-39).
+const titulosSenal: Record<string, string> = {
+  pide_dinero: "Pide dinero",
+  pide_datos: "Pide datos personales o bancarios",
+  amenaza: "Amenaza con consecuencias graves",
+  urgencia: "Mete prisa",
+  ortografia: "Faltas o símbolos raros",
+  remitente_falso: "Remitente que no cuadra",
+  enlace_sospechoso: "Enlace sospechoso",
+  enlace_no_listado: "Enlace que no conocemos",
+  enlace_acortado: "Enlace acortado",
+  enlace_parecido: "Enlace parecido a uno oficial",
+  enlace_imita_oficial: "Enlace que imita a uno oficial",
+  instruccion_qr: "Pide escanear un código QR",
+  instruccion_rara: "Pide responder, descargar o llamar",
+  devolucion_con_enlace: "Devolución con enlace para cobrar",
+  aviso_informativo: "Parece un aviso informativo",
+};
+
+const MOTIVO_NO_DISPONIBLE = "clasificador no disponible";
+
+// Los apartados de contexto.md en los que se apoyan las señales del clasificador.
+const contextoMd = (señales: Respuesta["señales"]) => {
+  const apartados = [
+    ...new Set(señales.flatMap((s) => s.fuente.match(/§\d+(?:\.\d+)?/g) ?? [])),
+  ];
+  return {
+    nombre: `Criterios de Sello (contexto.md${apartados.length ? ` ${apartados.join(", ")}` : ""})`,
+    url: "https://github.com/barracafh/build-sello-b/blob/main/contexto.md",
+  };
+};
+
 // `intro` va encima del formulario, en su columna: así el panel de ejemplos
 // arranca a la altura de la entradilla en escritorio. Los ejemplos solo se
 // enseñan con `conEjemplos`: la página lo activa por defecto y lo apaga con
@@ -217,7 +249,11 @@ export function AnalizarMensaje({
   // La web citada en prosa es oficial: se dice de quién, sin enlazarla (LAB-40).
   const webCitada = respuesta?.motivos[0] === "web_oficial_citada";
   const frase = respuesta
-    ? soloRemitente
+    ? respuesta.clasificado
+      ? respuesta.motivo === MOTIVO_NO_DISPONIBLE
+        ? "No hemos podido analizar el texto del mensaje ahora mismo, así que no podemos confirmar nada. Las señales que ves salen de reglas fijas."
+        : respuesta.motivo
+      : soloRemitente
       ? frases.remitente_dominio_ajeno
       : webCitada && respuesta.entidad
         ? `El mensaje cita una dirección que sí es la web oficial de ${respuesta.entidad}. Eso no prueba quién lo envía: entra tecleando tú la dirección.`
@@ -231,6 +267,7 @@ export function AnalizarMensaje({
         ...(respuesta.fuente && respuesta.entidad
           ? [{ nombre: respuesta.entidad, url: respuesta.fuente }]
           : []),
+        ...(respuesta.clasificado ? [contextoMd(respuesta.señales)] : []),
         avisosIncibe,
         linea017,
       ].filter((f, i, todas) => todas.findIndex((o) => o.url === f.url) === i)
@@ -395,7 +432,41 @@ export function AnalizarMensaje({
                   {respuesta.motivos.includes("sin_cifrado") &&
                     " Eso sí, el enlace no está cifrado (http)."}
                 </p>
-                {respuesta.senales.length > 0 && (
+                {respuesta.veredicto === "no_oficial" && respuesta.entidad_suplantada && (
+                  <p className="mt-2 text-(--text-secondary)">
+                    Intenta hacerse pasar por: {respuesta.entidad_suplantada}
+                  </p>
+                )}
+                {respuesta.clasificado && respuesta.señales.length > 0 && (
+                  <ul className="mt-4 grid gap-3" aria-label="Señales encontradas">
+                    {respuesta.señales.map((s) => {
+                      const nivel = respuesta.senales.find((x) => x.codigo === s.codigo)?.nivel;
+                      return (
+                        <li key={s.codigo} className="flex flex-wrap items-start gap-x-3 gap-y-1">
+                          {nivel && (
+                            <Badge
+                              className={cn(
+                                "h-auto px-2.5 py-1 text-base font-semibold",
+                                nivel === "roja"
+                                  ? "bg-destructive/10 text-foreground"
+                                  : "bg-(--warning) text-(--warning-foreground)",
+                              )}
+                            >
+                              {nivel === "roja" ? "Señal roja" : "Señal naranja"}
+                            </Badge>
+                          )}
+                          <span className="min-w-0 flex-[1_1_220px] [overflow-wrap:anywhere]">
+                            <span className="font-semibold">
+                              {titulosSenal[s.codigo] ?? "Otra señal"}.
+                            </span>{" "}
+                            {s.evidencia}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+                {!respuesta.clasificado && respuesta.senales.length > 0 && (
                   <ul className="mt-4 grid gap-3" aria-label="Señales encontradas">
                     {respuesta.senales.map((senal) => (
                       <li key={senal.codigo} className="flex flex-wrap items-start gap-x-3 gap-y-1">

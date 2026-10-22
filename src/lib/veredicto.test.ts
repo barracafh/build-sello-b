@@ -100,9 +100,27 @@ describe("leerRespuesta", () => {
         senales: [{ codigo: "a", nivel: "roja", texto: "t" }],
         reputacion: null,
         rdap: null,
+        clasificado: false,
+        motivo: null,
+        señales: [],
+        entidad_suplantada: null,
         desmentidos: [],
       },
     );
+  });
+
+  test("lee los campos del clasificador y descarta señales mal formadas", () => {
+    const r = leerRespuesta({
+      veredicto: "no_oficial",
+      clasificado: true,
+      motivo: "Pide pagar una multa por enlace.",
+      señales: [{ codigo: "pide_dinero", evidencia: "pague", fuente: "§5.4" }, { codigo: 1 }],
+      entidad_suplantada: "DGT",
+    });
+    assert.equal(r?.clasificado, true);
+    assert.equal(r?.motivo, "Pide pagar una multa por enlace.");
+    assert.deepEqual(r?.señales, [{ codigo: "pide_dinero", evidencia: "pague", fuente: "§5.4" }]);
+    assert.equal(r?.entidad_suplantada, "DGT");
   });
 
   test("solo deja desmentidos completos con enlace https", () => {

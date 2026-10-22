@@ -12,7 +12,8 @@
     "prebuild": "bun run lint:tema",
     "build": "next build --webpack",
     "typecheck": "tsc --noEmit",
-    "test": "bun test scripts/ src/"
+    "test": "bun test scripts/ src/",
+    "eval": "bun scripts/eval.ts"
   },
   "dependencies": {
     "@base-ui/react": "1.8.0",

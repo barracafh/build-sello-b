@@ -144,6 +144,8 @@ export function webOficial(
 }
 
 export type Senal = { codigo: string; nivel: "roja" | "naranja"; texto: string };
+/** Señal del clasificador (LAB-39): deterministas y del modelo, con su apartado. */
+export type SenalFinal = { codigo: string; evidencia: string; fuente: string };
 type Enlace = { nombre: string; url: string };
 export type Desmentido = {
   editor: string;
@@ -169,6 +171,12 @@ export type Respuesta = {
   senales: Senal[];
   reputacion: string | null;
   rdap: string | null;
+  /** Si el mensaje pasó por el clasificador (no era solo un enlace). */
+  clasificado: boolean;
+  /** Motivo en una frase; «clasificador no disponible» si el modelo falló. */
+  motivo: string | null;
+  señales: SenalFinal[];
+  entidad_suplantada: string | null;
   /** Desmentidos publicados de mensajes parecidos; vacío si no se consultó. */
   desmentidos: Desmentido[];
 };
@@ -181,6 +189,15 @@ const enlaceO = (valor: unknown): Enlace | null => {
   const nombre = textoO(e?.nombre);
   const url = textoO(e?.url);
   return nombre && url ? { nombre, url } : null;
+};
+
+const esSenalFinal = (s: unknown): s is SenalFinal => {
+  const x = s as Record<string, unknown> | null;
+  return (
+    typeof x?.codigo === "string" &&
+    typeof x.evidencia === "string" &&
+    typeof x.fuente === "string"
+  );
 };
 
 const esSenal = (s: unknown): s is Senal => {
@@ -229,6 +246,10 @@ export function leerRespuesta(datos: unknown): Respuesta | null {
     senales: Array.isArray(d.senales) ? d.senales.filter(esSenal) : [],
     reputacion: textoO(d.reputacion),
     rdap: textoO(d.rdap),
+    clasificado: d.clasificado === true,
+    motivo: textoO(d.motivo),
+    señales: Array.isArray(d.señales) ? d.señales.filter(esSenalFinal) : [],
+    entidad_suplantada: textoO(d.entidad_suplantada),
     desmentidos: Array.isArray(d.desmentidos)
       ? d.desmentidos.map(leerDesmentido).filter((x): x is Desmentido => x !== null)
       : [],
