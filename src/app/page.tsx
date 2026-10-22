@@ -15,7 +15,7 @@ const columnasPie = [
     enlaces: [
       { nombre: "Agencia Tributaria", url: "https://sede.agenciatributaria.gob.es" },
       { nombre: "Seguridad Social", url: "https://sede.seg-social.gob.es" },
-      { nombre: "Dirección General de Tráfico", url: "https://sede.dgt.gob.es" },
+      { nombre: "Tráfico (DGT)", url: "https://sede.dgt.gob.es" },
       { nombre: "Correos", url: "https://www.correos.es" },
       { nombre: "INCIBE", url: "https://www.incibe.es" },
     ],
@@ -26,7 +26,7 @@ const columnasPie = [
     enlaces: [
       { nombre: "Llamar al 017", url: "tel:017" },
       { nombre: "Línea 017 de INCIBE", url: linea017.url },
-      { nombre: "Avisos de estafas de INCIBE", url: avisosIncibe.url },
+      { nombre: "Avisos de INCIBE", url: avisosIncibe.url },
     ],
   },
 ];
@@ -106,8 +106,8 @@ export default async function Home({
       {/* Pie con la maqueta del equipo (estilo portal de la Administración), pero
           con la marca de ficha.json: sin escudos ni logotipos oficiales. */}
       <footer className="mt-8 bg-muted text-base">
-        <div className="mx-auto grid max-w-5xl gap-10 px-(--page-gutter) py-14 md:px-8 md:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1fr] lg:gap-0">
-          <div className="lg:pr-10">
+        <div className="mx-auto grid max-w-5xl gap-10 px-(--page-gutter) py-14 md:px-8 md:grid-cols-2 lg:grid-cols-[1fr_1.05fr_1.05fr_0.95fr] lg:gap-0">
+          <div className="lg:pr-6">
             <span className="inline-flex items-center gap-4 border-l-4 border-brand-yellow pl-4">
               <span
                 aria-hidden="true"
@@ -130,7 +130,7 @@ export default async function Home({
             <nav
               key={columna.id}
               aria-labelledby={`pie-${columna.id}`}
-              className="lg:border-l lg:border-border lg:px-8"
+              className="lg:border-l lg:border-border lg:px-6"
             >
               <h2 id={`pie-${columna.id}`} className="font-sans text-lg font-semibold">
                 {columna.titulo}
@@ -152,7 +152,7 @@ export default async function Home({
             </nav>
           ))}
 
-          <section aria-labelledby="pie-herramienta" className="lg:border-l lg:border-border lg:pl-8">
+          <section aria-labelledby="pie-herramienta" className="lg:border-l lg:border-border lg:pl-6">
             <h2 id="pie-herramienta" className="font-sans text-lg font-semibold">
               Sobre la herramienta
             </h2>
@@ -163,7 +163,7 @@ export default async function Home({
               href={site.feedbackUrl}
               className={cn(
                 buttonVariants({ variant: "outline", size: "lg" }),
-                "mt-4 h-12 px-5 text-base",
+                "mt-4 h-auto min-h-12 px-5 py-2 text-base whitespace-normal",
               )}
             >
               ¿Algo está mal? Avísanos
