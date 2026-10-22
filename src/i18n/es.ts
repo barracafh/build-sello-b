@@ -17,8 +17,6 @@ export const es = {
   },
   pagina: {
     titulo: "¿Este mensaje es de verdad?",
-    intro:
-      "Pega un SMS, un correo o una web que dice ser de la DGT, Hacienda u otro organismo y te decimos si podemos confirmarlo.",
   },
   pie: {
     descripcion: (nombre: string) =>
@@ -79,10 +77,12 @@ export const es = {
     },
   },
   analizar: {
-    etiquetaCampo: "Pega aquí el mensaje que te ha llegado",
-    ayudaCampo:
-      "Puede ser un SMS, un correo o el enlace de una web. Incluye el remitente y el enlace tal como aparecen.",
-    noPulses: "No pulses el enlace.",
+    // Una sola frase, que es la etiqueta de la caja; `negrita` va resaltada.
+    campo: {
+      antes: "Pega aquí el SMS, el correo o la web tal como te ha llegado, ",
+      negrita: "sin pulsar ningún enlace",
+      despues: ", y te decimos si podemos confirmarlo.",
+    },
     placeholder:
       "DGT: Dispone de 24 horas para pagar su multa. Consulte en el siguiente enlace: hxxps://…",
     contador: (actual: string, maximo: string) => `${actual} de ${maximo} caracteres como máximo`,

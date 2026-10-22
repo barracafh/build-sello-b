@@ -36,8 +36,6 @@ export const gl = {
   },
   pagina: {
     titulo: "Esta mensaxe é de verdade?",
-    intro:
-      "Pega un SMS, un correo ou unha web que di ser da DGT, de Facenda ou doutro organismo e dicímosche se podemos confirmalo.",
   },
   pie: {
     descripcion: (nombre: string) =>
@@ -92,10 +90,11 @@ export const gl = {
     },
   },
   analizar: {
-    etiquetaCampo: "Pega aquí a mensaxe que che chegou",
-    ayudaCampo:
-      "Pode ser un SMS, un correo ou a ligazón dunha web. Inclúe o remitente e a ligazón tal e como aparecen.",
-    noPulses: "Non premas na ligazón.",
+    campo: {
+      antes: "Pega aquí o SMS, o correo ou a web tal e como che chegou, ",
+      negrita: "sen premer en ningunha ligazón",
+      despues: ", e dicímosche se podemos confirmalo.",
+    },
     placeholder: "DGT: Dispón de 24 horas para pagar a súa multa. Consulte na seguinte ligazón: hxxps://…",
     contador: (actual: string, maximo: string) => `${actual} de ${maximo} caracteres como máximo`,
     subirCaptura: "Subir captura",

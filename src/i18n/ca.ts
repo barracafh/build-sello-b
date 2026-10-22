@@ -36,8 +36,6 @@ export const ca = {
   },
   pagina: {
     titulo: "Aquest missatge és de veritat?",
-    intro:
-      "Enganxa un SMS, un correu o una web que diu ser de la DGT, d'Hisenda o d'un altre organisme i et direm si ho podem confirmar.",
   },
   pie: {
     descripcion: (nombre: string) =>
@@ -94,10 +92,11 @@ export const ca = {
     },
   },
   analizar: {
-    etiquetaCampo: "Enganxa aquí el missatge que t'ha arribat",
-    ayudaCampo:
-      "Pot ser un SMS, un correu o l'enllaç d'un web. Inclou el remitent i l'enllaç tal com apareixen.",
-    noPulses: "No toquis l'enllaç.",
+    campo: {
+      antes: "Enganxa aquí l'SMS, el correu o la web tal com t'ha arribat, ",
+      negrita: "sense tocar cap enllaç",
+      despues: ", i et direm si ho podem confirmar.",
+    },
     placeholder: "DGT: Disposa de 24 hores per pagar la multa. Consulti l'enllaç següent: hxxps://…",
     contador: (actual: string, maximo: string) => `${actual} de ${maximo} caràcters com a màxim`,
     subirCaptura: "Puja captura",
