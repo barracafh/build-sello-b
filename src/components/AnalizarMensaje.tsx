@@ -7,8 +7,11 @@ import { ruta } from "@/config/sitio";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { Fuentes } from "@/components/Fuentes";
+import { CargaResultado } from "@/components/CargaResultado";
+import { RETRASO_MS, esperaAntesDeMostrar } from "@/lib/carga";
 import { avisosIncibe, horario017, linea017 } from "@/datos/incibe";
 import { NOMBRES_EJEMPLOS, tipoDeEjemplo } from "@/datos/ejemplos";
 import {
@@ -131,6 +134,10 @@ export function AnalizarMensaje({
   const [error, setError] = useState<{ texto: string; delCampo: boolean } | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [avisoEnlace, setAvisoEnlace] = useState<string | null>(null);
+  // El esqueleto sale solo si tarda más de RETRASO_MS; aquí, cuándo apareció.
+  const [inicioCarga, setInicioCarga] = useState<number | null>(null);
+  const inicioCargaRef = useRef<number | null>(null);
+  const [transcurrido, setTranscurrido] = useState(0);
   const campoRef = useRef<HTMLTextAreaElement>(null);
   const comprobarRef = useRef<HTMLButtonElement>(null);
   const tituloRef = useRef<HTMLHeadingElement>(null);
@@ -146,6 +153,24 @@ export function AnalizarMensaje({
     const reducir = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     titulo.scrollIntoView({ behavior: reducir ? "auto" : "smooth", block: "start" });
   }, [respuesta]);
+
+  useEffect(() => {
+    if (!enviando) return;
+    const inicio = Date.now();
+    const retraso = setTimeout(() => {
+      inicioCargaRef.current = Date.now();
+      setTranscurrido(Date.now() - inicio);
+      setInicioCarga(inicioCargaRef.current);
+    }, RETRASO_MS);
+    const reloj = setInterval(() => setTranscurrido(Date.now() - inicio), 250);
+    return () => {
+      clearTimeout(retraso);
+      clearInterval(reloj);
+      inicioCargaRef.current = null;
+      setInicioCarga(null);
+    };
+  }, [enviando]);
+  const mostrarCarga = enviando && inicioCarga !== null;
 
   function cambiar(texto: string) {
     peticion.current++;
@@ -199,6 +224,12 @@ export function AnalizarMensaje({
     }
     // Si el mensaje ha cambiado mientras tanto, esta respuesta ya no vale.
     if (esta !== peticion.current) return;
+    // Si el esqueleto ya está en pantalla, se queda un mínimo para no parpadear.
+    const espera = esperaAntesDeMostrar(inicioCargaRef.current, Date.now());
+    if (espera > 0) {
+      await new Promise((resolver) => setTimeout(resolver, espera));
+      if (esta !== peticion.current) return;
+    }
     setEnviando(false);
     if (datos) setRespuesta(datos);
     else setError({ texto: "No hemos podido comprobarlo. Inténtalo de nuevo.", delCampo: false });
@@ -360,8 +391,20 @@ export function AnalizarMensaje({
             focusableWhenDisabled
             className="mt-6 h-14 px-6 text-lg max-sm:w-full"
           >
-            {enviando ? "Comprobando…" : "Comprobar el mensaje"}
+            {enviando ? (
+              <>
+                <Spinner />
+                Comprobando…
+              </>
+            ) : (
+              "Comprobar el mensaje"
+            )}
           </Button>
+          {/* Un solo anuncio al empezar. El veredicto lo lee el lector al recibir
+              el foco su titular, y los errores ya son role="alert": aquí no se repiten. */}
+          <p aria-live="polite" className="sr-only">
+            {enviando ? "Comprobando el mensaje" : ""}
+          </p>
           <p
             id={`${id}-privacidad`}
             className="mt-3 text-base text-(--text-secondary)"
@@ -411,11 +454,13 @@ export function AnalizarMensaje({
         </section>
       )}
 
+      <div aria-busy={mostrarCarga} className="empty:hidden lg:col-start-1 lg:row-start-2">
+      {mostrarCarga && <CargaResultado transcurrido={transcurrido} />}
       {respuesta && ficha && (
         // Tres bloques: el veredicto y por qué, qué hacer ahora y las fuentes.
         <section
           aria-labelledby={`${id}-resultado`}
-          className="[&>*+*]:mt-8 lg:col-start-1 lg:row-start-2"
+          className="[&>*+*]:mt-8"
         >
           {/* 1 · Veredicto: cabecera teñida según el resultado y, debajo, el porqué. */}
           <Card render={<article />} className="gap-0 py-0 text-lg">
@@ -701,6 +746,7 @@ export function AnalizarMensaje({
           </div>
         </section>
       )}
+      </div>
     </div>
   );
 }
