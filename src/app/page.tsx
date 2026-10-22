@@ -3,6 +3,7 @@ import { AnalizarMensaje } from "@/components/AnalizarMensaje";
 import { buttonVariants } from "@/components/ui/button";
 import { site } from "@/config/sitio";
 import { cn } from "@/lib/utils";
+import { mostrarCasosTest } from "@/lib/casos-test";
 import { avisosIncibe, linea017 } from "@/datos/incibe";
 import { ExternalLink, Phone } from "lucide-react";
 import ficha from "../../ficha.json";
@@ -34,8 +35,9 @@ const columnasPie = [
 const enlacePie =
   "inline-block py-2.5 text-(--azul-importass) underline underline-offset-4 hover:text-(--azul-importass-oscuro) hover:decoration-2 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-(--azul-importass-oscuro)";
 
-// ?casos-test enseña el panel de ejemplos (para demos y pruebas); sin él, el
-// verificador ocupa todo el ancho. ?casos-test=false o =0 también lo ocultan.
+// El panel de ejemplos (para demos y pruebas) se enseña por defecto; con
+// ?casos-test=false o =0 se oculta y el verificador ocupa todo el ancho.
+// TODO(prod): antes de producción, volver a ocultarlo por defecto.
 // Anchos del portal Import@ss (evidencia en docs/evidencias/ancho-importass.md):
 // header y pie a 1024 px (max-w-5xl = 64rem, como .ss-header y .ss-wrapper) y el
 // contenido a 58rem con 2rem de margen, como .ss-content. Con el panel de
@@ -45,9 +47,7 @@ export default async function Home({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const casosTest = (await searchParams)["casos-test"];
-  const valor = Array.isArray(casosTest) ? casosTest[0] : casosTest;
-  const conEjemplos = valor !== undefined && valor !== "false" && valor !== "0";
+  const conEjemplos = mostrarCasosTest((await searchParams)["casos-test"]);
 
   return (
     <>

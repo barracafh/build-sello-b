@@ -79,7 +79,8 @@ const frases: Record<string, string> = {
 
 // `intro` va encima del formulario, en su columna: así el panel de ejemplos
 // arranca a la altura de la entradilla en escritorio. Los ejemplos solo se
-// enseñan con `conEjemplos` (la página lo activa con ?casos-test).
+// enseñan con `conEjemplos`: la página lo activa por defecto y lo apaga con
+// ?casos-test=false o =0. TODO(prod): volver a ocultarlo por defecto.
 export function AnalizarMensaje({
   intro,
   conEjemplos = false,
