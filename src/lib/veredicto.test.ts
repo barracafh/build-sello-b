@@ -2,6 +2,8 @@ import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import { EJEMPLOS_PANEL, NOMBRES_EJEMPLOS, tipoDeEjemplo } from "@/datos/ejemplos";
 import ejemplos from "../../datos/mensajes-ejemplo.json";
+import { DICCIONARIOS, IDIOMAS } from "@/i18n";
+import { es } from "@/i18n/es";
 import { VEREDICTOS, deEntidad, fichaDe, leerRespuesta, mesDe, miles, webOficial } from "./veredicto";
 
 describe("fichaDe", () => {
@@ -11,25 +13,27 @@ describe("fichaDe", () => {
   });
 
   test("ninguna etiqueta enseña el código crudo", () => {
-    for (const ficha of Object.values(VEREDICTOS)) {
-      assert.doesNotMatch(ficha.etiqueta, /_/);
+    for (const idioma of IDIOMAS) {
+      for (const textos of Object.values(DICCIONARIOS[idioma].veredictos)) {
+        assert.doesNotMatch(textos.etiqueta, /_/);
+      }
     }
   });
 });
 
 describe("titulares", () => {
   test("nombran la entidad si la hay", () => {
-    const titular = VEREDICTOS.no_oficial.titular({ deEntidad: deEntidad("DGT"), hayEnlace: true });
+    const titular = es.veredictos.no_oficial.titular({ entidad: "DGT", hayEnlace: true });
     assert.equal(titular, "Este enlace no es de la DGT");
   });
 
   test("sin entidad, titular genérico", () => {
     assert.equal(
-      VEREDICTOS.no_oficial.titular({ deEntidad: null, hayEnlace: false }),
+      es.veredictos.no_oficial.titular({ entidad: null, hayEnlace: false }),
       "Este mensaje no es oficial",
     );
     assert.equal(
-      VEREDICTOS.no_determinable.titular({ deEntidad: null, hayEnlace: true }),
+      es.veredictos.no_determinable.titular({ entidad: null, hayEnlace: true }),
       "No podemos saber quién lo envía",
     );
   });
@@ -164,6 +168,9 @@ test("mesDe", () => {
   assert.equal(mesDe("2025-03-01T00:00:00Z"), "marzo de 2025");
   assert.equal(mesDe("no es fecha"), null);
   assert.equal(mesDe(null), null);
+  assert.equal(mesDe("2025-03-01T00:00:00Z", es.mes), "marzo de 2025");
+  assert.equal(mesDe("2025-04-30T23:00:00Z", DICCIONARIOS.ca.mes), "d'abril de 2025");
+  assert.equal(mesDe("2026-01-15T00:00:00Z", DICCIONARIOS.eu.mes), "2026ko urtarrila");
 });
 
 test("cada ejemplo dice si es fraude o legítimo y espera un veredicto conocido", () => {

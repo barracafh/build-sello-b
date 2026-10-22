@@ -100,6 +100,7 @@ export default async function Home({
         <div className="mt-6">
           <AnalizarMensaje
             conEjemplos={conEjemplos}
+            idioma={idioma}
             intro={
               <p className="max-w-[760px] text-(--text-secondary)">{t.pagina.intro}</p>
             }

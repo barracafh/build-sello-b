@@ -54,8 +54,18 @@ export const mensajesParaImagen = (dataUrl: string): Mensaje[] => [
 
 export const recortar = (texto: string) => texto.trim().slice(0, LIMITE_TEXTO);
 
+// `codigo` deja al navegador enseñar el error en el idioma elegido.
+export type CodigoErrorImagen = "ia" | "elegir" | "vacia" | "grande" | "tipo";
+const CODIGOS: Record<string, CodigoErrorImagen> = {
+  [ERROR_IA]: "ia",
+  "Elige una imagen para leerla.": "elegir",
+  "La imagen está vacía.": "vacia",
+  "La imagen ocupa más de 4 MB.": "grande",
+  "La imagen tiene que ser PNG, JPG o WebP.": "tipo",
+};
+
 const error = (mensaje: string, status = 400) =>
-  Response.json({ error: mensaje }, { status });
+  Response.json({ error: mensaje, codigo: CODIGOS[mensaje] ?? "ia" }, { status });
 
 /** POST multipart con el campo `imagen`; devuelve `{ texto }`. Una sola llamada a la IA. */
 export async function leerImagen(

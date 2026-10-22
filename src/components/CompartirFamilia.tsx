@@ -7,6 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { enlaceWhatsApp } from "@/lib/compartir";
+import { diccionario, type Idioma } from "@/i18n";
 
 const boton = "h-12 gap-2 px-5 text-lg max-sm:w-full";
 
@@ -17,12 +18,15 @@ export function CompartirFamilia({
   titulo,
   explicacion,
   texto,
+  idioma = "es",
 }: {
   titulo: string;
   explicacion: string;
   texto: string;
+  idioma?: Idioma;
 }) {
   const id = useId();
+  const t = diccionario(idioma).compartir;
   const [aviso, setAviso] = useState<string | null>(null);
   // Se puede editar; si cambia el resultado, vuelve al texto propuesto.
   const [valor, setValor] = useState(texto);
@@ -43,9 +47,9 @@ export function CompartirFamilia({
   async function copiar() {
     try {
       await navigator.clipboard.writeText(valor);
-      setAviso("Texto copiado. Pégalo en el chat de tu familia.");
+      setAviso(t.copiado);
     } catch {
-      setAviso("No hemos podido copiarlo. Selecciona el texto de la caja y cópialo.");
+      setAviso(t.noCopiado);
     }
   }
 
@@ -61,7 +65,7 @@ export function CompartirFamilia({
       <p className="mt-2 text-(--text-secondary)">{explicacion}</p>
 
       <label htmlFor={`${id}-texto`} className="mt-4 block font-medium">
-        Esto es lo que se envía. Puedes cambiarlo:
+        {t.etiqueta}
       </label>
       {/* Las mismas clases que la caja principal de AnalizarMensaje. */}
       <Textarea
@@ -85,18 +89,18 @@ export function CompartirFamilia({
           className={cn(buttonVariants({ variant: "outline", size: "lg" }), boton)}
         >
           <MessageCircle aria-hidden="true" className="size-5" />
-          Enviar por WhatsApp
-          <span className="sr-only"> (se abre en otra ventana)</span>
+          {t.whatsapp}
+          <span className="sr-only">{t.otraVentana}</span>
         </a>
         {puedeCompartir && (
           <Button type="button" variant="outline" size="lg" onClick={compartir} className={boton}>
             <Share2 aria-hidden="true" className="size-5" />
-            Otra app
+            {t.otraApp}
           </Button>
         )}
         <Button type="button" variant="outline" size="lg" onClick={copiar} className={boton}>
           <Copy aria-hidden="true" className="size-5" />
-          Copiar el texto
+          {t.copiar}
         </Button>
       </div>
       <p role="status" className="mt-3 text-base font-medium empty:mt-0">
