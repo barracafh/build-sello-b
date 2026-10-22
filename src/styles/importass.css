@@ -1,0 +1,150 @@
+/* Design system Import@ss: tokens del portal de la Tesorería General de la
+   Seguridad Social (tema «post», consultado el 22/10/2026). Documentación,
+   pares de contraste y componentes en docs/design-system.md; una prueba
+   (importass.test.ts) comprueba que este fichero y el documento coinciden.
+
+   Es una capa aparte de Sol: tema.css no se toca y nada de aquí cambia una
+   página hasta que se use. Todo va con el prefijo --iss- para no pisar Sol.
+   Cada color está fuera de Sol, por eso cada línea lleva su tema-ok. */
+
+@theme inline {
+  --color-iss-primary-50: var(--iss-primary-50);
+  --color-iss-primary-100: var(--iss-primary-100);
+  --color-iss-primary-150: var(--iss-primary-150);
+  --color-iss-primary-200: var(--iss-primary-200);
+  --color-iss-primary-500: var(--iss-primary-500);
+  --color-iss-primary-600: var(--iss-primary-600);
+  --color-iss-primary-700: var(--iss-primary-700);
+  --color-iss-primary-800: var(--iss-primary-800);
+  --color-iss-primary-900: var(--iss-primary-900);
+  --color-iss-surface: var(--iss-surface);
+  --color-iss-surface-primary: var(--iss-surface-primary);
+  --color-iss-text: var(--iss-text);
+  --color-iss-text-secondary: var(--iss-text-secondary);
+  --color-iss-text-inactive: var(--iss-text-inactive);
+  --color-iss-link-visited: var(--iss-link-visited);
+  --color-iss-focus-glow: var(--iss-focus-glow);
+  --color-iss-neutral-50: var(--iss-neutral-50);
+  --color-iss-neutral-100: var(--iss-neutral-100);
+  --color-iss-neutral-300: var(--iss-neutral-300);
+  --color-iss-border: var(--iss-border);
+  --color-iss-border-strong: var(--iss-border-strong);
+  --color-iss-disabled-text: var(--iss-disabled-text);
+  --color-iss-success-50: var(--iss-success-50);
+  --color-iss-success-700: var(--iss-success-700);
+  --color-iss-success-850: var(--iss-success-850);
+  --color-iss-warning-50: var(--iss-warning-50);
+  --color-iss-warning-500: var(--iss-warning-500);
+  --color-iss-warning-700: var(--iss-warning-700);
+  --color-iss-warning-850: var(--iss-warning-850);
+  --color-iss-error-50: var(--iss-error-50);
+  --color-iss-error-500: var(--iss-error-500);
+  --color-iss-error-700: var(--iss-error-700);
+  --color-iss-error-850: var(--iss-error-850);
+  --color-iss-info-50: var(--iss-info-50);
+  --color-iss-info-700: var(--iss-info-700);
+  --color-iss-info-850: var(--iss-info-850);
+  --text-iss-h1: var(--iss-text-h1);
+  --text-iss-h2: var(--iss-text-h2);
+  --text-iss-h3: var(--iss-text-h3);
+  --text-iss-h4: var(--iss-text-h4);
+  --text-iss-body: var(--iss-text-body);
+  --text-iss-sm: var(--iss-text-sm);
+  --text-iss-xs: var(--iss-text-xs);
+  --radius-iss-sm: var(--iss-radius-sm);
+  --radius-iss-md: var(--iss-radius-md);
+  --radius-iss-lg: var(--iss-radius-lg);
+  --container-iss-page: var(--iss-container-page);
+  --container-iss-content: var(--iss-container-content);
+}
+
+:root {
+  /* Color: primario (petróleo de la Tesorería) */
+  --iss-primary-50: #edf9fc; /* tema-ok: Import@ss new-primary-50, hover de botón secundario */
+  --iss-primary-100: #d8ebf2; /* tema-ok: Import@ss new-primary-100, borde decorativo de tarjeta */
+  --iss-primary-150: #b8dae5; /* tema-ok: Import@ss new-primary-150, hover de botón terciario */
+  --iss-primary-200: #98c8d9; /* tema-ok: Import@ss border-primary, activo de botón terciario */
+  --iss-primary-500: #046080; /* tema-ok: Import@ss primary-500, acción y enlace */
+  --iss-primary-600: #034d66; /* tema-ok: Import@ss primary-600, hover de enlace */
+  --iss-primary-700: #02384a; /* tema-ok: Import@ss new-primary-700, hover de botón y anillo de foco */
+  --iss-primary-800: #022633; /* tema-ok: Import@ss primary-800, activo de botón y pie */
+  --iss-primary-900: #01131a; /* tema-ok: Import@ss primary-900, franja final del pie */
+
+  /* Color: superficies y texto */
+  --iss-surface: #ffffff; /* tema-ok: Import@ss basic-white */
+  --iss-surface-primary: #f2fafc; /* tema-ok: Import@ss background-primary, bloque destacado */
+  --iss-text: #030303; /* tema-ok: Import@ss textual-basic-dark */
+  --iss-text-secondary: #595959; /* tema-ok: Import@ss content-neutral */
+  --iss-text-inactive: #717879; /* tema-ok: Import@ss textual-inactive */
+  --iss-link-visited: #681da8; /* tema-ok: Import@ss textual-visited-lightbg */
+  --iss-focus-glow: #4ec3cd; /* tema-ok: Import@ss secondary-500, halo de foco */
+
+  /* Color: neutros y bordes */
+  --iss-neutral-50: #f2f2f2; /* tema-ok: Import@ss neutral-50 */
+  --iss-neutral-100: #e5e5e5; /* tema-ok: Import@ss neutral-100, fondo deshabilitado */
+  --iss-neutral-300: #b3b3b3; /* tema-ok: Import@ss neutral-300, hover de enlace en el pie */
+  --iss-border: #d5d5d5; /* tema-ok: Import@ss color-border-neutral, separadores */
+  --iss-border-strong: #717879; /* tema-ok: borde de campo con 4.5:1, Import@ss usa d8ebf2 y no llega a 3:1 */
+  --iss-disabled-text: #ababab; /* tema-ok: Import@ss color-button, texto deshabilitado */
+
+  /* Color: estados */
+  --iss-success-50: #e5f6f1; /* tema-ok: Import@ss success-50 */
+  --iss-success-700: #008057; /* tema-ok: Import@ss success-700 */
+  --iss-success-850: #004d34; /* tema-ok: Import@ss success-850 */
+  --iss-warning-50: #fff4e5; /* tema-ok: Import@ss warning-50 */
+  --iss-warning-500: #ff4d00; /* tema-ok: Import@ss border-warning */
+  --iss-warning-700: #995600; /* tema-ok: Import@ss warning-700 */
+  --iss-warning-850: #4d2b00; /* tema-ok: Import@ss warning-850 */
+  --iss-error-50: #fee5ec; /* tema-ok: Import@ss error-50 */
+  --iss-error-500: #e50041; /* tema-ok: Import@ss error-500 */
+  --iss-error-700: #99002b; /* tema-ok: Import@ss error-700 */
+  --iss-error-850: #4d0016; /* tema-ok: Import@ss error-850 */
+  --iss-info-50: #e6f9ff; /* tema-ok: Import@ss info-50 */
+  --iss-info-700: #057399; /* tema-ok: Import@ss info-700 */
+  --iss-info-850: #02394d; /* tema-ok: Import@ss info-850 */
+
+  /* Tipografía. Lato y Merriweather no se cargan: si se adoptan, van por
+     next/font en layout.tsx; mientras, se ven las alternativas. */
+  --iss-font-body: Lato, "Helvetica Neue", Arial, sans-serif;
+  --iss-font-heading: Merriweather, Georgia, serif;
+  --iss-text-h1: 2rem;
+  --iss-text-h2: 1.75rem;
+  --iss-text-h2-mobile: 1.5rem;
+  --iss-text-h3: 1.5rem;
+  --iss-text-h3-mobile: 1.25rem;
+  --iss-text-h4: 1.25rem;
+  --iss-text-body: 1.125rem;
+  --iss-text-sm: 1rem;
+  --iss-text-xs: 0.875rem;
+  --iss-leading-heading: 1.25;
+  --iss-leading-body: 1.5;
+  --iss-weight-regular: 400;
+  --iss-weight-bold: 700;
+
+  /* Espaciado (múltiplos de 4 px) */
+  --iss-space-1: 0.25rem;
+  --iss-space-2: 0.5rem;
+  --iss-space-3: 0.75rem;
+  --iss-space-4: 1rem;
+  --iss-space-6: 1.5rem;
+  --iss-space-8: 2rem;
+  --iss-space-12: 3rem;
+  --iss-space-16: 4rem;
+
+  /* Rejilla y anchos */
+  --iss-container-page: 64rem;
+  --iss-container-content: 58rem;
+  --iss-gutter: 1.5rem;
+  --iss-gutter-md: 2rem;
+  --iss-control-height: 3rem;
+
+  /* Radios */
+  --iss-radius-sm: 0.25rem;
+  --iss-radius-md: 0.5rem;
+  --iss-radius-lg: 1rem;
+
+  /* Foco: anillo sólido (3:1 garantizado) más el halo de Import@ss */
+  --iss-focus-ring: 3px solid var(--iss-primary-700);
+  --iss-focus-offset: 2px;
+  --iss-focus-halo: 0 0 4px 3px var(--iss-focus-glow);
+}
