@@ -340,7 +340,7 @@ function Resultado({
             : frase}
           {sinCifrado && " Eso sí, el enlace no está cifrado (http)."}
         </p>
-        {respuesta.entidad_suplantada && (
+        {veredicto === "no_oficial" && respuesta.entidad_suplantada && (
           <p className="mt-3 text-base text-(--text-secondary)">
             Parece que intenta hacerse pasar por: {respuesta.entidad_suplantada}
           </p>
