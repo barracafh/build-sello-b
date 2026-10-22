@@ -1,6 +1,7 @@
 // Cómo se enseña cada veredicto de /api/verificar. El código crudo
 // (`no_determinable`…) no se enseña nunca: siempre icono y palabra.
 import { CircleCheck, CircleQuestionMark, CircleX, type LucideIcon } from "lucide-react";
+import { leerFragmentos, type Fragmento } from "@/lib/trozos";
 import { neutralizar } from "@/lib/url";
 import dominios from "../../datos/dominios-oficiales.json";
 
@@ -179,6 +180,8 @@ export type Respuesta = {
   entidad_suplantada: string | null;
   /** Desmentidos publicados de mensajes parecidos; vacío si no se consultó. */
   desmentidos: Desmentido[];
+  /** Dónde está cada trampa en el texto enviado (LAB-62). */
+  fragmentos: Fragmento[];
 };
 
 const textoO = (valor: unknown) =>
@@ -253,6 +256,7 @@ export function leerRespuesta(datos: unknown): Respuesta | null {
     desmentidos: Array.isArray(d.desmentidos)
       ? d.desmentidos.map(leerDesmentido).filter((x): x is Desmentido => x !== null)
       : [],
+    fragmentos: leerFragmentos(d.fragmentos),
   };
 }
 
