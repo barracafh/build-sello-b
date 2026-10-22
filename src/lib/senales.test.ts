@@ -125,12 +125,19 @@ describe("6. dinero, pagos y datos sensibles", () => {
     assert.equal(nivel("Ingrese 50 € en la cuenta indicada.", "pide_dinero"), "roja");
     assert.equal(nivel("Ingrese el importe antes del viernes.", "pide_dinero"), "roja");
     assert.equal(nivel("Correos: ingrese 1.500,00 euros hoy.", "pide_dinero"), "roja");
+    assert.equal(nivel("Ingrese en la cuenta indicada la cantidad pendiente.", "pide_dinero"), "roja");
+    assert.equal(nivel("Ingresen en esta cuenta bancaria el recargo.", "pide_dinero"), "roja");
+    assert.equal(nivel("Ingrese en la cuenta número 0000 0000.", "pide_dinero"), "roja");
     assert.equal(nivel("Ingrese en la cuenta ES00 0000 0000 00 0000000000.", "pide_dinero"), "roja");
   });
   test("«ingrese» como entrar no cuenta", () => {
     const frases = [
       "Agencia Tributaria: ingrese en la sede con Cl@ve para consultar la notificación.",
       "Seguridad Social: ingrese en su área personal.",
+      "Agencia Tributaria: ingrese en su cuenta de Cl@ve para consultar la notificación.",
+      "Seguridad Social: ingrese en su cuenta de Import@ss para ver su vida laboral.",
+      "DGT: ingrese en la cuenta de usuario de la sede para consultar sus puntos.",
+      "SEPE: ingresen en su cuenta personal para descargar el certificado.",
     ];
     for (const t of frases) {
       assert.ok(!codigos(t).includes("pide_dinero"), t);
@@ -141,6 +148,16 @@ describe("6. dinero, pagos y datos sensibles", () => {
     assert.equal(nivel("DGT: Dispone de 24 horas restantes para pagar su multa.", "pide_dinero"), "roja");
     assert.equal(nivel("Tiene que abonar la tasa.", "pide_dinero"), "roja");
     assert.equal(nivel("Deberá transferir el importe.", "pide_dinero"), "roja");
+  });
+  test("«puede pagar» informa, no pide", () => {
+    const frases = [
+      "Agencia Tributaria: puede pagar sus impuestos en la sede electrónica con Cl@ve.",
+      "Agencia Tributaria: si lo desea, puede pagar la deuda en la sede.",
+    ];
+    for (const t of frases) {
+      assert.ok(!codigos(t).includes("pide_dinero"), t);
+      assert.equal(veredicto(t), "no_determinable", t);
+    }
   });
   test("un sustantivo solo o «pagina» sin tilde no cuentan", () => {
     const frases = [

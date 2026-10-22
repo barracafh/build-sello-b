@@ -101,17 +101,19 @@ const PEDIR =
   String.raw`facilite|facil[ií]tenos|env[ií]e|env[ií]enos|confirme|conf[ií]rmenos|proporcione|proporci[oó]nenos|actualice|indique|ind[ií]quenos|introduzca|introduce|comunique|comun[ií]quenos`;
 
 // Solo una petición dirigida al ciudadano: un imperativo o un infinitivo tras
-// «debe», «para»… Listas cerradas: un sustantivo («pago», «importe», «tasa») no
-// basta, y sin raíces abiertas «pagina» o «paginación» no entran.
+// «debe», «para»…; «puede pagar» informa, no pide. Listas cerradas: un
+// sustantivo («pago», «importe», «tasa») no basta, y sin raíces abiertas
+// «pagina» o «paginación» no entran.
 const DINERO = [
   regla(String.raw`paguen?|abonen?|transfieran?`),
   // «ingrese» también es «entre» («ingrese en la sede»): solo cuenta con dinero detrás.
+  // «cuenta» solo con una marca bancaria detrás: «su cuenta de Cl@ve» es un acceso.
   // La cifra admite espacios: «1 500 €», y `sinNegaciones` deja «1.500» como «1. 500».
   regla(
-    String.raw`ingresen?(?:\s+[^\s.!?]+){0,2}?\s+(?:(?:(?:el|la)\s+)?(?:importe|cantidad|pago)|\d(?:[\d.,]|\s(?=\d))*\s?(?:€|euros?)|en\s+(?:la|su|esta)\s+cuenta)`,
+    String.raw`ingresen?(?:\s+[^\s.!?]+){0,2}?\s+(?:(?:(?:el|la)\s+)?(?:importe|cantidad|pago)|\d(?:[\d.,]|\s(?=\d))*\s?(?:€|euros?)|en\s+(?:la|esta)\s+cuenta\s+(?:ES\d{2,}|bancaria|indicada|siguiente|n[º°]|n[uú]mero))`,
   ),
   regla(String.raw`(?:realice|efect[uú]e)\s+(?:el\s+)?(?:pago|ingreso|abono)`),
-  regla(String.raw`(?:debe|tiene\s+que|deber[aá]|para|puede)\s+(?:pagar|abonar|ingresar|transferir)`),
+  regla(String.raw`(?:debe|tiene\s+que|deber[aá]|para)\s+(?:pagar|abonar|ingresar|transferir)`),
 ];
 const DATOS = [
   regla(String.raw`cvv2?|cvc|contrase[ñn]a|password|iban`),
