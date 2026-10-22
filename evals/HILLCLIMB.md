@@ -31,11 +31,24 @@ Las filas de deepseek, gemma4 y qwen3.6 son de antes de los arreglos (`cd3be57`)
 | deepseek-v4-flash | 88.6 % (31/35) | 6/6 · 14/14 · 11/15 | 0 | 0 | 3 | 3.7 s (máx. 8.0 s) | 2 526 | candidato |
 | gemma4 | — | — | — | — | 3/3 | 8.0 s (tiempo agotado) | — | descartado: ninguna respuesta en 8 s en los 3 primeros casos |
 | qwen3.6 | — | — | — | — | 3/3 | 8.0 s (tiempo agotado) | — | descartado: ninguna respuesta en 8 s en los 3 primeros casos |
-| glm5.3 | pendiente | | | | | | | |
-| glm5.3-flash | pendiente | | | | | | | |
+| glm5.3 | — | — | — | — | 10 de 12 | 7.9 s (las que responden: 6.4–7.4 s) | — | descartado: 10 reservas por tiempo en los 12 primeros casos |
+| glm5.3-flash | — | — | — | — | 10 de 14 | 7.8 s (las que responden: 7.0–7.6 s) | — | descartado: 10 reservas por tiempo en los 14 primeros casos |
 | glm5.2 | — | — | — | — | — | — | — | no disponible: HelmCode responde 400 «Invalid model name» aunque sale en `/models` |
 | claude-fable-5, claude-haiku-4-5, claude-opus-5, claude-sonnet-5 | — | — | — | — | — | — | — | no disponibles: 402 `subscription_required` (modelo de terceros, la organización no tiene crédito) |
 | gemini-3.5-flash-lite, gemini-3.6-flash | — | — | — | — | — | — | — | no disponibles: 402 `subscription_required` |
 | gpt-5.6-luna, gpt-5.6-sol, gpt-5.6-terra | — | — | — | — | — | — | — | no disponibles: 402 `subscription_required` |
 
 deepseek-v4-flash: el mismo 34/35 de `evals/ULTIMO.md` si las reservas cuentan como acierto. Fallos con reservas como fallo: dev-24 (`no_determinable` → `no_oficial`), y reservas en dev-17, dev-25 y dev-29 (salen `no_determinable` por la reserva, no por el modelo).
+
+## Bucle: solo deepseek-v4-flash
+
+Ningún otro modelo pasa el corte. Los de terceros no están disponibles (402) y `glm5.2` da 400. `gemma4`, `qwen3.6`, `glm5.3` y `glm5.3-flash` no responden en 8 s, o lo hacen muy al límite. El bucle se hace con un solo modelo.
+
+Regla para quedarse con un cambio: la accuracy media sobre 3 pasadas sube y ninguna puerta empeora respecto a la línea base: 0 falsos `oficial_verificado`, recall de `no_oficial` igual o mayor, y ejemplos ≥ 29/30. El candidato final necesita 30/30 en los ejemplos.
+
+| # | Cambio | Accuracy media | Por pasada | Falsos OV | Recall no_oficial | Ejemplos | Reservas | Latencia media (respondidas) | Tokens por caso | Resultado |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0 | Línea base (prompt de `main`) | 90.5 % (95/105) | 31 · 32 · 32 | 0 | 100 % | 29/30 | 5 | 3.5 s | 2 587 | — |
+| 1 | Prompt condensado (las mismas reglas y apartados, en menos palabras) y salida acotada (como mucho 3 señales, citas cortas, motivo de menos de 25 palabras) | 91.4 % (96/105) | 32 · 31 · 33 | 0 | 100 % | 27/30 ❌ | 6 | 2.8 s | 1 764 | **revertido**: los ejemplos bajan de 29/30 a 27/30 |
+
+Iteración 1: baja la latencia media y los tokens, pero las reservas siguen en los mismos casos (dev-17, dev-24 y dev-25 agotan los 8 s). dev-17, un ejemplo, también sale `no_oficial` una vez. Lo que tarda es la cola de esos casos, no la media.
