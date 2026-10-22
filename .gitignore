@@ -8,6 +8,8 @@ out/
 next-env.d.ts
 .DS_Store
 
+# Evals: los informes por modelo no se suben; evals/ULTIMO.md sí
+evals/resultados/
 # Conjunto de prueba de evals: nunca en el repo (LAB-47)
 *evals-holdout/
 src/datos/evals/**/test.json

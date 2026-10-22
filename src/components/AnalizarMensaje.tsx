@@ -11,11 +11,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Fuentes } from "@/components/Fuentes";
 import { avisosIncibe, horario017, linea017 } from "@/datos/incibe";
-import { NOMBRES_EJEMPLOS } from "@/datos/ejemplos";
+import { NOMBRES_EJEMPLOS, tipoDeEjemplo } from "@/datos/ejemplos";
 import {
   deEntidad,
   fichaDe,
   leerRespuesta,
+  mesDe,
   miles,
   webOficial,
   type Respuesta,
@@ -54,6 +55,9 @@ const textoDeEjemplo = (caso: Ejemplo) => {
 const EJEMPLOS = (ejemplos as Ejemplo[]).map((caso) => ({
   id: caso.id,
   nombre: NOMBRES_EJEMPLOS[caso.id] ?? caso.id,
+  tipo: tipoDeEjemplo(caso.id),
+  // Lo que debería devolver, con la misma píldora que el resultado.
+  esperado: fichaDe(caso.esperado),
   texto: textoDeEjemplo(caso),
 }));
 
@@ -77,6 +81,38 @@ const frases: Record<string, string> = {
   indicador_publicado: "Un organismo oficial ha avisado de que esta dirección es un fraude.",
   remitente_dominio_ajeno: "El remitente usa el nombre de un organismo oficial con una dirección de correo que no es la suya.",
   en_allowlist: "La dirección está en nuestra lista de webs oficiales.",
+};
+
+// Título en castellano llano de cada señal del clasificador (LAB-39).
+const titulosSenal: Record<string, string> = {
+  pide_dinero: "Pide dinero",
+  pide_datos: "Pide datos personales o bancarios",
+  amenaza: "Amenaza con consecuencias graves",
+  urgencia: "Mete prisa",
+  ortografia: "Faltas o símbolos raros",
+  remitente_falso: "Remitente que no cuadra",
+  enlace_sospechoso: "Enlace sospechoso",
+  enlace_no_listado: "Enlace que no conocemos",
+  enlace_acortado: "Enlace acortado",
+  enlace_parecido: "Enlace parecido a uno oficial",
+  enlace_imita_oficial: "Enlace que imita a uno oficial",
+  instruccion_qr: "Pide escanear un código QR",
+  instruccion_rara: "Pide responder, descargar o llamar",
+  devolucion_con_enlace: "Devolución con enlace para cobrar",
+  aviso_informativo: "Parece un aviso informativo",
+};
+
+const MOTIVO_NO_DISPONIBLE = "clasificador no disponible";
+
+// Los apartados de contexto.md en los que se apoyan las señales del clasificador.
+const contextoMd = (señales: Respuesta["señales"]) => {
+  const apartados = [
+    ...new Set(señales.flatMap((s) => s.fuente.match(/§\d+(?:\.\d+)?/g) ?? [])),
+  ];
+  return {
+    nombre: `Criterios de Sello (contexto.md${apartados.length ? ` ${apartados.join(", ")}` : ""})`,
+    url: "https://github.com/barracafh/build-sello-b/blob/main/contexto.md",
+  };
 };
 
 // `intro` va encima del formulario, en su columna: así el panel de ejemplos
@@ -250,7 +286,11 @@ export function AnalizarMensaje({
   // La web citada en prosa es oficial: se dice de quién, sin enlazarla (LAB-40).
   const webCitada = respuesta?.motivos[0] === "web_oficial_citada";
   const frase = respuesta
-    ? soloRemitente
+    ? respuesta.clasificado
+      ? respuesta.motivo === MOTIVO_NO_DISPONIBLE
+        ? "No hemos podido analizar el texto del mensaje ahora mismo, así que no podemos confirmar nada. Las señales que ves salen de reglas fijas."
+        : respuesta.motivo
+      : soloRemitente
       ? frases.remitente_dominio_ajeno
       : webCitada && respuesta.entidad
         ? `El mensaje cita una dirección que sí es la web oficial de ${respuesta.entidad}. Eso no prueba quién lo envía: entra tecleando tú la dirección.`
@@ -264,10 +304,15 @@ export function AnalizarMensaje({
         ...(respuesta.fuente && respuesta.entidad
           ? [{ nombre: respuesta.entidad, url: respuesta.fuente }]
           : []),
+        ...(respuesta.clasificado ? [contextoMd(respuesta.señales)] : []),
         avisosIncibe,
         linea017,
       ].filter((f, i, todas) => todas.findIndex((o) => o.url === f.url) === i)
     : [];
+  // Cada verificador con su web, una sola vez (LAB-45).
+  const verificadores = (respuesta?.desmentidos ?? [])
+    .map((d) => ({ nombre: d.editor, url: new URL(d.url).origin }))
+    .filter((f, i, todas) => todas.findIndex((o) => o.url === f.url) === i);
   const cercaDelLimite = mensaje.length >= AVISO_LIMITE;
 
   return (
@@ -407,9 +452,25 @@ export function AnalizarMensaje({
                 type="button"
                 variant="outline"
                 onClick={() => probarEjemplo(ejemplo.texto)}
-                className="h-auto min-h-12 max-w-full px-4 py-2 text-base whitespace-normal lg:justify-start lg:text-left"
+                className={cn(
+                  "h-auto min-h-12 max-w-full flex-col items-start gap-1.5 border-l-4 px-4 py-2 text-left text-base whitespace-normal",
+                  ejemplo.tipo === "Fraude" ? "border-l-destructive" : "border-l-muted-foreground",
+                )}
               >
-                {ejemplo.nombre}
+                <span>{ejemplo.nombre}</span>
+                <span className="flex flex-wrap items-center gap-2 text-sm font-normal">
+                  {ejemplo.tipo && <span className="font-semibold">{ejemplo.tipo}</span>}
+                  <Badge
+                    className={cn(
+                      "h-auto gap-1.5 px-2 py-0.5 text-sm font-medium whitespace-normal [&>svg]:size-4!",
+                      ejemplo.esperado.tono,
+                    )}
+                  >
+                    <ejemplo.esperado.icono aria-hidden="true" />
+                    <span className="sr-only">Debería dar: </span>
+                    {ejemplo.esperado.etiqueta}
+                  </Badge>
+                </span>
               </Button>
             ))}
           </div>
@@ -456,7 +517,41 @@ export function AnalizarMensaje({
                   {respuesta.motivos.includes("sin_cifrado") &&
                     " Eso sí, el enlace no está cifrado (http)."}
                 </p>
-                {respuesta.senales.length > 0 && (
+                {respuesta.veredicto === "no_oficial" && respuesta.entidad_suplantada && (
+                  <p className="mt-2 text-(--text-secondary)">
+                    Intenta hacerse pasar por: {respuesta.entidad_suplantada}
+                  </p>
+                )}
+                {respuesta.clasificado && respuesta.señales.length > 0 && (
+                  <ul className="mt-4 grid gap-3" aria-label="Señales encontradas">
+                    {respuesta.señales.map((s) => {
+                      const nivel = respuesta.senales.find((x) => x.codigo === s.codigo)?.nivel;
+                      return (
+                        <li key={s.codigo} className="flex flex-wrap items-start gap-x-3 gap-y-1">
+                          {nivel && (
+                            <Badge
+                              className={cn(
+                                "h-auto px-2.5 py-1 text-base font-semibold",
+                                nivel === "roja"
+                                  ? "bg-destructive/10 text-foreground"
+                                  : "bg-(--warning) text-(--warning-foreground)",
+                              )}
+                            >
+                              {nivel === "roja" ? "Señal roja" : "Señal naranja"}
+                            </Badge>
+                          )}
+                          <span className="min-w-0 flex-[1_1_220px] [overflow-wrap:anywhere]">
+                            <span className="font-semibold">
+                              {titulosSenal[s.codigo] ?? "Otra señal"}.
+                            </span>{" "}
+                            {s.evidencia}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+                {!respuesta.clasificado && respuesta.senales.length > 0 && (
                   <ul className="mt-4 grid gap-3" aria-label="Señales encontradas">
                     {respuesta.senales.map((senal) => (
                       <li key={senal.codigo} className="flex flex-wrap items-start gap-x-3 gap-y-1">
@@ -520,6 +615,42 @@ export function AnalizarMensaje({
               </section>
             )}
           </Card>
+
+          {respuesta.desmentidos.length > 0 && (
+            // Señal de apoyo: enlaza los desmentidos, nunca la dirección analizada.
+            <Card
+              render={<section aria-labelledby={`${id}-desmentidos`} />}
+              className="gap-3 px-6 py-6 text-lg md:px-8 md:py-8"
+            >
+              <h3 id={`${id}-desmentidos`} className="text-xl font-semibold">
+                Ya lo han desmentido
+              </h3>
+              <p className="text-base text-(--text-secondary)">
+                Verificadores de noticias han publicado sobre mensajes parecidos a este.
+                {respuesta.veredicto !== "no_oficial" &&
+                  " Eso no prueba por sí solo que este sea falso."}
+              </p>
+              <ul className="grid gap-2">
+                {respuesta.desmentidos.map((d) => (
+                  <li key={d.url}>
+                    <a
+                      href={d.url}
+                      className="flex min-h-11 items-center justify-between gap-4 rounded-lg px-3 py-2 ring-1 ring-foreground/10 transition-colors outline-none hover:bg-muted focus-visible:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
+                    >
+                      <span className="min-w-0 [overflow-wrap:anywhere]">
+                        <span className="block font-medium">{d.editor}</span>
+                        <span className="block text-base text-(--text-secondary)">
+                          «{d.calificacion}»
+                          {mesDe(d.fecha) && ` · ${mesDe(d.fecha)}`}
+                        </span>
+                      </span>
+                      <span aria-hidden="true">↗</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
 
           {/* 2 · Qué hacer ahora: fondo beige (naranja de marca al 10 %), pasos
               numerados y, si toca, la línea 017. */}
@@ -586,7 +717,7 @@ export function AnalizarMensaje({
             aria-label="Fuentes y datos de la comprobación"
             className="rounded-xl bg-(--azul-importass) px-6 py-6 text-background md:px-8 md:py-8"
           >
-            <Fuentes fuentes={fuentes} />
+            <Fuentes fuentes={fuentes} verificadores={verificadores} />
             <ul className="mt-6 text-base text-background/90">
               <li>
                 Reputación del enlace:{" "}

@@ -168,6 +168,9 @@ describe("remitente: la marca cuenta por token completo", () => {
     ["carpetaciudadana", "info.com.es"],
     ["dgt-multas", "gmail.com"],
     ["seg-social", "ejemplo.com"],
+    ["trafico", "gmail.com"],
+    ["seguridadsocial", "gmail.com"],
+    ["dgtmultas", "gmail.com"],
   ]) {
     test(`${local}@${dominio} → no_oficial`, () => {
       const r = veredictoDe(local, dominio);
@@ -175,6 +178,11 @@ describe("remitente: la marca cuenta por token completo", () => {
       assert.ok(r.motivos.includes("remitente_dominio_ajeno"), r.motivos.join());
     });
   }
+
+  test("la marca unida en la parte local resuelve su entidad", () => {
+    assert.match(veredictoDe("trafico", "gmail.com").web_oficial ?? "", /dgt\.gob\.es/);
+    assert.match(veredictoDe("seguridadsocial", "gmail.com").web_oficial ?? "", /seg-social/);
+  });
 
   test("solo remitente: lo devuelve neutralizado y con el aviso de INCIBE", () => {
     const r = veredictoDe("carpetaciudadana", "info.com.es");

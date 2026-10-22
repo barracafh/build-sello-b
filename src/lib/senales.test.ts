@@ -105,6 +105,26 @@ describe("5. remitente con el nombre del servicio y otro dominio", () => {
   test("remitente sin marca → sin señal", () => {
     assert.ok(!codigos(`De: juan${A}ejemplo.com Hola`).includes("remitente_falso"));
   });
+  test("«clave» o «hacienda» en la dirección no bastan → sin señal", () => {
+    assert.ok(!codigos(`De: juan.clave${A}gmail.com Hola`).includes("remitente_falso"));
+    assert.ok(!codigos(`De: info${A}hacienda-lasrosas.com Hola`).includes("remitente_falso"));
+  });
+  test("marca por token en la dirección y dominio ajeno → roja", () => {
+    assert.equal(nivel(`De: dgt-multas${A}gmail.com Pague ya`, "remitente_falso"), "roja");
+  });
+  test("marca unida en la parte local y dominio ajeno → roja y no_oficial", () => {
+    for (const local of ["trafico", "seguridadsocial", "dgtmultas"]) {
+      const t = `De: ${local}${A}gmail.com Pague ya`;
+      assert.equal(nivel(t, "remitente_falso"), "roja", local);
+      assert.equal(veredicto(t), "no_oficial", local);
+    }
+  });
+  test("remitente oficial de la DGT → sin señal", () => {
+    assert.ok(!codigos(`De: notificaciones${A}dgt.es Su cita`).includes("remitente_falso"));
+  });
+  test("nombre visible con marca y correo gratuito → roja", () => {
+    assert.equal(nivel(`De: Agencia Tributaria <x${A}gmail.com>`, "remitente_falso"), "roja");
+  });
 });
 
 describe("6. dinero, pagos y datos sensibles", () => {

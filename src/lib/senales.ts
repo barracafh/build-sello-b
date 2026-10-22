@@ -1,7 +1,7 @@
 // Señales de contenido (contexto.md §1.4, §5.4 y §5.6). Puro: sin red ni IA, y
 // sin guardar ni registrar el texto. Las señales solo empujan hacia `no_oficial`:
 // nunca suben un veredicto a `oficial_verificado`.
-import { MARCAS, verificar, type Resultado } from "./verificar";
+import { MARCAS, marcaEnDireccion, verificar, type Resultado } from "./verificar";
 
 export type Senal = {
   codigo: string;
@@ -175,8 +175,11 @@ function remitenteFalso(texto: string): boolean {
   const limpio = limpiar(texto);
   for (const m of limpio.matchAll(CORREO)) {
     const visible = limpio.slice(Math.max(0, m.index - 60), m.index).split(/[\n:]/).pop() ?? "";
-    const nombre = normalizar(`${m[1]}${visible.replace(/<\s*$/, "")}`);
-    if (!MARCA_EN_NOMBRE.some((marca) => nombre.includes(normalizar(marca)))) continue;
+    // La dirección se mira por token, como en `verificar`: «juan.clave» o
+    // «hacienda-lasrosas» no son una marca. El nombre visible sigue por subcadena.
+    const nombre = normalizar(visible.replace(/<\s*$/, ""));
+    const enNombre = MARCA_EN_NOMBRE.some((marca) => nombre.includes(normalizar(marca)));
+    if (!enNombre && !marcaEnDireccion(m[1], m[2])) continue;
     if (verificar(`https://${m[2]}`).veredicto !== "oficial_verificado") return true;
   }
   return false;

@@ -1,8 +1,8 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { NOMBRES_EJEMPLOS } from "@/datos/ejemplos";
+import { NOMBRES_EJEMPLOS, tipoDeEjemplo } from "@/datos/ejemplos";
 import ejemplos from "../../datos/mensajes-ejemplo.json";
-import { VEREDICTOS, deEntidad, fichaDe, leerRespuesta, miles, webOficial } from "./veredicto";
+import { VEREDICTOS, deEntidad, fichaDe, leerRespuesta, mesDe, miles, webOficial } from "./veredicto";
 
 describe("fichaDe", () => {
   test("un veredicto desconocido es la duda, nunca «oficial»", () => {
@@ -100,8 +100,52 @@ describe("leerRespuesta", () => {
         senales: [{ codigo: "a", nivel: "roja", texto: "t" }],
         reputacion: null,
         rdap: null,
+        clasificado: false,
+        motivo: null,
+        señales: [],
+        entidad_suplantada: null,
+        desmentidos: [],
       },
     );
+  });
+
+  test("lee los campos del clasificador y descarta señales mal formadas", () => {
+    const r = leerRespuesta({
+      veredicto: "no_oficial",
+      clasificado: true,
+      motivo: "Pide pagar una multa por enlace.",
+      señales: [{ codigo: "pide_dinero", evidencia: "pague", fuente: "§5.4" }, { codigo: 1 }],
+      entidad_suplantada: "DGT",
+    });
+    assert.equal(r?.clasificado, true);
+    assert.equal(r?.motivo, "Pide pagar una multa por enlace.");
+    assert.deepEqual(r?.señales, [{ codigo: "pide_dinero", evidencia: "pague", fuente: "§5.4" }]);
+    assert.equal(r?.entidad_suplantada, "DGT");
+  });
+
+  test("solo deja desmentidos completos con enlace https", () => {
+    const bueno = {
+      editor: "Maldita.es",
+      sitio: "maldita.es",
+      calificacion: "Falso",
+      url: "https://maldita.es/x",
+      fecha: "2025-03-01T00:00:00Z",
+    };
+    const respuesta = leerRespuesta({
+      veredicto: "no_oficial",
+      desmentidos: [
+        bueno,
+        { ...bueno, url: "javascript:alert(1)" },
+        { ...bueno, url: "http://maldita.es/y" },
+        { ...bueno, editor: 3 },
+        { editor: "Newtral", calificacion: "Bulo", url: "https://newtral.es/z" },
+      ],
+    });
+    assert.deepEqual(respuesta?.desmentidos, [
+      bueno,
+      { editor: "Newtral", sitio: null, calificacion: "Bulo", url: "https://newtral.es/z", fecha: null },
+    ]);
+    assert.deepEqual(leerRespuesta({ veredicto: "no_oficial", desmentidos: "no_consultado" })?.desmentidos, []);
   });
 
   test("neutraliza la URL analizada aunque llegue viva", () => {
@@ -114,6 +158,22 @@ test("cada ejemplo tiene un nombre propio y no se repiten", () => {
   const nombres = ejemplos.map((caso) => NOMBRES_EJEMPLOS[caso.id]);
   for (const [i, nombre] of nombres.entries()) assert.ok(nombre, ejemplos[i].id);
   assert.equal(new Set(nombres).size, ejemplos.length);
+});
+
+test("mesDe", () => {
+  assert.equal(mesDe("2025-03-01T00:00:00Z"), "marzo de 2025");
+  assert.equal(mesDe("no es fecha"), null);
+  assert.equal(mesDe(null), null);
+});
+
+test("cada ejemplo dice si es fraude o legítimo y espera un veredicto conocido", () => {
+  for (const caso of ejemplos) {
+    assert.ok(tipoDeEjemplo(caso.id), caso.id);
+    assert.ok(Object.hasOwn(VEREDICTOS, caso.esperado), caso.id);
+  }
+  assert.equal(tipoDeEjemplo("F01"), "Fraude");
+  assert.equal(tipoDeEjemplo("L05"), "Legítimo");
+  assert.equal(tipoDeEjemplo("X01"), null);
 });
 
 test("miles", () => {

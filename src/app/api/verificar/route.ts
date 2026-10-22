@@ -1,12 +1,13 @@
-import { combinar, senales } from "@/lib/senales";
-import { verificar } from "@/lib/verificar";
+import { analizar } from "@/lib/analizar";
+import { aplicarDesmentidos, buscarDesmentidos, consultaDesmentido } from "@/lib/factcheck";
 
 const LIMITE = 2000;
 
 const error = (mensaje: string) =>
   Response.json({ error: mensaje }, { status: 400 });
 
-// Valida la entrada y verifica la URL. No guarda ni registra el texto.
+// Valida la entrada, verifica la URL y, si es un mensaje, lo clasifica con una
+// sola llamada al modelo. No guarda ni registra el texto.
 export async function POST(request: Request) {
   let cuerpo: unknown;
   try {
@@ -22,11 +23,13 @@ export async function POST(request: Request) {
   if (texto.length > LIMITE) return error("«texto» supera los 2.000 caracteres");
 
   // Marcadores hasta que existan Safe Browsing y RDAP.
-  const url = verificar(texto);
-  const lista = senales(texto, url);
+  const analisis = await analizar(texto);
+  // Después del veredicto final: un desmentido solo lo apoya, nunca lo cambia.
+  const desmentidos = await buscarDesmentidos(consultaDesmentido(texto, analisis));
   return Response.json({
-    ...combinar(url, lista, texto),
-    senales: lista,
+    ...analisis,
+    ...aplicarDesmentidos(analisis, desmentidos),
+    desmentidos,
     reputacion: "no_consultada",
     rdap: "no_disponible",
   });
