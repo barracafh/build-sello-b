@@ -2,6 +2,8 @@ import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import {
   MOTIVO_NO_DISPONIBLE,
+  TIMEOUT_MS,
+  timeoutPara,
   clasificarMensaje,
   combinarClasificacion,
   esSalidaLlm,
@@ -192,7 +194,7 @@ describe("clasificarMensaje", () => {
     const extra = usuarioEu.slice(usuarioEs.length).trim();
     assert.equal(extra.split("\n").length, 1);
     assert.match(extra, /motivo/);
-    assert.match(extra, /euskera/);
+    assert.equal(extra, "Escribe «motivo» en euskera, en una sola frase breve.");
     assert.match((await mensajesCon("va"))[1], /valenciano/);
   });
 
@@ -297,4 +299,12 @@ test("el motivo de reserva de un no_oficial coincide con el del diccionario", ()
   const det = determinista(FRAUDE);
   assert.equal(det.resultado.veredicto, "no_oficial");
   assert.equal(combinarClasificacion(null, det).motivo, es.analizar.motivoSuplantacion);
+});
+
+// Pedir el motivo en otro idioma alarga la respuesta (LAB-68): más margen solo ahí.
+test("el timeout es de 8 s en castellano y de 12 s en los otros idiomas", () => {
+  assert.equal(TIMEOUT_MS, 8000);
+  assert.equal(timeoutPara(undefined), 8000);
+  assert.equal(timeoutPara("es"), 8000);
+  for (const idioma of ["ca", "va", "gl", "eu"] as const) assert.equal(timeoutPara(idioma), 12000);
 });

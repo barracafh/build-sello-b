@@ -13,6 +13,11 @@ export type { Determinista } from "./clasificar-prompt";
 
 export const MOTIVO_NO_DISPONIBLE = "clasificador no disponible";
 export const TIMEOUT_MS = 8000;
+// Pedir el `motivo` en otro idioma alarga la respuesta y con 8 s se agotaban
+// 5-6 de 35 casos (LAB-68): fuera del castellano, 12 s.
+const TIMEOUT_OTRO_IDIOMA_MS = 12000;
+export const timeoutPara = (idioma: Idioma | undefined) =>
+  idioma && idioma !== "es" ? TIMEOUT_OTRO_IDIOMA_MS : TIMEOUT_MS;
 // Id de DeepSeek Flash en HelmCode (GET /models). No es un secreto.
 export const MODELO_POR_DEFECTO = "deepseek-v4-flash";
 
@@ -162,7 +167,7 @@ export async function clasificarMensaje(
   opciones: OpcionesClasificador = {},
 ): Promise<Clasificacion & { fragmentos: Fragmento[] }> {
   const completar = opciones.completar ?? completarReal;
-  const signal = AbortSignal.timeout(opciones.timeoutMs ?? TIMEOUT_MS);
+  const signal = AbortSignal.timeout(opciones.timeoutMs ?? timeoutPara(opciones.idioma));
   let llm: SalidaLlm | null = null;
   try {
     // La carrera con `signal` corta aunque el cliente ignore la señal.

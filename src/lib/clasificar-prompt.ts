@@ -117,5 +117,5 @@ Comprobación de la URL: ${det.resultado.veredicto} (${det.resultado.motivos.joi
 MENSAJE A ANALIZAR
 <<<
 ${texto}
->>>${idioma === "es" ? "" : `\nEscribe «motivo» en ${IDIOMA_DEL_MOTIVO[idioma]}.`}`;
+>>>${idioma === "es" ? "" : `\nEscribe «motivo» en ${IDIOMA_DEL_MOTIVO[idioma]}, en una sola frase breve.`}`;
 }
