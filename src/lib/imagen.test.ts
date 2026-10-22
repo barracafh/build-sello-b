@@ -131,7 +131,7 @@ describe("leerImagen", () => {
       throw new Error("HelmCode respondió 500");
     });
     assert.equal(res.status, 503);
-    assert.deepEqual(await res.json(), { error: ERROR_IA });
+    assert.deepEqual(await res.json(), { error: ERROR_IA, codigo: "ia" });
   });
 
   test("con el marcador SIN_TEXTO devuelve texto vacío", async () => {
@@ -143,7 +143,7 @@ describe("leerImagen", () => {
   test("503 si la IA responde vacío: no se confunde con una imagen sin texto", async () => {
     const res = await leerImagen(conImagen(archivo("image/png", 16)), async () => "  ");
     assert.equal(res.status, 503);
-    assert.deepEqual(await res.json(), { error: ERROR_IA });
+    assert.deepEqual(await res.json(), { error: ERROR_IA, codigo: "ia" });
   });
 
   test("200 con el texto transcrito, una sola llamada", async () => {

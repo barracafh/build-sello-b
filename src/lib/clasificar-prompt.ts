@@ -1,6 +1,7 @@
 // Prompt del clasificador de mensajes. Cada bloque de reglas cita el apartado de
 // contexto.md del que sale; no hay reglas inventadas. El prompt nunca pide
 // `oficial_verificado`: eso solo lo decide la comprobación determinista de URLs.
+import type { Idioma } from "@/i18n";
 import type { Senal } from "./senales";
 import type { Resultado } from "./verificar";
 
@@ -99,8 +100,17 @@ Si no hay ninguna señal, "señales" es [] o contiene solo "sin_senales". "fragm
 
 export type Determinista = { resultado: Resultado; senales: Senal[] };
 
+// Idioma del `motivo` (LAB-68). En castellano no se añade nada: el prompt
+// queda igual que antes y el veredicto no depende del idioma.
+const IDIOMA_DEL_MOTIVO: Record<Exclude<Idioma, "es">, string> = {
+  ca: "catalán",
+  va: "valenciano",
+  gl: "gallego",
+  eu: "euskera",
+};
+
 // Mensaje de usuario: el texto, delimitado, y las señales deterministas.
-export function mensajeUsuario(texto: string, det: Determinista): string {
+export function mensajeUsuario(texto: string, det: Determinista, idioma: Idioma = "es"): string {
   const lista = det.senales.length
     ? det.senales.map((s) => `- ${s.codigo} (${s.nivel}): ${s.texto}`).join("\n")
     : "- ninguna";
@@ -111,5 +121,5 @@ Comprobación de la URL: ${det.resultado.veredicto} (${det.resultado.motivos.joi
 MENSAJE A ANALIZAR
 <<<
 ${texto}
->>>`;
+>>>${idioma === "es" ? "" : `\nEscribe «motivo» en ${IDIOMA_DEL_MOTIVO[idioma]}, en una sola frase breve.`}`;
 }

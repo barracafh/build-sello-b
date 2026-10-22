@@ -1,3 +1,5 @@
+import { diccionario, type Idioma } from "@/i18n";
+
 export type Source = { nombre: string; url: string };
 
 const sinProtocolo = (url: string) =>
@@ -32,20 +34,23 @@ function Lista({ fuentes }: { fuentes: readonly Source[] }) {
 export function Fuentes({
   fuentes,
   verificadores = [],
+  idioma = "es",
 }: {
   fuentes: readonly Source[];
   verificadores?: readonly Source[];
+  idioma?: Idioma;
 }) {
+  const t = diccionario(idioma).fuentes;
   return (
-    <aside aria-label="Fuentes" className="text-base">
+    <aside aria-label={t.aria} className="text-base">
       <h3 className="text-xl font-semibold">
-        Fuentes oficiales
+        {t.oficiales}
       </h3>
       <Lista fuentes={fuentes} />
       {verificadores.length > 0 && (
         <>
           <h3 className="mt-6 text-xl font-semibold">
-            Verificadores
+            {t.verificadores}
           </h3>
           <Lista fuentes={verificadores} />
         </>

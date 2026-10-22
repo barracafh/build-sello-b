@@ -3,15 +3,21 @@ import { Cabecera } from "@/components/Cabecera";
 import { JuegoEstafas } from "@/components/JuegoEstafas";
 import { Pie } from "@/components/Pie";
 import ficha from "../../../ficha.json";
+import { idiomaDePeticion } from "@/i18n/servidor";
+import { langHtml } from "@/i18n";
+import { IdiomaDocumento } from "@/components/IdiomaDocumento";
 
 export const metadata: Metadata = {
   title: `Juego: ¿estafa o no? · ${ficha.nombre}`,
 };
 
-export default function Juego() {
+// La cabecera y el pie siguen el idioma elegido; el juego aún es solo en castellano (LAB-70).
+export default async function Juego() {
+  const idioma = await idiomaDePeticion();
   return (
     <>
-      <Cabecera activa="juego" />
+      <IdiomaDocumento lang={langHtml(idioma)} />
+      <Cabecera activa="juego" idioma={idioma} />
 
       {/* Recorta a lo ancho de la página: la tarjeta sale volando sin scroll horizontal. */}
       <div className="overflow-x-clip">
@@ -38,7 +44,7 @@ export default function Juego() {
         </main>
       </div>
 
-      <Pie />
+      <Pie idioma={idioma} />
     </>
   );
 }

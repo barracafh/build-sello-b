@@ -2,6 +2,7 @@
 // POST /api/verificar, en proceso y de uno en uno, con una pausa entre casos: los
 // límites de HelmCode son compartidos. Cuesta llamadas reales a la API: no forma
 // parte de `test` ni de `build`.
+import type { Idioma } from "../src/i18n";
 import { execSync } from "node:child_process";
 import { analizar } from "../src/lib/analizar";
 import { modeloClasificador } from "../src/lib/clasificar";
@@ -59,6 +60,8 @@ export type Metricas = {
 
 export type Informe = {
   modelo: string;
+  /** Idioma del `motivo` (LAB-68); sin él, castellano. */
+  idioma?: Idioma;
   conjunto: string;
   fecha: string;
   commit: string | null;
@@ -135,6 +138,7 @@ const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export async function ejecutarEvals(opciones: {
   modelo: string;
+  idioma?: Idioma;
   repeticiones?: number;
   casos?: Caso[];
   pausaMs?: number;
@@ -152,7 +156,7 @@ export async function ejecutarEvals(opciones: {
         tokens = (tokens ?? 0) + (u.total_tokens ?? (u.prompt_tokens ?? 0) + (u.completion_tokens ?? 0));
       };
       const inicio = performance.now();
-      const r = await analizarCaso(caso.texto, { modelo: opciones.modelo, alUso });
+      const r = await analizarCaso(caso.texto, { modelo: opciones.modelo, alUso, idioma: opciones.idioma });
       const e: Ejecucion = {
         id: caso.id,
         repeticion: rep,
@@ -182,17 +186,20 @@ const commitLocal = () => {
 
 export async function informeCompleto(opciones: {
   modelo?: string;
+  idioma?: Idioma;
   repeticiones?: number;
   alCaso?: (e: Ejecucion) => void;
 }): Promise<Informe> {
   const modelo = opciones.modelo || modeloClasificador();
   const ejecuciones = await ejecutarEvals({
     modelo,
+    idioma: opciones.idioma,
     repeticiones: opciones.repeticiones,
     alCaso: opciones.alCaso,
   });
   return {
     modelo,
+    ...(opciones.idioma && opciones.idioma !== "es" ? { idioma: opciones.idioma } : {}),
     conjunto: "src/datos/evals/dev.json",
     fecha: new Date().toISOString(),
     commit: commitLocal(),

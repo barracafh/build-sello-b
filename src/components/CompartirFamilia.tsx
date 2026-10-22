@@ -7,17 +7,28 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { IconoWhatsApp } from "@/components/IconoWhatsApp";
 import { enlaceWhatsApp } from "@/lib/compartir";
+import { diccionario, type Idioma } from "@/i18n";
 
 // Botones blancos sobre el verde. El anillo de foco en foreground: el gris de
 // Sol apenas se ve sobre el verde.
+// Con altura libre: en euskera algunos textos no caben en una línea a 320 px.
 const boton =
-  "h-12 gap-2 border-transparent px-5 text-lg focus-visible:ring-foreground/60 max-sm:w-full";
+  "h-auto min-h-12 gap-2 border-transparent px-5 py-2 text-lg whitespace-normal focus-visible:ring-foreground/60 max-sm:w-full";
 
 // Franja verde WhatsApp con el título y los botones. El texto no se enseña: va
 // dentro de los botones y se ve (y se puede cambiar) en WhatsApp o en la app
 // elegida antes de enviarlo. Vive en el navegador: no pasa por nuestro servidor.
-export function CompartirFamilia({ titulo, texto }: { titulo: string; texto: string }) {
+export function CompartirFamilia({
+  titulo,
+  texto,
+  idioma = "es",
+}: {
+  titulo: string;
+  texto: string;
+  idioma?: Idioma;
+}) {
   const id = useId();
+  const t = diccionario(idioma).compartir;
   const [aviso, setAviso] = useState<string | null>(null);
   // `navigator.share` solo existe en el navegador (y no en todos): se mira al montar.
   const [puedeCompartir, setPuedeCompartir] = useState(false);
@@ -35,9 +46,9 @@ export function CompartirFamilia({ titulo, texto }: { titulo: string; texto: str
   async function copiar() {
     try {
       await navigator.clipboard.writeText(texto);
-      setAviso("Texto copiado. Pégalo en el chat de tu familia.");
+      setAviso(t.copiado);
     } catch {
-      setAviso("No hemos podido copiarlo. Prueba con «Enviar por WhatsApp».");
+      setAviso(t.noCopiado);
     }
   }
 
@@ -61,18 +72,18 @@ export function CompartirFamilia({ titulo, texto }: { titulo: string; texto: str
         >
           {/* El logotipo en su verde, como lo usa la marca sobre blanco. */}
           <IconoWhatsApp className="size-5 text-whatsapp" />
-          Enviar por WhatsApp
-          <span className="sr-only"> (se abre en otra ventana)</span>
+          {t.whatsapp}
+          <span className="sr-only">{t.otraVentana}</span>
         </a>
         {puedeCompartir && (
           <Button type="button" variant="outline" size="lg" onClick={compartir} className={boton}>
             <Share2 aria-hidden="true" className="size-5" />
-            Otra app
+            {t.otraApp}
           </Button>
         )}
         <Button type="button" variant="outline" size="lg" onClick={copiar} className={boton}>
           <Copy aria-hidden="true" className="size-5" />
-          Copiar el texto
+          {t.copiar}
         </Button>
       </div>
 

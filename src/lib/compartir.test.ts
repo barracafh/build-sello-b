@@ -36,7 +36,7 @@ const resultadoDe = (texto: string) => {
 
 // Solo pueden ir vivas la web de la herramienta y webs oficiales sin esquema.
 const enlacesVivos = (texto: string) =>
-  [...texto.matchAll(/https?:\/\/\S+/g)].map((m) => m[0]).filter((u) => u !== ficha.url);
+  [...texto.matchAll(/https?:\/\/\S+/g)].map((m) => m[0]).filter((u) => !u.startsWith(`${ficha.url}?lang=`));
 
 describe("resumen para la familia de cada ejemplo", () => {
   for (const caso of ejemplos as Ejemplo[]) {
@@ -149,4 +149,28 @@ test("si el mensaje cita la web oficial, no dice que no se pulse", () => {
 
 test("enlaceWhatsApp codifica el texto", () => {
   assert.equal(enlaceWhatsApp("a b\n&c"), "https://wa.me/?text=a%20b%0A%26c");
+});
+
+describe("resumen en otro idioma", () => {
+  const respuesta = {
+    veredicto: "no_oficial",
+    motivos: [],
+    url_analizada: "hxxps://dgt-multas[.]com",
+    remitente_analizado: null,
+    entidad: "DGT",
+    web_oficial: "https://sede.dgt.gob.es/",
+  };
+
+  test("el enlace a la herramienta lleva ?lang", () => {
+    assert.ok(resumenParaFamilia(respuesta, "eu").includes(`${ficha.url}?lang=eu`));
+    assert.ok(resumenParaFamilia(respuesta).includes(`${ficha.url}?lang=es`));
+  });
+
+  test("usa los textos del idioma y conserva el 017, la entidad y la dirección", () => {
+    const texto = textoParaFamilia("Hola", respuesta, "ca");
+    assert.ok(!texto.includes("Me ha llegado"));
+    for (const fijo of ["017", "DGT", "hxxps://dgt-multas[.]com", "sede.dgt.gob.es"]) {
+      assert.ok(texto.includes(fijo), fijo);
+    }
+  });
 });

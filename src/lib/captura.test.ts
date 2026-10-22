@@ -1,3 +1,4 @@
+import { DICCIONARIOS, type Idioma } from "@/i18n";
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import { analizarCaptura } from "./captura";
@@ -14,7 +15,7 @@ function servidor(responder: () => Response | Promise<Response>) {
   return { urls, enviar };
 }
 
-function prueba(enviar: typeof fetch, vigente = () => true) {
+function prueba(enviar: typeof fetch, vigente = () => true, idioma?: Idioma) {
   const llamadas = { texto: [] as string[], comprobar: [] as string[], error: [] as string[] };
   const hecho = analizarCaptura(imagen, {
     enviar,
@@ -22,6 +23,7 @@ function prueba(enviar: typeof fetch, vigente = () => true) {
     mostrarTexto: (texto) => llamadas.texto.push(texto),
     comprobar: (texto) => llamadas.comprobar.push(texto),
     mostrarError: (error) => llamadas.error.push(error),
+    idioma,
   });
   return { llamadas, hecho };
 }
@@ -47,12 +49,24 @@ describe("analizarCaptura", () => {
     assert.match(llamadas.error[0], /No hemos encontrado texto en la imagen/);
   });
 
+  // El servidor manda un `codigo` (LAB-68): el texto sale del diccionario del idioma.
   test("si falla la lectura, enseña el error del servidor y no comprueba", async () => {
-    const { enviar } = servidor(() => Response.json({ error: "La imagen es demasiado grande." }, { status: 413 }));
+    const { enviar } = servidor(() =>
+      Response.json({ error: "La imagen ocupa más de 4 MB.", codigo: "grande" }, { status: 400 }),
+    );
     const { llamadas, hecho } = prueba(enviar);
     await hecho;
     assert.deepEqual(llamadas.comprobar, []);
-    assert.deepEqual(llamadas.error, ["La imagen es demasiado grande."]);
+    assert.deepEqual(llamadas.error, ["La imagen ocupa más de 4 MB."]);
+  });
+
+  test("el error sale en el idioma elegido", async () => {
+    const { enviar } = servidor(() =>
+      Response.json({ error: "La imagen ocupa más de 4 MB.", codigo: "grande" }, { status: 400 }),
+    );
+    const { llamadas, hecho } = prueba(enviar, () => true, "eu");
+    await hecho;
+    assert.deepEqual(llamadas.error, [DICCIONARIOS.eu.errores.imagen.grande]);
   });
 
   test("sin red, enseña el error por defecto y no comprueba", async () => {

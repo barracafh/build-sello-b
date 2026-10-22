@@ -3,12 +3,13 @@ import { BotonAviso } from "@/components/BotonAviso";
 import { avisosIncibe, linea017 } from "@/datos/incibe";
 import { cn } from "@/lib/utils";
 import ficha from "../../ficha.json";
+import { diccionario, type Diccionario, type Idioma } from "@/i18n";
 
 // Columnas del pie: webs oficiales de datos/dominios-oficiales.json y la ayuda de INCIBE.
-const columnasPie = [
+const columnasPie = (t: Diccionario) => [
   {
     id: "organismos",
-    titulo: "Organismos oficiales",
+    titulo: t.pie.organismos,
     enlaces: [
       { nombre: "Agencia Tributaria", url: "https://sede.agenciatributaria.gob.es" },
       { nombre: "Seguridad Social", url: "https://sede.seg-social.gob.es" },
@@ -19,11 +20,11 @@ const columnasPie = [
   },
   {
     id: "ayuda",
-    titulo: "Información y ayuda",
+    titulo: t.pie.ayuda,
     enlaces: [
-      { nombre: "Llamar al 017", url: "tel:017" },
-      { nombre: "Línea 017 de INCIBE", url: linea017.url },
-      { nombre: "Avisos de INCIBE", url: avisosIncibe.url },
+      { nombre: t.pie.llamar017, url: "tel:017" },
+      { nombre: t.pie.linea017, url: linea017.url },
+      { nombre: t.pie.avisosIncibe, url: avisosIncibe.url },
     ],
   },
 ];
@@ -35,7 +36,8 @@ const enlacePie =
 // es un servicio oficial.» y «¿Algo está mal? Avísanos» (regla 5). Maqueta
 // del equipo (estilo portal de la Administración), pero con la marca de
 // ficha.json: sin escudos ni logotipos oficiales.
-export function Pie() {
+export function Pie({ idioma = "es" }: { idioma?: Idioma }) {
+  const t = diccionario(idioma);
   return (
     <footer className="mt-8 bg-muted text-base">
       <div className="mx-auto grid max-w-5xl gap-10 px-(--page-gutter) py-14 md:px-8 md:grid-cols-2 lg:grid-cols-[1fr_1.05fr_1.05fr_0.95fr] lg:gap-0">
@@ -52,13 +54,11 @@ export function Pie() {
             </span>
           </span>
           <p className="mt-6 max-w-[38ch] text-(--text-secondary)">
-            {ficha.nombre} es una herramienta independiente para ayudarte a
-            identificar posibles fraudes. Herramienta experimental. No es un
-            servicio oficial.
+            {t.pie.descripcion(ficha.nombre)} {t.pie.aviso}
           </p>
         </div>
 
-        {columnasPie.map((columna) => (
+        {columnasPie(t).map((columna) => (
           <nav
             key={columna.id}
             aria-labelledby={`pie-${columna.id}`}
@@ -86,13 +86,14 @@ export function Pie() {
 
         <section aria-labelledby="pie-herramienta" className="lg:border-l lg:border-border lg:pl-6">
           <h2 id="pie-herramienta" className="font-sans text-lg font-semibold">
-            Sobre la herramienta
+            {t.pie.sobre}
           </h2>
           <p className="mt-3 text-(--text-secondary)">
-            No guardamos lo que pegas ni abrimos sus enlaces.
+            {t.pie.privacidad}
           </p>
           <BotonAviso
             variant="outline"
+            idioma={idioma}
             className="mt-4 h-auto min-h-12 px-5 py-2 text-base whitespace-normal"
           />
         </section>
@@ -112,10 +113,10 @@ export function Pie() {
           {/* En el móvil, en columna y sin separadores: si no, las rayas quedan sueltas al partir la fila. */}
           <ul className="flex flex-col gap-y-2 text-(--text-secondary) sm:flex-row sm:flex-wrap sm:items-center sm:[&>li+li]:border-l sm:[&>li+li]:border-border sm:[&>li+li]:pl-4 sm:[&>li]:pr-4">
             <li>
-              Squad <span className="font-mono">{ficha.equipo}</span>
+              {t.pie.squad} <span className="font-mono">{ficha.equipo}</span>
             </li>
             <li>Build night BARRACA x SOTI</li>
-            <li>{ficha.datos === "reales" ? "Datos públicos" : "Datos simulados"}</li>
+            <li>{ficha.datos === "reales" ? t.cabecera.datosReales : t.cabecera.datosSimulados}</li>
           </ul>
         </div>
       </div>
