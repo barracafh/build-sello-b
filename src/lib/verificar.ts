@@ -115,7 +115,7 @@ const ES_IPV4 = /^\d{1,3}(?:\.\d{1,3}){3}$/;
 // La marca cuenta por token completo: `seg-social` es la secuencia `seg`,
 // `social`, así que `enclave-hotel` o `sepes` no coinciden con `clave` ni `sepe`.
 // `hacienda` y `clave` son palabras y apellidos corrientes: en un remitente no
-// bastan (`juan.clave@gmail.com`). En enlaces siguen, porque allí la imitación de
+// bastan (`juan.clave@correo.example`). En enlaces siguen, porque allí la imitación de
 // marca ya pide una segunda señal.
 const MARCAS_REMITENTE = MARCAS.filter((m) => m !== "hacienda" && m !== "clave");
 const tokens = (texto: string) => texto.split(/[.\-_]/).filter(Boolean);

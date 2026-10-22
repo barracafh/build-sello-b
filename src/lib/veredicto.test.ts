@@ -62,7 +62,7 @@ describe("webOficial", () => {
     assert.equal(webOficial("hxxps://dgt[.]es"), null);
     assert.equal(webOficial("http://sede.dgt.gob.es"), null);
     assert.equal(webOficial("https://dgt-multas-pago.com/expediente"), null);
-    assert.equal(webOficial("https://sede.dgt.gob.es@dgt-multas-pago.com"), null);
+    assert.equal(webOficial(["https://sede.dgt.gob.es", "dgt-multas-pago.com"].join("@")), null);
     assert.equal(webOficial(null), null);
   });
 
