@@ -10,7 +10,7 @@
     "dev": "bun scripts/dev.ts",
     "build": "next build --webpack",
     "typecheck": "tsc --noEmit",
-    "test": "bun test scripts/"
+    "test": "bun test scripts/ src/"
   },
   "dependencies": {
     "@base-ui/react": "1.8.0",
