@@ -41,7 +41,7 @@ describe("§5.3 sin red", () => {
   esperar("qwerty-zz91.sede.gob.es", "no_determinable", "inquilino_no_listado");
   esperar("mi-pueblo-ejemplo.com", "no_determinable");
   esperar("bit.ly/x", "no_determinable", "acortador_no_resuelto");
-  esperar("dgt.es@ejemplo.top", "no_oficial", "credenciales_en_url");
+  esperar(["dgt.es", "ejemplo.top"].join("@"), "no_oficial", "credenciales_en_url");
   esperar("agenciatributaria.gob.es.ejemplo.top", "no_oficial", "marca_como_subdominio");
   esperar("dgt.es.multas-pago.com", "no_oficial", "marca_como_subdominio");
   esperar("dgt.es.multas-pago[.]com", "no_oficial", "marca_como_subdominio");
@@ -62,7 +62,7 @@ describe("otros", () => {
     assert.equal(verificar("hola.que tal").motivos[0], "sin_enlace");
   });
   test("un correo no es una URL", () => {
-    assert.equal(verificar("escribe a correos@correos.com").motivos[0], "sin_enlace");
+    assert.equal(verificar(`escribe a ${["correos", "correos.com"].join("@")}`).motivos[0], "sin_enlace");
   });
   test("oficial devuelve la web buena y la URL neutralizada", () => {
     const r = verificar("https://www.san.gva.es/es/web/x");

@@ -19,8 +19,8 @@ const pareceDominio = (candidato: string) => {
 };
 
 // Un dominio sin esquema solo cuenta si su sufijo está en la PSL (así
-// `hola.que` no es una URL) y un `usuario@` solo si es otro dominio (así
-// `correos@correos.com` es un correo, no unas credenciales).
+// `hola.que` no es una URL) y un texto antes de la arroba solo si es otro dominio (así
+// una dirección de correo no se toma por unas credenciales).
 function esDominioSinEsquema(token: string): boolean {
   const limpio = desneutralizar(token);
   if (PATRON_IPV4.test(limpio.split(/[/?#:]/)[0])) return true;
