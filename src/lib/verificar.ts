@@ -4,7 +4,7 @@ import { domainToUnicode } from "node:url";
 import { parse } from "tldts";
 import { desneutralizar, extraerEnlace, neutralizar } from "./url";
 import dominios from "../../datos/dominios-oficiales.json";
-import { indicadores } from "../datos/indicadores";
+import { incibe165, indicadores } from "../datos/indicadores";
 
 export type Veredicto = "oficial_verificado" | "no_oficial" | "no_determinable";
 
@@ -17,6 +17,10 @@ export type Resultado = {
   fuente?: string;
   // Aviso público que da el dominio por fraudulento (INCIBE, Seguridad Social…).
   indicador?: { nombre: string; url: string; fecha: string };
+  // Remitente de correo que motiva el veredicto, neutralizado (nunca un enlace).
+  remitente_analizado?: string;
+  // Aviso de INCIBE que respalda el caso, si lo hay.
+  aviso?: { nombre: string; url: string };
   url_analizada: string | null;
 };
 
@@ -108,9 +112,20 @@ const ES_IPV4 = /^\d{1,3}(?:\.\d{1,3}){3}$/;
 // Remitentes de correo: el nombre del servicio con un dominio ajeno es señal de
 // fraude; un dominio de la lista no prueba nada, porque el remitente se puede
 // falsificar.
+// La marca cuenta por token completo: `seg-social` es la secuencia `seg`,
+// `social`, así que `enclave-hotel` o `sepes` no coinciden con `clave` ni `sepe`.
+const tokens = (texto: string) => texto.split(/[.\-_]/).filter(Boolean);
+const marcaEnTokens = (partes: string[]) =>
+  MARCAS.find((marca) => contiene(partes, marca.split("-")));
+const AVISOS_POR_MARCA: Record<string, { nombre: string; url: string }> = {
+  carpetaciudadana: incibe165,
+};
+
 function remitentesAjenos(texto: string) {
   const motivos: string[] = [];
   let entidad: Entidad | undefined;
+  let analizado: string | undefined;
+  let aviso: { nombre: string; url: string } | undefined;
   for (const token of texto.split(/\s+/)) {
     const m = /^([^@/\s]+)@([^@/\s]+\.[^@/\s]+)$/.exec(
       desneutralizar(token).replace(/^[([{<"'«“]+/, "").replace(/[.,;:!?)}>»”]+$/, "").toLowerCase(),
@@ -121,13 +136,17 @@ function remitentesAjenos(texto: string) {
     const registrable = parse(dominio, { allowPrivateDomains: true }).domain ?? dominio;
     if (indicadorDe(registrable)) motivos.push("indicador_publicado");
     if (entradaDe(host)) continue;
-    const marca = MARCAS.find((t) => `${local}.${dominio}`.includes(t));
+    const marca = marcaEnTokens([...tokens(local), ...host.flatMap(tokens)]);
     if (marca) {
       motivos.push("remitente_dominio_ajeno");
       entidad ??= entidadDeMarca(marca);
+      analizado ??= neutralizar(`${local}@${dominio}`);
+      aviso ??= AVISOS_POR_MARCA[marca];
     }
   }
-  return motivos.length > 0 ? { motivos: [...new Set(motivos)], entidad } : null;
+  return motivos.length > 0
+    ? { motivos: [...new Set(motivos)], entidad, analizado, aviso }
+    : null;
 }
 
 export function verificar(texto: string): Resultado {
@@ -142,6 +161,8 @@ export function verificar(texto: string): Resultado {
     veredicto: "no_oficial",
     motivos: [...remitente.motivos, ...base.motivos.filter((m) => m !== "sin_enlace")],
     ...(base.web_oficial ? {} : con(remitente.entidad)),
+    ...(remitente.analizado ? { remitente_analizado: remitente.analizado } : {}),
+    ...(remitente.aviso ? { aviso: remitente.aviso } : {}),
   };
 }
 

@@ -7,7 +7,8 @@ const ciberalertas: Source = {
   nombre: "Seguridad Social · Ciberalertas",
   url: "https://www.seg-social.es/wps/portal/wss/internet/HerramientasWeb/ciberseguridad",
 };
-const incibe165: Source = {
+// Aviso de INCIBE que acompaña a un remitente de Mi Carpeta Ciudadana.
+export const incibe165: Source = {
   nombre: "INCIBE-2026-165 · Mi Carpeta Ciudadana",
   url: "https://www.incibe.es/ciudadania/avisos/mi-carpeta-ciudadana-no-esta-enviando-notificaciones-los-ciudadanos-para-recibir",
 };

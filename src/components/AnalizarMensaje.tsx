@@ -26,6 +26,8 @@ type Respuesta = {
   entidad?: string;
   fuente?: string;
   indicador?: { nombre: string; url: string; fecha: string };
+  remitente_analizado?: string;
+  aviso?: { nombre: string; url: string };
   url_analizada: string | null;
   senales: Senal[];
   reputacion: string;
@@ -265,8 +267,21 @@ function Resultado({
 }) {
   const { veredicto, motivos, web_oficial, entidad, fuente } = respuesta;
   const Icono = iconos[veredicto];
-  const frase =
-    frases[motivos.find((m) => frases[m]) ?? "dominio_desconocido"];
+  // El veredicto sale del remitente y no hay enlace: se habla del mensaje.
+  const soloRemitente =
+    veredicto === "no_oficial" &&
+    Boolean(respuesta.remitente_analizado) &&
+    !respuesta.url_analizada;
+  const frase = soloRemitente
+    ? frases.remitente_dominio_ajeno
+    : frases[motivos.find((m) => frases[m]) ?? "dominio_desconocido"];
+  const fuentes = [
+    ...(respuesta.indicador ? [respuesta.indicador] : []),
+    ...(respuesta.aviso ? [respuesta.aviso] : []),
+    ...(fuente && entidad ? [{ nombre: entidad, url: fuente }] : []),
+    avisosIncibe,
+    linea017,
+  ].filter((f, i, todas) => todas.findIndex((o) => o.url === f.url) === i);
   const sinCifrado = motivos.includes("sin_cifrado");
   const hayRoja = respuesta.senales.some((s) => s.nivel === "roja");
 
@@ -292,16 +307,21 @@ function Resultado({
             veredicto === "no_oficial" && "text-destructive",
           )}
         >
-          {titulares[veredicto]}
+          {soloRemitente
+            ? "Cuidado: este mensaje no es oficial"
+            : titulares[veredicto]}
         </h2>
         <p className="mt-3">
           {frase}
           {sinCifrado && " Eso sí, el enlace no está cifrado (http)."}
         </p>
         <p className="mt-3 text-base text-(--text-secondary)">
-          Enlace analizado (no pulsable):{" "}
+          {soloRemitente ? "Remitente analizado" : "Enlace analizado"} (no
+          pulsable):{" "}
           <code className="font-mono text-foreground [overflow-wrap:anywhere]">
-            {respuesta.url_analizada ?? "ninguno"}
+            {soloRemitente
+              ? respuesta.remitente_analizado
+              : (respuesta.url_analizada ?? "ninguno")}
           </code>
         </p>
       </div>
@@ -399,14 +419,7 @@ function Resultado({
         </li>
       </ul>
 
-      <Fuentes
-        fuentes={[
-          ...(respuesta.indicador ? [respuesta.indicador] : []),
-          ...(fuente && entidad ? [{ nombre: entidad, url: fuente }] : []),
-          avisosIncibe,
-          linea017,
-        ]}
-      />
+      <Fuentes fuentes={fuentes} />
     </>
   );
 }

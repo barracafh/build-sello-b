@@ -118,3 +118,44 @@ describe("remitente de correo", () => {
     assert.equal(r.veredicto, "no_determinable");
   });
 });
+
+describe("remitente: la marca cuenta por token completo", () => {
+  const correo = (local: string, dominio: string) => [local, dominio].join("@");
+  const veredictoDe = (local: string, dominio: string) =>
+    verificar(`De: ${correo(local, dominio)}. Buenas tardes.`);
+
+  for (const [local, dominio] of [
+    ["pepe.sepeda", "gmail.com"],
+    ["info", "enclave-hotel.com"],
+    ["ana", "clavería.com"],
+    ["madgtr", "gmail.com"],
+    ["info", "dehumidificadores.es"],
+    ["rrhh", "sepes.es"],
+    ["info", "correosexpress.com"],
+  ]) {
+    test(`${local}@${dominio} → no_determinable`, () => {
+      const r = veredictoDe(local, dominio);
+      assert.equal(r.veredicto, "no_determinable");
+      assert.ok(!r.motivos.includes("remitente_dominio_ajeno"));
+    });
+  }
+
+  for (const [local, dominio] of [
+    ["carpetaciudadana", "info.com.es"],
+    ["dgt-multas", "gmail.com"],
+    ["seg-social", "ejemplo.com"],
+  ]) {
+    test(`${local}@${dominio} → no_oficial`, () => {
+      const r = veredictoDe(local, dominio);
+      assert.equal(r.veredicto, "no_oficial");
+      assert.ok(r.motivos.includes("remitente_dominio_ajeno"), r.motivos.join());
+    });
+  }
+
+  test("solo remitente: lo devuelve neutralizado y con el aviso de INCIBE", () => {
+    const r = veredictoDe("carpetaciudadana", "info.com.es");
+    assert.equal(r.url_analizada, null);
+    assert.equal(r.remitente_analizado, "carpetaciudadana@info[.]com[.]es");
+    assert.match(r.aviso?.url ?? "", /mi-carpeta-ciudadana-no-esta-enviando/);
+  });
+});
