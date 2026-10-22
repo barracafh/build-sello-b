@@ -28,7 +28,7 @@ export type OpcionesIa = {
   alUso?: (uso: UsoIa) => void;
 };
 
-const base = () => process.env.HELMCODE_BASE_URL ?? "https://api.helmcode.com/v1";
+export const base = () => process.env.HELMCODE_BASE_URL ?? "https://api.helmcode.com/v1";
 
 // Espera `ms` y se corta si `signal` aborta.
 const esperar = (ms: number, signal?: AbortSignal) =>
