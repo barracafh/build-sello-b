@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CompartirFamilia } from "@/components/CompartirFamilia";
 import { Fuentes } from "@/components/Fuentes";
-import { resumenParaFamilia } from "@/lib/compartir";
+import { textoParaFamilia } from "@/lib/compartir";
 import { avisosIncibe, horario017, linea017 } from "@/datos/incibe";
 import { NOMBRES_EJEMPLOS, tipoDeEjemplo } from "@/datos/ejemplos";
 import {
@@ -318,6 +318,14 @@ export function AnalizarMensaje({
     .map((d) => ({ nombre: d.editor, url: new URL(d.url).origin }))
     .filter((f, i, todas) => todas.findIndex((o) => o.url === f.url) === i);
   const cercaDelLimite = mensaje.length >= AVISO_LIMITE;
+  // Va en dos sitios según el ancho (debajo de los ejemplos o al final del resultado).
+  const compartir = respuesta ? (
+    <CompartirFamilia
+      titulo="Mándaselo a tu familia"
+      explicacion="Va el mensaje que has comprobado, con sus enlaces desactivados, y el resultado. Quita antes lo que sea personal."
+      texto={textoParaFamilia(mensaje, respuesta)}
+    />
+  ) : null;
 
   return (
     // En escritorio, dos columnas: formulario y resultado a la izquierda; ejemplos a la derecha.
@@ -442,43 +450,53 @@ export function AnalizarMensaje({
       </div>
 
       {conEjemplos && (
-        <section
-          aria-labelledby={`${id}-ejemplos`}
-          className="lg:sticky lg:top-8 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:rounded-xl lg:bg-muted lg:p-6"
+        // Sin resultado, la columna se queda fija al hacer scroll; con él, lleva
+        // debajo «Mándaselo a tu familia», que es más alto que la pantalla.
+        <div
+          className={cn(
+            "lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:[&>*+*]:mt-8",
+            !compartir && "lg:sticky lg:top-8",
+          )}
         >
-          <h2 id={`${id}-ejemplos`} className="font-sans text-lg font-medium">
-            ¿Quieres probar con un ejemplo?
-          </h2>
-          <div className="mt-3 flex flex-wrap gap-3 lg:flex-col">
-            {EJEMPLOS.map((ejemplo) => (
-              <Button
-                key={ejemplo.id}
-                type="button"
-                variant="outline"
-                onClick={() => probarEjemplo(ejemplo.texto)}
-                className={cn(
-                  "h-auto min-h-12 max-w-full flex-col items-start gap-1.5 border-l-4 px-4 py-2 text-left text-base whitespace-normal",
-                  ejemplo.tipo === "Fraude" ? "border-l-destructive" : "border-l-muted-foreground",
-                )}
-              >
-                <span>{ejemplo.nombre}</span>
-                <span className="flex flex-wrap items-center gap-2 text-sm font-normal">
-                  {ejemplo.tipo && <span className="font-semibold">{ejemplo.tipo}</span>}
-                  <Badge
-                    className={cn(
-                      "h-auto gap-1.5 px-2 py-0.5 text-sm font-medium whitespace-normal [&>svg]:size-4!",
-                      ejemplo.esperado.tono,
-                    )}
-                  >
-                    <ejemplo.esperado.icono aria-hidden="true" />
-                    <span className="sr-only">Debería dar: </span>
-                    {ejemplo.esperado.etiqueta}
-                  </Badge>
-                </span>
-              </Button>
-            ))}
-          </div>
-        </section>
+          <section
+            aria-labelledby={`${id}-ejemplos`}
+            className="lg:rounded-xl lg:bg-muted lg:p-6"
+          >
+            <h2 id={`${id}-ejemplos`} className="font-sans text-lg font-medium">
+              ¿Quieres probar con un ejemplo?
+            </h2>
+            <div className="mt-3 flex flex-wrap gap-3 lg:flex-col">
+              {EJEMPLOS.map((ejemplo) => (
+                <Button
+                  key={ejemplo.id}
+                  type="button"
+                  variant="outline"
+                  onClick={() => probarEjemplo(ejemplo.texto)}
+                  className={cn(
+                    "h-auto min-h-12 max-w-full flex-col items-start gap-1.5 border-l-4 px-4 py-2 text-left text-base whitespace-normal",
+                    ejemplo.tipo === "Fraude" ? "border-l-destructive" : "border-l-muted-foreground",
+                  )}
+                >
+                  <span>{ejemplo.nombre}</span>
+                  <span className="flex flex-wrap items-center gap-2 text-sm font-normal">
+                    {ejemplo.tipo && <span className="font-semibold">{ejemplo.tipo}</span>}
+                    <Badge
+                      className={cn(
+                        "h-auto gap-1.5 px-2 py-0.5 text-sm font-medium whitespace-normal [&>svg]:size-4!",
+                        ejemplo.esperado.tono,
+                      )}
+                    >
+                      <ejemplo.esperado.icono aria-hidden="true" />
+                      <span className="sr-only">Debería dar: </span>
+                      {ejemplo.esperado.etiqueta}
+                    </Badge>
+                  </span>
+                </Button>
+              ))}
+            </div>
+          </section>
+          {compartir && <div className="max-lg:hidden">{compartir}</div>}
+        </div>
       )}
 
       {respuesta && ficha && (
@@ -738,11 +756,8 @@ export function AnalizarMensaje({
             </ul>
           </section>
 
-          <CompartirFamilia
-            titulo="Mándaselo a tu familia"
-            explicacion="Solo va el resultado y la web oficial. El texto de tu mensaje no se envía."
-            texto={resumenParaFamilia(respuesta)}
-          />
+          {/* Con el panel de ejemplos, en escritorio va debajo de los ejemplos. */}
+          <div className={cn(conEjemplos && "lg:hidden")}>{compartir}</div>
 
           <div>
             <div className="flex flex-wrap gap-3">

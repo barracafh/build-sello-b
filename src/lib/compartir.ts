@@ -1,6 +1,7 @@
 // Texto ya redactado para mandar el resultado a la familia por WhatsApp u otra
-// app. Lleva solo el veredicto, la dirección neutralizada y la web oficial:
-// nunca el texto del mensaje, que puede llevar datos personales.
+// app: el mensaje que se ha comprobado, con sus enlaces desactivados, y el
+// veredicto con la web oficial. Se arma en el navegador y la persona lo puede
+// editar antes de enviarlo (por ejemplo, para quitar datos personales).
 import { neutralizar } from "@/lib/url";
 import { deEntidad, webOficial, type Respuesta } from "@/lib/veredicto";
 import ficha from "../../ficha.json";
@@ -57,6 +58,28 @@ export function resumenParaFamilia(respuesta: ParaCompartir): string {
 
   return [...parrafos, PIE].filter(Boolean).join("\n\n");
 }
+
+const URL_CON_ESQUEMA = /(?:https?|hxxps?):\/\/[^\s<>"']+/gi;
+// Dominios sueltos («dgt-multas.com», «sede.dgt.gob.es»): WhatsApp también los enlaza.
+const DOMINIO_SUELTO = /\b(?:[a-z0-9-]+\.)+[a-z]{2,}\b/gi;
+
+/** Desactiva todas las direcciones del texto: ni WhatsApp ni el correo las enlazan. */
+export const neutralizarTexto = (texto: string) =>
+  texto
+    // La puntuación final («…/x.») no es parte de la dirección.
+    .replace(URL_CON_ESQUEMA, (url) => {
+      const fin = /[.,;:!?)}»”]+$/.exec(url)?.[0] ?? "";
+      return neutralizar(url.slice(0, url.length - fin.length)) + fin;
+    })
+    .replace(DOMINIO_SUELTO, (dominio) => dominio.replace(/\./g, "[.]"));
+
+/** El mensaje comprobado, sin enlaces vivos, seguido del resultado. */
+export const textoParaFamilia = (mensaje: string, respuesta: ParaCompartir) =>
+  [
+    "Me ha llegado este mensaje:",
+    `«${neutralizarTexto(mensaje.trim())}»`,
+    resumenParaFamilia(respuesta),
+  ].join("\n\n");
 
 /** Para que la familia tenga la herramienta a mano antes de que llegue el SMS. */
 export const invitacionParaFamilia = () =>

@@ -3,7 +3,13 @@ import assert from "node:assert/strict";
 import { combinar, senales } from "./senales";
 import { verificar } from "./verificar";
 import { leerRespuesta } from "./veredicto";
-import { enlaceWhatsApp, invitacionParaFamilia, resumenParaFamilia } from "./compartir";
+import {
+  enlaceWhatsApp,
+  invitacionParaFamilia,
+  neutralizarTexto,
+  resumenParaFamilia,
+  textoParaFamilia,
+} from "./compartir";
 import ejemplos from "../../datos/mensajes-ejemplo.json";
 import ficha from "../../ficha.json";
 
@@ -59,6 +65,31 @@ describe("resumen para la familia de cada ejemplo", () => {
       assert.ok(resumen.includes("no es un servicio oficial"));
     });
   }
+});
+
+describe("texto para la familia con el mensaje", () => {
+  for (const caso of ejemplos as Ejemplo[]) {
+    test(`${caso.id}: lleva el mensaje y el resultado, sin direcciones vivas`, () => {
+      const mensaje = textoDeEjemplo(caso);
+      const texto = textoParaFamilia(mensaje, resultadoDe(mensaje));
+      assert.ok(texto.startsWith("Me ha llegado este mensaje:"));
+      assert.ok(texto.includes(resumenParaFamilia(resultadoDe(mensaje))));
+      // Las primeras palabras del mensaje, tal cual.
+      assert.ok(texto.includes(caso.texto.slice(0, 12)), caso.id);
+      assert.deepEqual(enlacesVivos(texto), []);
+      // Ningún dominio con puntos normales salvo la web de la herramienta y las oficiales del resumen.
+      const cita = texto.split("\n\n")[1];
+      assert.doesNotMatch(cita, /[a-z0-9-]\.[a-z]{2,}\b/i, cita);
+    });
+  }
+});
+
+test("neutralizarTexto desactiva URL, dominios sueltos y correos", () => {
+  assert.equal(
+    neutralizarTexto("Pague en https://dgt-multas.com/x. O en sede.dgt.gob.es o escriba a a@correos.com"),
+    "Pague en hxxps://dgt-multas[.]com/x. O en sede[.]dgt[.]gob[.]es o escriba a a@correos[.]com",
+  );
+  assert.equal(neutralizarTexto("Pague 411,00 € hoy. Gracias."), "Pague 411,00 € hoy. Gracias.");
 });
 
 test("un veredicto desconocido se comparte como duda", () => {
