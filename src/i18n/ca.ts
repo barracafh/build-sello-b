@@ -177,7 +177,8 @@ export const ca = {
     sin_enlace: "No hem trobat cap enllaç al missatge.",
     web_oficial_citada:
       "El missatge cita una adreça que sí que és un web oficial. Això no demostra qui l'envia: entra-hi escrivint tu l'adreça.",
-    url_no_valida: "L'enllaç no té un format que puguem llegir.",
+    url_no_valida:
+      "L'enllaç està incomplet o trencat: no el premis; escriu tu l'adreça de l'organisme.",
     ip_como_host:
       "L'enllaç porta a un número en lloc d'un nom de web, cosa que els webs oficials no fan.",
     credenciales_en_url:

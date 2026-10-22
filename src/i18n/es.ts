@@ -167,7 +167,8 @@ export const es = {
     sin_enlace: "No hemos encontrado ningún enlace en el mensaje.",
     web_oficial_citada:
       "El mensaje cita una dirección que sí es una web oficial. Eso no prueba quién lo envía: entra tecleando tú la dirección.",
-    url_no_valida: "El enlace no tiene un formato que podamos leer.",
+    url_no_valida:
+      "El enlace está incompleto o roto: no lo pulses; teclea tú la dirección del organismo.",
     ip_como_host:
       "El enlace lleva a un número en vez de a un nombre de web, algo que las webs oficiales no hacen.",
     credenciales_en_url:

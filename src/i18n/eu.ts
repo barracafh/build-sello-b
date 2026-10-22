@@ -179,7 +179,8 @@ export const eu = {
     sin_enlace: "Ez dugu estekarik aurkitu mezuan.",
     web_oficial_citada:
       "Mezuak aipatzen duen helbidea webgune ofizial bat da. Horrek ez du frogatzen nork bidaltzen duen: sartu zuk zeuk helbidea idatzita.",
-    url_no_valida: "Estekak ez du guk irakur dezakegun formaturik.",
+    url_no_valida:
+      "Esteka osatu gabe edo hautsita dago: ez sakatu; idatzi zuk zeuk erakundearen helbidea.",
     ip_como_host:
       "Estekak zenbaki batera eramaten du, ez webgune-izen batera, eta webgune ofizialek ez dute hori egiten.",
     credenciales_en_url:

@@ -68,7 +68,7 @@ describe("§5.3 sin red", () => {
   esperar("http://192.168.0.1", "no_oficial", "ip_como_host");
   esperar("http://0x7f.1/", "no_oficial", "ip_como_host");
   esperar("ugt.es", "no_determinable", "posible_imitacion_de_marca");
-  esperar("http://[broken", "no_oficial", "url_no_valida");
+  esperar("http://[broken", "no_determinable", "url_no_valida");
 });
 
 describe("otros", () => {
