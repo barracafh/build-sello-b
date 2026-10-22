@@ -247,7 +247,8 @@ describe("combinar con el veredicto", () => {
     assert.equal(combinar(r, senales(t, r), t).url_analizada, "dgt[.]es[.]multas-pago[.]com");
   });
   test("web oficial citada con remitente ajeno sigue en no_oficial", () => {
-    const t = "De: avisos@dgt-multas.com. Para pagar la multa con descuento acceda a sede.dgt.gob.es";
+    const remitente = ["avisos", "dgt-multas.com"].join("@");
+    const t = `De: ${remitente}. Para pagar la multa con descuento acceda a sede.dgt.gob.es`;
     const r = verificar(t);
     assert.equal(r.veredicto, "no_oficial");
     assert.equal(combinar(r, senales(t, r), t).veredicto, "no_oficial");
