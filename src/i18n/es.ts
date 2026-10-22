@@ -149,7 +149,7 @@ export const es = {
     enlaceCopiado: "Enlace copiado. Quien lo abra verá este mensaje y su resultado.",
     enlaceNoCopiado:
       "No hemos podido copiarlo. El enlace ya está en la barra de direcciones: cópialo desde ahí.",
-    criterios: (apartados: string) => `Criterios de Sello (contexto.md${apartados})`,
+    criterios: (apartados: string) => `Criterios de Everdá (contexto.md${apartados})`,
     avisosIncibe: "INCIBE · Avisos a la ciudadanía",
     sinClasificadorOficial:
       "La dirección está en nuestra lista de webs oficiales. No hemos podido analizar el resto del texto ahora mismo.",

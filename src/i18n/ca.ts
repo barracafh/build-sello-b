@@ -149,7 +149,7 @@ export const ca = {
     enlaceCopiado: "Enllaç copiat. Qui l'obri veurà aquest missatge i el seu resultat.",
     enlaceNoCopiado:
       "No l'hem pogut copiar. L'enllaç ja és a la barra d'adreces: copia'l des d'allà.",
-    criterios: (apartados: string) => `Criteris de Sello (contexto.md${apartados})`,
+    criterios: (apartados: string) => `Criteris d'Everdá (contexto.md${apartados})`,
     avisosIncibe: "INCIBE · Avisos a la ciutadania",
     sinClasificadorOficial:
       "L'adreça és a la nostra llista de webs oficials. Ara mateix no hem pogut analitzar la resta del text.",

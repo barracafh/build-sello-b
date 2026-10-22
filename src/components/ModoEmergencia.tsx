@@ -73,12 +73,12 @@ export function ModoEmergencia({ idioma = "es" }: { idioma?: Idioma }) {
     return (
       <div className="flex flex-col gap-4 rounded-r-xl border-l-4 border-brand bg-muted px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="font-semibold text-foreground">{t.yaHasActuado}</p>
+          <p className="text-lg font-semibold tracking-[-0.01em] text-foreground">{t.yaHasActuado}</p>
           <p className="mt-1 text-(--text-secondary)">
             {t.cuentanos}
           </p>
         </div>
-        <Button variant="outline" size="lg" onClick={() => setAbierto(true)} className="shrink-0">
+        <Button variant="outline" size="lg" onClick={() => setAbierto(true)} className="h-12 shrink-0 px-5 text-base">
           {t.yaHePulsado}
         </Button>
       </div>

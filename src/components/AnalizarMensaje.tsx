@@ -331,10 +331,11 @@ export function AnalizarMensaje({
     >
       <div className="lg:col-start-1 lg:row-start-1">
         <form onSubmit={analizar} aria-describedby={`${id}-privacidad`}>
-          {/* Una sola frase: qué pegar, que no se pulse el enlace y qué hacemos. */}
-          <label htmlFor={`${id}-mensaje`} className="block max-w-[760px] text-base">
+          {/* Una sola frase: qué pegar, que no se pulse el enlace y qué hacemos.
+              A 600 px y con la negrita sin partir, en escritorio corta justo antes de ella. */}
+          <label htmlFor={`${id}-mensaje`} className="block max-w-[600px] text-base">
             {a.campo.antes}
-            <strong className="font-semibold">{a.campo.negrita}</strong>
+            <strong className="font-semibold whitespace-nowrap">{a.campo.negrita}</strong>
             {a.campo.despues}
           </label>
           <Textarea

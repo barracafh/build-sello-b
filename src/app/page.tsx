@@ -1,6 +1,7 @@
 import { AnalizarMensaje } from "@/components/AnalizarMensaje";
 import { ModoEmergencia } from "@/components/ModoEmergencia";
 import { Cabecera } from "@/components/Cabecera";
+import { Pregunta } from "@/components/Marca";
 import { Pie } from "@/components/Pie";
 import { cn } from "@/lib/utils";
 import { mostrarCasosTest } from "@/lib/casos-test";
@@ -36,9 +37,9 @@ export default async function Home({
           conEjemplos ? "max-w-5xl" : "max-w-[58rem]",
         )}
       >
-        {/* Sin antetítulo: el titular abre la página. */}
+        {/* Sin antetítulo: el titular abre la página. Su «¿», en el rojo de la marca. */}
         <h1 className="max-w-[760px] font-heading text-[clamp(34px,calc(4.5vw_-_2px),58px)] leading-[1.1] tracking-[-0.02em]">
-          {t.pagina.titulo}
+          <Pregunta>{t.pagina.titulo}</Pregunta>
         </h1>
         <span aria-hidden="true" className="mt-6 block h-1 w-16 rounded-full bg-brand" />
 
