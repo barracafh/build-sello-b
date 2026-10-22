@@ -59,6 +59,12 @@ describe("combinarClasificacion", () => {
     assert.equal(MOTIVO_NO_DISPONIBLE, "clasificador no disponible");
   });
 
+  test("sin salida del modelo, un oficial_verificado de la URL se mantiene", () => {
+    const r = combinarClasificacion(null, determinista(OFICIAL));
+    assert.equal(r.veredicto, "oficial_verificado");
+    assert.equal(r.motivo, MOTIVO_NO_DISPONIBLE);
+  });
+
   test("un mensaje bien escrito sin otra señal es no_determinable", () => {
     const r = combinarClasificacion(llm(), determinista(NEUTRO));
     assert.equal(r.veredicto, "no_determinable");

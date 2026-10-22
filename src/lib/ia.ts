@@ -78,6 +78,15 @@ export async function completar(
     if (!res.ok) throw new Error(`HelmCode respondió ${res.status}`);
     const data = await res.json();
     if (data.usage) alUso?.(data.usage);
-    return data.choices[0].message.content;
+    return textoDeRespuesta(data);
   }
+}
+
+// La respuesta está en `content`. El modelo devuelve además su razonamiento en
+// `reasoning_content`: no es la respuesta y nunca se usa como tal.
+export function textoDeRespuesta(data: unknown): string {
+  const contenido = (data as { choices?: { message?: { content?: unknown } }[] })
+    ?.choices?.[0]?.message?.content;
+  if (typeof contenido !== "string") throw new Error("HelmCode respondió sin texto");
+  return contenido;
 }
