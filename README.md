@@ -35,7 +35,9 @@ bun install --frozen-lockfile
 bun run dev
 ```
 
-`bun run test` prueba la elección de puerto. Vercel no usa nada de esto: sigue con `bun run build`.
+**Preview en Tailscale.** Si `tailscale` está disponible, `bun run dev` publica el puerto con `tailscale serve --bg --https=<puerto>` y imprime `Preview: https://<host>.ts.net:<puerto>/<equipo>` bajo la URL local. Es solo para la tailnet (nunca `funnel`) y no toca las rutas del 443. La base sale de `PREVIEW_BASE_URL` si está puesta, o si no de `Self.DNSName` de `tailscale status --json`; sin Tailscale, dev funciona como siempre y no imprime preview. `next.config.ts` añade ese host a `allowedDevOrigins` para que el hot reload funcione. Al salir (Ctrl+C, SIGTERM, caída) el script retira solo su entrada. Un `kill -9` no se puede interceptar y deja la entrada: `tailscale serve --https=<puerto> off`. Publica después de que next escuche, porque `tailscale serve` ocupa el puerto.
+
+`bun run test` prueba la elección de puerto y el preview. Vercel no usa nada de esto: sigue con `bun run build`.
 
 ## Publicar
 
