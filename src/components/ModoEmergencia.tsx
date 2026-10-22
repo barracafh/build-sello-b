@@ -11,8 +11,12 @@ import {
   type AccionId,
   type Paso,
 } from "@/datos/pasos-emergencia";
+import { diccionario, type Diccionario, type Idioma } from "@/i18n";
 
-export function ModoEmergencia() {
+type Textos = Diccionario["emergencia"];
+
+export function ModoEmergencia({ idioma = "es" }: { idioma?: Idioma }) {
+  const t = diccionario(idioma).emergencia;
   const [abierto, setAbierto] = useState(false);
   const [seleccion, setSeleccion] = useState<Set<AccionId>>(new Set());
 
@@ -29,9 +33,9 @@ export function ModoEmergencia() {
     return (
       <div className="border-l-4 border-brand rounded-r-xl bg-muted px-6 py-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="font-semibold text-foreground">¿Ya has actuado?</p>
+          <p className="font-semibold text-foreground">{t.yaHasActuado}</p>
           <p className="mt-1 text-sm text-(--text-secondary)">
-            Cuéntanos qué pasó y te decimos qué hacer ahora.
+            {t.cuentanos}
           </p>
         </div>
         <Button
@@ -39,7 +43,7 @@ export function ModoEmergencia() {
           onClick={() => setAbierto(true)}
           className="shrink-0"
         >
-          Ya he pulsado →
+          {t.yaHePulsado}
         </Button>
       </div>
     );
@@ -51,9 +55,9 @@ export function ModoEmergencia() {
     <div>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-foreground">¿Qué hiciste?</h2>
+          <h2 className="text-xl font-semibold text-foreground">{t.queHiciste}</h2>
           <p className="mt-1 text-sm text-(--text-secondary)">
-            Marca todo lo que corresponda. Los pasos aparecen al instante.
+            {t.marca}
           </p>
         </div>
         <Button
@@ -62,18 +66,18 @@ export function ModoEmergencia() {
           onClick={() => { setSeleccion(new Set()); setAbierto(false); }}
           className="shrink-0"
         >
-          Cerrar
+          {t.cerrar}
         </Button>
       </div>
 
-      <ul className="mt-4 grid gap-3 sm:grid-cols-2" role="group" aria-label="Acciones realizadas">
-        {ACCIONES.map((accion) => {
-          const activo = seleccion.has(accion.id);
+      <ul className="mt-4 grid gap-3 sm:grid-cols-2" role="group" aria-label={t.accionesAria}>
+        {ACCIONES.map((id) => {
+          const activo = seleccion.has(id);
           return (
-            <li key={accion.id}>
+            <li key={id}>
               <button /* tema-ok: toggle de selección múltiple, no hay componente UI equivalente con aria-pressed */
                 type="button"
-                onClick={() => toggleAccion(accion.id)}
+                onClick={() => toggleAccion(id)}
                 aria-pressed={activo}
                 className={cn(
                   "w-full rounded-xl border-2 px-4 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
@@ -82,8 +86,8 @@ export function ModoEmergencia() {
                     : "border-border bg-background hover:bg-muted",
                 )}
               >
-                <span className="block font-medium text-foreground">{accion.label}</span>
-                <span className="block text-sm text-(--text-secondary)">{accion.descripcion}</span>
+                <span className="block font-medium text-foreground">{t.acciones[id].label}</span>
+                <span className="block text-sm text-(--text-secondary)">{t.acciones[id].descripcion}</span>
               </button>
             </li>
           );
@@ -92,10 +96,10 @@ export function ModoEmergencia() {
 
       {pasos.length > 0 && (
         <div className="mt-8">
-          <h3 className="font-semibold text-foreground">Pasos para tu caso</h3>
+          <h3 className="font-semibold text-foreground">{t.pasosTitulo}</h3>
           <ol className="mt-4 flex flex-col gap-4">
             {pasos.map((paso, i) => (
-              <PasoItem key={paso.id} paso={paso} numero={i + 1} />
+              <PasoItem key={paso.id} paso={paso} numero={i + 1} t={t} />
             ))}
           </ol>
         </div>
@@ -104,7 +108,7 @@ export function ModoEmergencia() {
   );
 }
 
-function PasoItem({ paso, numero }: { paso: Paso; numero: number }) {
+function PasoItem({ paso, numero, t }: { paso: Paso; numero: number; t: Textos }) {
   return (
     <li className="flex gap-4">
       <span
@@ -118,12 +122,12 @@ function PasoItem({ paso, numero }: { paso: Paso; numero: number }) {
       >
         {numero}
       </span>
-      <div className="flex-1 pt-0.5">
+      <div className="min-w-0 flex-1 pt-0.5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-medium text-foreground">{paso.texto}</span>
+          <span className="font-medium text-foreground">{t.pasos[paso.id]}</span>
           {paso.urgente && (
             <Badge variant="destructive" className="text-xs">
-              Ahora
+              {t.ahora}
             </Badge>
           )}
         </div>
@@ -135,7 +139,8 @@ function PasoItem({ paso, numero }: { paso: Paso; numero: number }) {
                   href={enlace.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 font-mono text-xs text-(--azul-importass) underline underline-offset-2 hover:text-(--azul-importass-oscuro) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--azul-importass-oscuro)"
+                  // Las direcciones largas (incibe.es/…) se parten: sin scroll a 320 px.
+                  className="inline-flex items-center gap-1 font-mono text-xs [overflow-wrap:anywhere] text-(--azul-importass) underline underline-offset-2 hover:text-(--azul-importass-oscuro) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--azul-importass-oscuro)"
                 >
                   {enlace.texto}
                   <ExternalLink aria-hidden="true" className="size-3" />

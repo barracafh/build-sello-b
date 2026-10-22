@@ -511,7 +511,7 @@ export function AnalizarMensaje({
       )}
 
       <div aria-busy={mostrarCarga} className="empty:hidden lg:col-start-1 lg:row-start-2">
-      {mostrarCarga && <CargaResultado transcurrido={transcurrido} />}
+      {mostrarCarga && <CargaResultado transcurrido={transcurrido} idioma={idioma} />}
       {respuesta && ficha && textos && (
         // Tres bloques: el veredicto y por qué, qué hacer ahora y las fuentes.
         <section
@@ -624,6 +624,7 @@ export function AnalizarMensaje({
               </div>
 
               <MensajeSenalado
+                idioma={idioma}
                 id={`${id}-senalado`}
                 texto={analizado}
                 fragmentos={respuesta.fragmentos}

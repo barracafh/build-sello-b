@@ -1,4 +1,4 @@
-import type { ContextoTitular, Diccionario } from "./es";
+import { REMITENTE_CORREOS, type ContextoTitular, type Diccionario } from "./es";
 
 // Euskaraz izenari atzizkia gehitzea arriskutsua da (DGTrena, SEPErena…):
 // «X erakundea» eran aipatzen da, izena ukitu gabe.
@@ -33,6 +33,10 @@ export const eu = {
     secciones: "Atalak",
     datosReales: "Datu publikoak",
     datosSimulados: "Datu simulatuak",
+    menu: {
+      verificar: { nombre: "Egiaztatu mezu bat", corto: "Egiaztatu" },
+      juego: { nombre: "Jokoa: iruzurra ala ez?", corto: "Iruzurra?" },
+    },
   },
   pagina: {
     antetitulo: "Mezu-egiaztatzailea",
@@ -271,6 +275,182 @@ export const eu = {
   },
   // «2025eko martxoa».
   mes: (mes: number, año: number) => `${año}ko ${HILABETEAK[mes]}`,
+  emergencia: {
+    seccion: "Dagoeneko zerbait egin baduzu",
+    yaHasActuado: "Dagoeneko zerbait egin duzu?",
+    cuentanos: "Kontatu zer gertatu den, eta orain zer egin esango dizugu.",
+    yaHePulsado: "Sakatu egin dut →",
+    queHiciste: "Zer egin zenuen?",
+    marca: "Markatu dagokion guztia. Urratsak berehala agertzen dira.",
+    cerrar: "Itxi",
+    accionesAria: "Egindako ekintzak",
+    pasosTitulo: "Zure kasurako urratsak",
+    ahora: "Orain",
+    acciones: {
+      enlace: { label: "Esteka sakatu nuen", descripcion: "Webgunea ireki nuen, baina ez nuen ezer idatzi" },
+      tarjeta: { label: "Txartelaren edo bankuaren datuak sartu nituen", descripcion: "Txartel-zenbakia, CVVa, kontua…" },
+      clave: { label: "Cl@ve pasahitza edo sarbide-datuak eman nituen", descripcion: "Erabiltzailea, pasahitza edo jasotako kodea" },
+      instale: { label: "Zerbait instalatu edo fitxategi bat deskargatu nuen", descripcion: "Aplikazio bat, eranskin bat…" },
+      pague: { label: "Ordaindu nuen", descripcion: "Transferentzia edo kargu bat egin nuen" },
+    },
+    pasos: {
+      banco: "Deitu orain zure bankura eta esan txartela edo kontua blokeatzeko. Telefonoa txartelaren atzealdean dago.",
+      "banco-pago": "Deitu zure bankura, azaldu zer gertatu den eta galdetu dirua itzul diezazuketen.",
+      capturas: "Atera argazki bat mugikorrarekin jaso zenuen mezuari, gordeta izateko gero behar baduzu.",
+      "cambiar-clave": "Aldatu Cl@ve pasahitza ahalik eta lasterren. Idatzi zuk zeuk helbidea nabigatzailean; ez sakatu estekarik.",
+      "revisar-dehu": "Sartu zure jakinarazpen-postontzian eta Herritarren Karpetan helbidea zuk zeuk idatzita, eta begiratu ea zerbait arraroa dagoen.",
+      "no-dispositivo": "Ez erabili telefono edo ordenagailu hori bankuan sartzeko edo pasahitzak idazteko, konfiantzazko norbaitek begiratu arte.",
+      "no-enlace": "Ez sakatu berriro esteka hori, eta ez deitu mezuan agertzen zen zenbakira.",
+      denuncia: "Jarri salaketa Polizia Nazionalean edo Guardia Zibilean. Interneten bidez edo bertara joanda egin dezakezu.",
+      "017": "Deitu 017ra, doakoa da. Egunero artatzen dute, goizeko 8etatik gaueko 11ak arte, eta zehatz azaltzen dizute zer egin.",
+      "reporte-incibe": "Jakinarazi zibersegurtasuneko erakunde ofizialari (INCIBE) zer gertatu den.",
+    },
+  },
+  senalado: {
+    titulo: "Horrela ikusten da zure mezuan",
+    continuo: "Azpimarra jarraitua",
+    trazos: "Azpimarra etena",
+    roja: "seinale gorria",
+    naranja: "seinale laranja",
+  },
+  carga: {
+    pasos: ["Esteka berrikusten…", "Iruzur-seinaleak bilatzen…", "Iturri ofizialak kontsultatzen…"],
+    lenta: "Honek segundo batzuk gehiago iraun dezake.",
+  },
+  juego: {
+    antetitulo: "Jokoa · 10 mezu",
+    titulo: "Iruzurra ala ez?",
+    intro:
+      "INCIBEk ohartarazitako benetako bost iruzur eta egiazko bost abisu. Irristatu ezkerrera iruzurra bada, eta eskuinera egiazkoa bada.",
+    tipos: { sms: "SMS", email: "Posta", web: "Web" },
+    mensajeDe: (n: string, total: string) => `${n}. mezua (${total}etik)`,
+    aciertos: (n: string) => `Asmatuak: ${n}`,
+    tarjeta: "txartela",
+    etiquetaTarjeta: (n: string, tipo: string) => `${n}. mezua: ${tipo}`,
+    estafa: "Iruzurra",
+    deVerdad: "Egiazkoa",
+    desliza: "Irristatu txartela",
+    flechas: (izquierda: string, derecha: string) =>
+      ` edo erabili teklatuko ${izquierda} eta ${derecha} geziak`,
+    bienVisto: "Ondo ikusita!",
+    estaNo: "Hau ez",
+    esEstafa: "INCIBEk ohartarazitako benetako iruzurra da.",
+    esDeVerdad: "Egiazko abisua da. Hala ere, ez fidatu mezuaz: sartu zuk zeuk webgune ofizialean.",
+    lasPistas: "Pistak",
+    webOficialEs: "Webgune ofiziala hau da:",
+    fuente: "Iturria:",
+    webOficial: "Webgune ofiziala",
+    siguiente: "Hurrengo mezua",
+    verResultado: "Ikusi nire emaitza",
+    resultado: (aciertos: string, total: string) => `${total}etik ${aciertos} asmatu dituzu`,
+    valoracion: {
+      perfecto: "Bikain! Iruzur batek ere ez zaitu engainatu.",
+      muyBien: "Oso ondo. Berrikusi huts egin dituzunak: horiek engainatzen dute gehien.",
+      noEstaMal: "Ez dago gaizki, baina iruzurren batek engainatuko zintuen.",
+      repasa: "Iruzurrak oso ondo eginda daude. Berrikusi pistak eta saiatu berriro.",
+    },
+    recuerda:
+      "Gogoratu: abisu bat egiazkoa izan arren, sartu zuk zeuk webgune ofizialean helbidea idatzita. Mezu batek ez du frogatzen nork bidaltzen duen.",
+    tusRespuestas: "Zure erantzunak",
+    acertada: "Asmatua: ",
+    fallada: "Huts egina: ",
+    respuestaEstafa: "iruzurra",
+    respuestaDeVerdad: "egiazkoa",
+    otraVez: "Jokatu berriro",
+    comprobarReal: "Egiaztatu benetako mezu bat",
+    casos: {
+      F01: {
+        texto:
+          "AGENCIA TRIBUTARIA: Zure 2023ko errentako PFEZaren itzulketaren 411,00¿ ordainketa agindu da. informazio gehiago webgunean:",
+        pistas: [
+          "Diru-itzulketa bat agintzen du eta esteka bat sakatzeko eskatzen du",
+          "Estekak ez darama sede.agenciatributaria.gob.es helbidera",
+          "Webgune faltsuak izen osoa, txartel-zenbakia, iraungitze-data, CVVa eta PINa eskatzen ditu; AEATk ez du inoiz txartelaren daturik eskatzen SMS bidez",
+        ],
+      },
+      F02: {
+        texto:
+          "DGT: 24 ordu geratzen zaizkizu 2024/06/13ko isuna ordaintzeko. Kontsultatu esteka honetan:",
+        pistas: [
+          "Presa sartzen du 24 orduko epearekin, errekargu bat saihesteko",
+          "DGTk isunak gutun ziurtatuz edo DEV (Dirección Electrónica Vial) bidez jakinarazten ditu, ez SMS bateko ordainketa-estekekin",
+          "Igorlearen 'DGT' ezizena faltsutu daiteke",
+        ],
+      },
+      F03: {
+        texto:
+          "[CORREOS] Bezero agurgarria: Zure paketea ezin izan da ee/hh egunean entregatu, aduana-tasak X,XX€ ordaindu ez direlako: Jarraitu jarraibideei: [URL iruzurtia]",
+        pistas: [
+          "Diru kopuru txiki bat (aduana-tasak) esteka baten bidez ordaintzeko eskatzen du",
+          "Correosek ez du inoiz banku-daturik edo ordainketarik eskatzen SMS edo posta bidez",
+          "Enpresaren izena erabiltzen du correos.es ez den domeinu baten barruan",
+        ],
+      },
+      F04: {
+        texto:
+          "GIZARTE SEGURANTZA: Zure osasun-txartelak eguneraketa bat behar du. Mesedez eguneratu hori gune seguruaren bidez zure zerbitzuak mantentzeko: [URL maltzurra]",
+        pistas: [
+          "Datuak esteka baten bidez 'eguneratzeko' eskatzen du, eta zerbitzuak galtzeko mehatxua egiten du",
+          "Gizarte Segurantzak ez du eskatzen datuak eguneratzeko edo zorrak ordaintzeko SMSetako esteken bidez (INCIBE, 2026/08/19ko abisua)",
+          "Itzulpen arraroa eta hitz-ordena okerra ('eguneratu hori')",
+        ],
+      },
+      F05: {
+        texto:
+          "Gaia: Azken gogorarazpena zure isunaren errekarguaren aurretik – Espedientea zk,. XXXXXXX",
+        pistas: [
+          "'DGTk EZ ditu INOIZ isunak posta elektronikoz jakinarazten' (dgt.es)",
+          "Errekargu batekin mehatxatzen du presa sartzeko",
+          "Igorlea ez da DGTren domeinu ofizialekoa",
+        ],
+      },
+      L01: {
+        texto:
+          "AEAT: Jakinarazpen berri bat duzu eskuragarri. Zeure bitartekoez Zerga Agentziaren Egoitza elektronikoan (sede.agenciatributaria.gob.es) edo DEHún sartuta kontsulta dezakezu. Mezu hau informatiboa baino ez da.",
+        pistas: [
+          "Testua abisu ofizial batekin bat dator, baina ez du frogatzen nork bidaltzen duen: igorlea faltsutu daiteke. Horregatik ez da berresten; egoitzara bidaltzen da, helbidea idatzita",
+          "Jakinarazpen bat dagoela baino ez du esaten; ez du daturik, ordainketarik edo txartelik eskatzen",
+          "Ez dakar sakatzeko estekarik: .gob.es egoitza ofizialera bidaltzen du",
+        ],
+      },
+      L02: {
+        texto:
+          "Gaia: Dirección Electrónica Vial – Jakinarazpen berri bat duzu. Jakinarazten dizugu jakinarazpen berri bat duzula zure Dirección Electrónica Vial-en (DEV). Kontsultatzeko, sartu DGTren Egoitza elektronikoan (sede.dgt.gob.es) eta identifikatu NAN elektronikoarekin, ziurtagiri digitalarekin edo Cl@ve-rekin.",
+        pistas: [
+          "Testua abisu ofizial batekin bat dator, baina ez du frogatzen nork bidaltzen duen: igorlea faltsutu daiteke. Horregatik ez da berresten; egoitzara bidaltzen da, helbidea idatzita",
+          "DEVn borondatez alta eman duenak baino ez du jasotzen",
+          "Ez du zenbatekorik, 24 orduko eperik edo ordainketa-estekarik",
+        ],
+      },
+      L03: {
+        texto:
+          `Nork: ${REMITENTE_CORREOS}. Gaia: Zure bidalketa bidean dago. Kaixo, PQ00000000000000000000 erreferentzia duen zure bidalketa banatzen ari dira. www.correos.es-eko Bidalketen Bilatzailean edo Correosen aplikazioan jarrai dezakezu. Kode segurua: XXXX-XXXX (koadro horia mezuaren amaieran).`,
+        pistas: [
+          "Testua abisu ofizial batekin bat dator, baina ez du frogatzen nork bidaltzen duen: igorlea faltsutu daiteke. Horregatik ez da berresten; egoitzara bidaltzen da, helbidea idatzita",
+          `Igorlea ${REMITENTE_CORREOS} da, Correosek bere komunikazio ofizialetarako adierazten duena, nahiz eta igorle bat faltsutu daitekeen`,
+          "Kode segurua dakar, correos.es-eko posta-egiaztatzailean egiazta daitekeena",
+        ],
+      },
+      L04: {
+        texto:
+          "Gaia: DEHú – Jakinarazpen berriaren abisua. Jakinarazten dizugu Zerga Administrazioko Estatu Agentziaren jakinarazpen berri bat duzula eskura Dirección Electrónica Habilitada única-n. dehu.redsara.es helbidean sar zaitezke, Cl@ve, ziurtagiri edo NANe bidez identifikatuta. Adeitasun-abisu bat da hau.",
+        pistas: [
+          "Testua abisu ofizial batekin bat dator, baina ez du frogatzen nork bidaltzen duen: igorlea faltsutu daiteke. Horregatik ez da berresten; egoitzara bidaltzen da, helbidea idatzita",
+          "DEHúk 'adeitasun-abisuak' bidaltzen ditu posta bidez, atxikitako erakunde baten jakinarazpen berri bat iristen denean",
+          "dehu.redsara.es domeinu ofizialera bidaltzen du; ez da .gob.es, baina ofiziala da",
+        ],
+      },
+      L05: {
+        texto:
+          "Orria: 'Lehen Mailako Arretan Hitzordua Eskatzeko Laguntza – Pazientearen Ataria – Conselleria de Sanidad'. Zure lehen mailako arretako medikuarekin edo erizainarekin hitzordua eskatzeko, idatzi zure SIP zenbakia eta jaiotze-data, eta aukeratu eguna eta ordua.",
+        pistas: [
+          "URLa domeinu ofizialen zerrendan dago (san.gva.es) eta ez darama birbideratze-parametrorik",
+          "san.gva.es domeinua, Generalitat Valencianaren azpidomeinu ofiziala",
+          "SIPa eta jaiotze-data eskatzen ditu, baina inoiz ez banku- edo txartel-daturik",
+        ],
+      },
+    },
+  },
   fuentes: {
     aria: "Iturriak",
     oficiales: "Iturri ofizialak",

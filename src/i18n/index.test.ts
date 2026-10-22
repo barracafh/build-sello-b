@@ -1,6 +1,9 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import ficha from "../../ficha.json";
+import ejemplos from "../../datos/mensajes-ejemplo.json";
+import { ACCIONES, PASOS } from "@/datos/pasos-emergencia";
+import { RONDAS } from "@/lib/juego";
 import { DICCIONARIOS, IDIOMAS, NOMBRES, langHtml, resolverIdioma } from "./index";
 
 describe("resolverIdioma", () => {
@@ -96,5 +99,39 @@ describe("diccionarios", () => {
   test("el aviso obligatorio aparece en todos", () => {
     for (const idioma of IDIOMAS) assert.ok(DICCIONARIOS[idioma].pie.aviso.length > 0);
     assert.equal(DICCIONARIOS.es.pie.aviso, "Herramienta experimental. No es un servicio oficial.");
+  });
+});
+
+// LAB-70: el juego y el modo emergencia guardan la lógica sin texto; cada id
+// tiene que tener su texto en los cinco idiomas.
+describe("textos por id", () => {
+  test("cada caso del juego tiene texto y pistas en los cinco idiomas", () => {
+    for (const idioma of IDIOMAS) {
+      for (const { id } of RONDAS) {
+        const caso = DICCIONARIOS[idioma].juego.casos[id];
+        assert.ok(caso?.texto.trim(), `${idioma} ${id}`);
+        assert.ok(caso.pistas.length > 0 && caso.pistas.every((p) => p.trim()), `${idioma} ${id}`);
+      }
+    }
+  });
+
+  test("cada AccionId y cada paso del modo emergencia tienen texto en los cinco idiomas", () => {
+    for (const idioma of IDIOMAS) {
+      const t = DICCIONARIOS[idioma].emergencia;
+      for (const id of ACCIONES) {
+        assert.ok(t.acciones[id]?.label.trim() && t.acciones[id].descripcion.trim(), `${idioma} ${id}`);
+      }
+      for (const id of Object.keys(PASOS) as (keyof typeof PASOS)[]) {
+        assert.ok(t.pasos[id]?.trim(), `${idioma} ${id}`);
+      }
+    }
+  });
+
+  test("en castellano, cada caso es el texto de datos/mensajes-ejemplo.json y sus tres primeras pistas", () => {
+    for (const caso of ejemplos) {
+      const id = caso.id as keyof typeof DICCIONARIOS.es.juego.casos;
+      assert.equal(DICCIONARIOS.es.juego.casos[id].texto, caso.texto, caso.id);
+      assert.deepEqual([...DICCIONARIOS.es.juego.casos[id].pistas], caso.pistas.slice(0, 3), caso.id);
+    }
   });
 });

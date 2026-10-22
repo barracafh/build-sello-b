@@ -1,13 +1,16 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { AVISO_LENTO_MS, MINIMO_MS, PASOS, esLenta, esperaAntesDeMostrar, pasoEn } from "./carga";
+import { es } from "@/i18n/es";
+import { AVISO_LENTO_MS, MINIMO_MS, esLenta, esperaAntesDeMostrar, pasoEn } from "./carga";
+
+const PASOS = es.carga.pasos;
 
 describe("pasoEn", () => {
   test("avanza por los pasos y se queda en el último", () => {
-    assert.equal(pasoEn(0), PASOS[0]);
-    assert.equal(pasoEn(1600), PASOS[1]);
-    assert.equal(pasoEn(3200), PASOS[2]);
-    assert.equal(pasoEn(60_000), PASOS[2]);
+    assert.equal(pasoEn(0, PASOS), PASOS[0]);
+    assert.equal(pasoEn(1600, PASOS), PASOS[1]);
+    assert.equal(pasoEn(3200, PASOS), PASOS[2]);
+    assert.equal(pasoEn(60_000, PASOS), PASOS[2]);
   });
 
   test("no promete porcentajes", () => {

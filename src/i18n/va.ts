@@ -118,4 +118,32 @@ export const va = {
     mejorNoPulses: (url: string) => `Millor no toques l'enllaç: ${url}`,
     mejorNoRespondas: "Millor no respongues ni toques res.",
   },
+  emergencia: {
+    ...ca.emergencia,
+    marca: "Marca tot el que corresponga. Els passos apareixen a l'instant.",
+    pasos: {
+      ...ca.emergencia.pasos,
+      banco: "Telefona ara al teu banc i demana que bloquegen la targeta o el compte. El telèfon està en el revers de la targeta.",
+      "banco-pago": "Telefona al teu banc, explica què ha passat i pregunta si et poden tornar els diners.",
+      "cambiar-clave": "Canvia la contrasenya de Cl@ve com més prompte millor. Escriu tu mateix l'adreça en el navegador, no toques cap enllaç.",
+      "revisar-dehu": "Entra en la teua bústia de notificacions i en la Carpeta Ciutadana escrivint tu mateix l'adreça, i mira si hi ha res estrany.",
+      "no-dispositivo": "No utilitzes eixe telèfon o ordinador per a entrar al banc ni per a posar contrasenyes fins que algú de confiança el revise.",
+      "no-enlace": "No tornes a tocar eixe enllaç ni telefones al número que eixia en el missatge.",
+      "017": "Telefona al 017, és gratuït. T'atenen cada dia de 8 del matí a 11 de la nit i t'expliquen exactament què has de fer.",
+    },
+  },
+  carga: {
+    ...ca.carga,
+    lenta: "Açò pot tardar uns segons més.",
+  },
+  juego: {
+    ...ca.juego,
+    esDeVerdad: "És un avís de veritat. Tot i això, no et fies del missatge: entra tu en la web oficial.",
+    recuerda:
+      "Recorda: encara que un avís siga de veritat, entra tu en la web oficial escrivint l'adreça. Un missatge no prova qui l'envia.",
+    verResultado: "Vore el meu resultat",
+    tusRespuestas: "Les teues respostes",
+    flechas: (izquierda: string, derecha: string) =>
+      ` o utilitza les fletxes ${izquierda} i ${derecha} del teclat`,
+  },
 } satisfies Diccionario;
