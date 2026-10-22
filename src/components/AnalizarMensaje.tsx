@@ -51,6 +51,7 @@ const frases: Record<string, string> = {
   contenido_sospechoso: "La web del enlace figura como oficial, pero el mensaje tiene señales de fraude: no podemos confirmarlo.",
   contenido_fraudulento: "El mensaje usa el nombre de un organismo oficial y tiene señales claras de fraude.",
   sin_enlace: "No hemos encontrado ningún enlace en el mensaje.",
+  web_oficial_citada: "El mensaje cita una dirección que sí es una web oficial. Eso no prueba quién lo envía: entra tecleando tú la dirección.",
   url_no_valida: "El enlace no tiene un formato que podamos leer.",
   ip_como_host: "El enlace lleva a un número en vez de a un nombre de web, algo que las webs oficiales no hacen.",
   credenciales_en_url: "El enlace esconde la web real detrás de un @: lo que parece el nombre es solo un disfraz.",
@@ -272,9 +273,13 @@ function Resultado({
     veredicto === "no_oficial" &&
     Boolean(respuesta.remitente_analizado) &&
     !respuesta.url_analizada;
+  // La web citada en prosa es oficial: se dice de quién, sin enlazarla.
+  const webCitada = motivos[0] === "web_oficial_citada";
   const frase = soloRemitente
     ? frases.remitente_dominio_ajeno
-    : frases[motivos.find((m) => frases[m]) ?? "dominio_desconocido"];
+    : webCitada && entidad
+      ? `El mensaje cita una dirección que sí es la web oficial de ${entidad}. Eso no prueba quién lo envía: entra tecleando tú la dirección.`
+      : frases[motivos.find((m) => frases[m]) ?? "dominio_desconocido"];
   const fuentes = [
     ...(respuesta.indicador ? [respuesta.indicador] : []),
     ...(respuesta.aviso ? [respuesta.aviso] : []),
@@ -316,8 +321,12 @@ function Resultado({
           {sinCifrado && " Eso sí, el enlace no está cifrado (http)."}
         </p>
         <p className="mt-3 text-base text-(--text-secondary)">
-          {soloRemitente ? "Remitente analizado" : "Enlace analizado"} (no
-          pulsable):{" "}
+          {soloRemitente
+            ? "Remitente analizado"
+            : webCitada
+              ? "Dirección citada"
+              : "Enlace analizado"}{" "}
+          (no pulsable):{" "}
           <code className="font-mono text-foreground [overflow-wrap:anywhere]">
             {soloRemitente
               ? respuesta.remitente_analizado
