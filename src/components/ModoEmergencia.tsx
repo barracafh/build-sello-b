@@ -12,10 +12,8 @@ import {
   type Paso,
 } from "@/datos/pasos-emergencia";
 
-type Fase = "initial" | "eligiendo" | "pasos";
-
 export function ModoEmergencia() {
-  const [fase, setFase] = useState<Fase>("initial");
+  const [abierto, setAbierto] = useState(false);
   const [seleccion, setSeleccion] = useState<Set<AccionId>>(new Set());
 
   function toggleAccion(id: AccionId) {
@@ -27,7 +25,7 @@ export function ModoEmergencia() {
     });
   }
 
-  if (fase === "initial") {
+  if (!abierto) {
     return (
       <div className="border-l-4 border-brand rounded-r-xl bg-muted px-6 py-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -38,7 +36,7 @@ export function ModoEmergencia() {
         </div>
         <Button
           variant="outline"
-          onClick={() => setFase("eligiendo")}
+          onClick={() => setAbierto(true)}
           className="shrink-0"
         >
           Ya he pulsado →
@@ -47,89 +45,61 @@ export function ModoEmergencia() {
     );
   }
 
-  if (fase === "eligiendo") {
-    return (
-      <div>
-        <h2 className="text-xl font-semibold text-foreground">¿Qué hiciste?</h2>
-        <p className="mt-1 text-sm text-(--text-secondary)">
-          Puedes marcar más de una.
-        </p>
-
-        <ul className="mt-4 grid gap-3 sm:grid-cols-2" role="group" aria-label="Acciones realizadas">
-          {ACCIONES.map((accion) => {
-            const activo = seleccion.has(accion.id);
-            return (
-              <li key={accion.id}>
-                {/* tema-ok: toggle nativo envuelto en li, sin shadcn equivalente */}
-                <button /* tema-ok: toggle de selección múltiple, no hay componente UI equivalente con aria-pressed */
-                  type="button"
-                  onClick={() => toggleAccion(accion.id)}
-                  aria-pressed={activo}
-                  className={cn(
-                    "w-full rounded-xl border-2 px-4 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-                    activo
-                      ? "border-brand bg-brand/5"
-                      : "border-border bg-background hover:bg-muted",
-                  )}
-                >
-                  <span className="block font-medium text-foreground">
-                    {accion.label}
-                  </span>
-                  <span className="block text-sm text-(--text-secondary)">
-                    {accion.descripcion}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Button
-            variant="sunset"
-            disabled={seleccion.size === 0}
-            onClick={() => setFase("pasos")}
-          >
-            Ver mis pasos
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSeleccion(new Set());
-              setFase("initial");
-            }}
-          >
-            Cancelar
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // fase === "pasos"
-  const pasos = pasosParaAcciones([...seleccion] as AccionId[]);
+  const pasos = seleccion.size > 0 ? pasosParaAcciones([...seleccion] as AccionId[]) : [];
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-foreground">Pasos para tu caso</h2>
-      <p className="mt-1 text-sm text-(--text-secondary)">
-        Sigue estos pasos en orden.
-      </p>
-
-      <ol className="mt-6 flex flex-col gap-4">
-        {pasos.map((paso, i) => (
-          <PasoItem key={paso.id} paso={paso} numero={i + 1} />
-        ))}
-      </ol>
-
-      <div className="mt-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-semibold text-foreground">¿Qué hiciste?</h2>
+          <p className="mt-1 text-sm text-(--text-secondary)">
+            Marca todo lo que corresponda. Los pasos aparecen al instante.
+          </p>
+        </div>
         <Button
           variant="outline"
-          onClick={() => setFase("eligiendo")}
+          size="sm"
+          onClick={() => { setSeleccion(new Set()); setAbierto(false); }}
+          className="shrink-0"
         >
-          ← Volver
+          Cerrar
         </Button>
       </div>
+
+      <ul className="mt-4 grid gap-3 sm:grid-cols-2" role="group" aria-label="Acciones realizadas">
+        {ACCIONES.map((accion) => {
+          const activo = seleccion.has(accion.id);
+          return (
+            <li key={accion.id}>
+              <button /* tema-ok: toggle de selección múltiple, no hay componente UI equivalente con aria-pressed */
+                type="button"
+                onClick={() => toggleAccion(accion.id)}
+                aria-pressed={activo}
+                className={cn(
+                  "w-full rounded-xl border-2 px-4 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+                  activo
+                    ? "border-brand bg-brand/5"
+                    : "border-border bg-background hover:bg-muted",
+                )}
+              >
+                <span className="block font-medium text-foreground">{accion.label}</span>
+                <span className="block text-sm text-(--text-secondary)">{accion.descripcion}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      {pasos.length > 0 && (
+        <div className="mt-8">
+          <h3 className="font-semibold text-foreground">Pasos para tu caso</h3>
+          <ol className="mt-4 flex flex-col gap-4">
+            {pasos.map((paso, i) => (
+              <PasoItem key={paso.id} paso={paso} numero={i + 1} />
+            ))}
+          </ol>
+        </div>
+      )}
     </div>
   );
 }
@@ -174,9 +144,7 @@ function PasoItem({ paso, numero }: { paso: Paso; numero: number }) {
             ))}
           </ul>
         )}
-        <p className="mt-1 font-mono text-xs text-(--text-secondary)">
-          {paso.fuente}
-        </p>
+        <p className="mt-1 font-mono text-xs text-(--text-secondary)">{paso.fuente}</p>
       </div>
     </li>
   );
