@@ -196,8 +196,7 @@ export const es = {
       "Termina en gob.es, reservado a administraciones, pero no sabemos de qué organismo es.",
     marca_como_subdominio: "Usa el nombre de una web oficial al principio, pero la web real es otra.",
     imitacion_de_marca: "Imita el nombre de un organismo oficial y tiene otras señales de fraude.",
-    posible_imitacion_de_marca:
-      "Se parece al nombre de un organismo oficial, pero no podemos asegurar que sea falsa.",
+    posible_imitacion_de_marca: "Se parece al nombre de un organismo oficial, pero no es su web. Trátalo como un fraude.",
     dominio_desconocido: "No es una web que tengamos en nuestra lista de webs oficiales.",
     homografo: "El nombre usa letras de otro alfabeto para parecerse a una web oficial.",
     indicador_publicado: "Un organismo oficial ha avisado de que esta dirección es un fraude.",

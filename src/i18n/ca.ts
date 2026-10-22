@@ -194,8 +194,7 @@ export const ca = {
       "Acaba en gob.es, reservat a les administracions, però no sabem de quin organisme és.",
     marca_como_subdominio: "Fa servir el nom d'un web oficial al principi, però el web real és un altre.",
     imitacion_de_marca: "Imita el nom d'un organisme oficial i té altres senyals de frau.",
-    posible_imitacion_de_marca:
-      "S'assembla al nom d'un organisme oficial, però no podem assegurar que sigui fals.",
+    posible_imitacion_de_marca: "S'assembla al nom d'un organisme oficial, però no és el seu web. Tracta'l com un frau.",
     dominio_desconocido: "No és un web que tinguem a la nostra llista de webs oficials.",
     homografo: "El nom fa servir lletres d'un altre alfabet per semblar un web oficial.",
     indicador_publicado: "Un organisme oficial ha avisat que aquesta adreça és un frau.",
