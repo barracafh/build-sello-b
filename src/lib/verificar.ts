@@ -121,9 +121,30 @@ const MARCAS_REMITENTE = MARCAS.filter((m) => m !== "hacienda" && m !== "clave")
 const tokens = (texto: string) => texto.split(/[.\-_]/).filter(Boolean);
 const marcaEnTokens = (partes: string[]) =>
   MARCAS_REMITENTE.find((marca) => contiene(partes, marca.split("-")));
+// En la parte local la marca también va unida a otras palabras (`trafico@`,
+// `dgtmultas@`): ahí cuenta como prefijo de un token, pero solo para marcas que
+// no empiezan palabras corrientes. `sepe` (sepelio), `correos` (correosexpress),
+// `hacienda` y `clave` se quedan fuera. Cada prefijo apunta a su clave de MARCAS.
+const PREFIJOS_LOCALES: Record<string, string> = {
+  dgt: "dgt",
+  trafico: "dgt",
+  seguridadsocial: "seg-social",
+  segsocial: "seg-social",
+  agenciatributaria: "agenciatributaria",
+  carpetaciudadana: "carpetaciudadana",
+};
+const marcaPorPrefijo = (partes: string[]) =>
+  Object.entries(PREFIJOS_LOCALES).find(([prefijo]) =>
+    partes.some((t) => t.startsWith(prefijo)),
+  )?.[1];
 // Marca de servicio en la dirección de un remitente (parte local y host).
-export const marcaEnDireccion = (local: string, dominio: string) =>
-  marcaEnTokens([...tokens(local.toLowerCase()), ...etiquetas(dominio.toLowerCase()).flatMap(tokens)]);
+export const marcaEnDireccion = (local: string, dominio: string) => {
+  const partesLocal = tokens(local.toLowerCase());
+  return (
+    marcaEnTokens([...partesLocal, ...etiquetas(dominio.toLowerCase()).flatMap(tokens)]) ??
+    marcaPorPrefijo(partesLocal)
+  );
+};
 const AVISOS_POR_MARCA: Record<string, { nombre: string; url: string }> = {
   carpetaciudadana: incibe165,
 };

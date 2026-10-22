@@ -112,6 +112,16 @@ describe("5. remitente con el nombre del servicio y otro dominio", () => {
   test("marca por token en la dirección y dominio ajeno → roja", () => {
     assert.equal(nivel(`De: dgt-multas${A}gmail.com Pague ya`, "remitente_falso"), "roja");
   });
+  test("marca unida en la parte local y dominio ajeno → roja y no_oficial", () => {
+    for (const local of ["trafico", "seguridadsocial", "dgtmultas"]) {
+      const t = `De: ${local}${A}gmail.com Pague ya`;
+      assert.equal(nivel(t, "remitente_falso"), "roja", local);
+      assert.equal(veredicto(t), "no_oficial", local);
+    }
+  });
+  test("remitente oficial de la DGT → sin señal", () => {
+    assert.ok(!codigos(`De: notificaciones${A}dgt.es Su cita`).includes("remitente_falso"));
+  });
   test("nombre visible con marca y correo gratuito → roja", () => {
     assert.equal(nivel(`De: Agencia Tributaria <x${A}gmail.com>`, "remitente_falso"), "roja");
   });
