@@ -4,50 +4,25 @@ Generado por `bun run eval` en local (una pasada, en serie, 1 s entre casos). Pi
 
 ## deepseek-v4-flash
 
-Fecha: 2026-10-22T18:09:57.985Z · commit: df0efbc · conjunto: `src/datos/evals/dev.json` · casos: 35 × 1
+Fecha: 2026-10-22T18:37:47.956Z · commit: 49d84cf · conjunto: `src/datos/evals/dev.json` · casos: 35 × 3
 
-- Accuracy: **97.1 %** (34/35) ✅ (puerta: ≥ 85 %)
+- Accuracy: **90.5 %** (95/105) ✅ (puerta: ≥ 85 %)
 - Falsos `oficial_verificado`: **0** ✅ (puerta: 0)
-- Ejemplos de `datos/mensajes-ejemplo.json`: **10/10** ✅ (puerta: 10/10)
+- Ejemplos de `datos/mensajes-ejemplo.json`: **29/30** ❌ (puerta: 10/10)
 - `no_oficial` → `no_determinable`: 0
-- Respuestas de reserva (modelo no disponible): 2
-- Casos inestables entre repeticiones: ninguno
+- Reservas (el modelo no respondió; cuentan como fallo): 5
+- Casos inestables entre repeticiones: dev-25
 
 | Clase | Precisión | Recall | Casos |
 | --- | --- | --- | --- |
-| oficial_verificado | 100.0 % | 100.0 % | 6 |
-| no_oficial | 93.3 % | 100.0 % | 14 |
-| no_determinable | 100.0 % | 93.3 % | 15 |
+| oficial_verificado | 100.0 % | 100.0 % | 18 |
+| no_oficial | 89.4 % | 100.0 % | 42 |
+| no_determinable | 100.0 % | 88.9 % | 45 |
 
 Matriz de confusión (filas: esperado; columnas: obtenido, en el orden oficial_verificado / no_oficial / no_determinable):
 
 | esperado \ obtenido | oficial_verificado | no_oficial | no_determinable |
 | --- | --- | --- | --- |
-| oficial_verificado | 6 | 0 | 0 |
-| no_oficial | 0 | 14 | 0 |
-| no_determinable | 0 | 1 | 14 |
-
-## glm5.3-flash
-
-Fecha: 2026-10-22T18:15:14.039Z · commit: df0efbc · conjunto: `src/datos/evals/dev.json` · casos: 35 × 1
-
-- Accuracy: **77.1 %** (27/35) ❌ (puerta: ≥ 85 %)
-- Falsos `oficial_verificado`: **0** ✅ (puerta: 0)
-- Ejemplos de `datos/mensajes-ejemplo.json`: **9/10** ❌ (puerta: 10/10)
-- `no_oficial` → `no_determinable`: 2
-- Respuestas de reserva (modelo no disponible): 23
-- Casos inestables entre repeticiones: ninguno
-
-| Clase | Precisión | Recall | Casos |
-| --- | --- | --- | --- |
-| oficial_verificado | — | 0.0 % | 6 |
-| no_oficial | 100.0 % | 85.7 % | 14 |
-| no_determinable | 65.2 % | 100.0 % | 15 |
-
-Matriz de confusión (filas: esperado; columnas: obtenido, en el orden oficial_verificado / no_oficial / no_determinable):
-
-| esperado \ obtenido | oficial_verificado | no_oficial | no_determinable |
-| --- | --- | --- | --- |
-| oficial_verificado | 0 | 0 | 6 |
-| no_oficial | 0 | 12 | 2 |
-| no_determinable | 0 | 0 | 15 |
+| oficial_verificado | 18 | 0 | 0 |
+| no_oficial | 0 | 42 | 0 |
+| no_determinable | 0 | 5 | 40 |
