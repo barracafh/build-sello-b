@@ -10,8 +10,9 @@ const buttonVariants = cva(
         default: "bg-primary text-primary-foreground hover:bg-primary/80",
         // El sol se dibuja en al menos 134 px para que en botones cortos siga siendo una franja.
         // Entra despacio y sale rápido apagándose en lineal, sin pasar por tonos pardos.
+        // Se queda un 10 % por debajo del borde: más arriba, el naranja deja el texto por debajo de 4,5:1.
         sunset:
-          "relative isolate overflow-hidden bg-primary text-primary-foreground before:absolute before:inset-0 before:-z-1 before:rounded-[inherit] before:bg-(image:--brand-sun) before:bg-size-[max(100%,134px)_100%] before:bg-position-[50%_0] before:bg-no-repeat before:opacity-0 before:translate-y-[55%] before:[transition:opacity_200ms_linear,translate_200ms_ease] hover:before:opacity-100 hover:before:translate-y-0 hover:before:[transition:opacity_280ms_var(--ease-brand),translate_420ms_var(--ease-brand)] motion-reduce:before:translate-y-0",
+          "relative isolate overflow-hidden bg-primary text-primary-foreground before:absolute before:inset-0 before:-z-1 before:rounded-[inherit] before:bg-(image:--brand-sun) before:bg-size-[max(100%,134px)_100%] before:bg-position-[50%_0] before:bg-no-repeat before:opacity-0 before:translate-y-[55%] before:[transition:opacity_200ms_linear,translate_200ms_ease] hover:before:opacity-100 hover:before:translate-y-[10%] hover:before:[transition:opacity_280ms_var(--ease-brand),translate_420ms_var(--ease-brand)] motion-reduce:before:translate-y-[10%]",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
