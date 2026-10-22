@@ -3,6 +3,7 @@
 // No guarda ni registra el texto del ciudadano.
 import { completar as completarReal, type Mensaje, type OpcionesIa } from "./ia";
 import { SISTEMA, mensajeUsuario, type Determinista } from "./clasificar-prompt";
+import { fragmentosDelModelo, type Fragmento } from "./fragmentos";
 import type { Senal } from "./senales";
 import { neutralizar } from "./url";
 import { verificar, type Veredicto } from "./verificar";
@@ -15,16 +16,18 @@ export const TIMEOUT_MS = 8000;
 export const MODELO_POR_DEFECTO = "deepseek-v4-flash";
 
 export type SenalLlm = { codigo: string; evidencia: string; fuente: string };
+// El modelo puede citar dónde está la señal; la cita solo vale si está en el mensaje.
+export type SenalModelo = SenalLlm & { fragmento?: string | null };
 
 export type SalidaLlm = {
   veredicto: Veredicto;
   motivo: string;
-  señales: SenalLlm[];
+  señales: SenalModelo[];
   entidad_suplantada: string | null;
   web_oficial: string | null;
 };
 
-export type Clasificacion = SalidaLlm;
+export type Clasificacion = Omit<SalidaLlm, "señales"> & { señales: SenalLlm[] };
 
 const esTexto = (v: unknown): v is string => typeof v === "string";
 const esTextoONulo = (v: unknown): v is string | null => v === null || esTexto(v);
@@ -79,12 +82,17 @@ function webOficialSegura(propuesta: string | null): string | null {
   return r.veredicto === "oficial_verificado" ? (r.web_oficial ?? null) : null;
 }
 
+// Las mismas señales del modelo que entran en `combinarClasificacion`.
+const senalesDelModelo = (llm: SalidaLlm | null) =>
+  (llm?.señales ?? []).filter((s) => s.codigo !== "sin_senales").slice(0, 8);
+
 const sinDuplicados = (lista: SenalLlm[]) =>
   lista.filter((s, i) => lista.findIndex((x) => x.codigo === s.codigo) === i);
 
 // Orden de las reglas (contexto.md §1.1, §1.4):
 // 1. un `no_oficial` determinista gana siempre;
-// 2. sin salida del modelo: `no_determinable` («clasificador no disponible»);
+// 2. sin salida del modelo: «clasificador no disponible» y `no_determinable`,
+//    salvo un `oficial_verificado` de la URL, que se mantiene;
 // 3. el `oficial_verificado` solo viene de la comprobación de la URL: si el modelo
 //    lo dice, baja a `no_determinable`; y si la URL es oficial pero el modelo
 //    sospecha, también baja a `no_determinable`;
@@ -104,10 +112,7 @@ export function combinarClasificacion(
     entidad_suplantada: entidad,
     web_oficial,
   });
-  const delModelo = (llm?.señales ?? [])
-    .filter((s) => s.codigo !== "sin_senales")
-    .slice(0, 8)
-    .map((s) => ({ codigo: s.codigo, evidencia: limpio(s.evidencia), fuente: limpio(s.fuente, 40) }));
+  const delModelo = senalesDelModelo(llm).map((s) => ({ codigo: s.codigo, evidencia: limpio(s.evidencia), fuente: limpio(s.fuente, 40) }));
   const motivoLlm = llm ? limpio(llm.motivo) : "";
 
   if (resultado.veredicto === "no_oficial") {
@@ -117,7 +122,15 @@ export function combinarClasificacion(
       delModelo,
     );
   }
-  if (!llm) return salida("no_determinable", MOTIVO_NO_DISPONIBLE, []);
+  // Sin modelo, el `oficial_verificado` de la URL (LAB-34) se mantiene: la
+  // reserva solo sustituye al modelo, no a la comprobación determinista.
+  if (!llm) {
+    return salida(
+      resultado.veredicto === "oficial_verificado" ? "oficial_verificado" : "no_determinable",
+      MOTIVO_NO_DISPONIBLE,
+      [],
+    );
+  }
   if (resultado.veredicto === "oficial_verificado") {
     return llm.veredicto === "no_oficial"
       ? salida("no_determinable", motivoLlm, delModelo)
@@ -144,7 +157,7 @@ export async function clasificarMensaje(
   texto: string,
   det: Determinista,
   opciones: OpcionesClasificador = {},
-): Promise<Clasificacion> {
+): Promise<Clasificacion & { fragmentos: Fragmento[] }> {
   const completar = opciones.completar ?? completarReal;
   const signal = AbortSignal.timeout(opciones.timeoutMs ?? TIMEOUT_MS);
   let llm: SalidaLlm | null = null;
@@ -175,5 +188,8 @@ export async function clasificarMensaje(
   } catch {
     llm = null;
   }
-  return combinarClasificacion(llm, det);
+  return {
+    ...combinarClasificacion(llm, det),
+    fragmentos: fragmentosDelModelo(texto, senalesDelModelo(llm)),
+  };
 }
