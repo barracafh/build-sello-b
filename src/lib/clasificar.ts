@@ -12,7 +12,7 @@ export type { Determinista } from "./clasificar-prompt";
 export const MOTIVO_NO_DISPONIBLE = "clasificador no disponible";
 export const TIMEOUT_MS = 8000;
 // Id de DeepSeek Flash en HelmCode (GET /models). No es un secreto.
-export const MODELO_POR_DEFECTO = "deepseek-flash";
+export const MODELO_POR_DEFECTO = "deepseek-v4-flash";
 
 export type SenalLlm = { codigo: string; evidencia: string; fuente: string };
 
