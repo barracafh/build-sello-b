@@ -59,6 +59,12 @@ describe("combinarClasificacion", () => {
     assert.equal(MOTIVO_NO_DISPONIBLE, "clasificador no disponible");
   });
 
+  test("sin salida del modelo, un oficial_verificado de la URL se mantiene", () => {
+    const r = combinarClasificacion(null, determinista(OFICIAL));
+    assert.equal(r.veredicto, "oficial_verificado");
+    assert.equal(r.motivo, MOTIVO_NO_DISPONIBLE);
+  });
+
   test("un mensaje bien escrito sin otra señal es no_determinable", () => {
     const r = combinarClasificacion(llm(), determinista(NEUTRO));
     assert.equal(r.veredicto, "no_determinable");
@@ -115,6 +121,12 @@ describe("esSalidaLlm", () => {
     assert.ok(!esSalidaLlm({ ...llm(), motivo: undefined }));
     assert.ok(!esSalidaLlm(null));
     assert.ok(!esSalidaLlm("no_oficial"));
+  });
+  test("acepta una señal con «fragmento», sin él o con null", () => {
+    const señal = { codigo: "urgencia", evidencia: "e", fuente: "§1.4" };
+    assert.ok(esSalidaLlm(llm({ señales: [{ ...señal, fragmento: "24 horas" }] })));
+    assert.ok(esSalidaLlm(llm({ señales: [{ ...señal, fragmento: null }] })));
+    assert.ok(esSalidaLlm(llm({ señales: [señal] })));
   });
 });
 
@@ -203,6 +215,34 @@ describe("clasificarMensaje", () => {
       },
     });
     assert.ok(señal && !señal.aborted);
+  });
+
+  test("devuelve las citas del modelo que están en el mensaje, con el color de su código", async () => {
+    const señal = (codigo: string, fragmento: string) => ({ codigo, evidencia: "e", fuente: "§5.4", fragmento });
+    const r = await clasificarMensaje(FRAUDE, determinista(FRAUDE), {
+      completar: responde(
+        JSON.stringify(
+          llm({
+            veredicto: "no_oficial",
+            señales: [
+              señal("pide_dinero", "PAGUE su multa"),
+              señal("pide_datos", "introduzca su CVV"),
+              señal("urgencia", "en 24 horas"),
+            ],
+          }),
+        ),
+      ),
+    });
+    assert.deepEqual(
+      r.fragmentos.map((f) => [FRAUDE.slice(f.inicio, f.fin), f.nivel]),
+      [["pague su multa", "roja"], ["en 24 horas", "naranja"]],
+    );
+    assert.ok(r.señales.every((s) => !("fragmento" in s)));
+  });
+
+  test("sin modelo no hay citas", async () => {
+    const r = await clasificarMensaje(NEUTRO, det, { completar: responde("no es json") });
+    assert.deepEqual(r.fragmentos, []);
   });
 
   test("no escribe el texto en la consola", async () => {

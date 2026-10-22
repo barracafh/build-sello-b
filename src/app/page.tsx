@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { AnalizarMensaje } from "@/components/AnalizarMensaje";
 import { BotonAviso } from "@/components/BotonAviso";
+import { ModoEmergencia } from "@/components/ModoEmergencia";
 import { cn } from "@/lib/utils";
 import { mostrarCasosTest } from "@/lib/casos-test";
 import { avisosIncibe, linea017 } from "@/datos/incibe";
@@ -100,6 +101,11 @@ export default async function Home({
             }
           />
         </div>
+
+        <section aria-labelledby="emergencia-titulo" className="mt-12 border-t border-border pt-10">
+          <p id="emergencia-titulo" className="sr-only">Si ya has actuado</p>
+          <ModoEmergencia />
+        </section>
       </main>
 
       {/* Pie con la maqueta del equipo (estilo portal de la Administración), pero

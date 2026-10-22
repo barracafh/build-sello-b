@@ -72,10 +72,20 @@ const cerca = (a: string, b: string, n = 50) => {
 
 // Una frase que dice lo que el organismo NO hace no es una petición.
 const NEGACION = /\b(nunca|jam[aá]s|no le (?:pedir|solicit)|no (?:pedimos|solicitamos))/i;
+const FRASES = /(?<=[.!?\n])/;
 const sinNegaciones = (texto: string) =>
-  texto.split(/(?<=[.!?\n])/).filter((f) => !NEGACION.test(f)).join(" ");
+  texto.split(FRASES).filter((f) => !NEGACION.test(f)).join(" ");
 
 const CLAVE_PIN = /cl[@a]ve\s+(?:permanente\s+)?pin/gi;
+
+// Como `sinNegaciones` + `CLAVE_PIN`, pero con la misma longitud que el texto:
+// las frases negadas y «Cl@ve PIN» se quedan en blanco y los índices no se mueven.
+export const pedidoMismaLongitud = (texto: string) =>
+  texto
+    .split(FRASES)
+    .map((f) => (NEGACION.test(f) ? f.replace(/[^.!?\n]/g, " ") : f))
+    .join("")
+    .replace(CLAVE_PIN, (m) => " ".repeat(m.length));
 
 const URGENCIA = [
   regla(String.raw`(?:24|48|72)\s?(?:horas|h)`),
@@ -146,23 +156,34 @@ const LLAMADA = cerca(
 );
 const NUMERO = /(?<!\d)(?:\+?34[\s.-]?)?(\d(?:[\s.-]?\d){2,8})(?!\d)/g;
 
+// Grupos de reglas de cada señal, para subrayarlas en el mensaje (fragmentos.ts).
+export const REGLAS = { AMENAZA, URGENCIA, ORTOGRAFIA, DINERO, DATOS, QR, INSTRUCCION };
+
 const algunaCoincide = (patrones: RegExp[], texto: string) =>
   patrones.some((p) => p.test(texto));
 
-function telefonosAjenos(texto: string): string[] {
-  const salida: string[] = [];
-  for (const frase of texto.split(/(?<=[.!?\n])/)) {
+// Números a los que se pide llamar y que no son oficiales, con su posición.
+export function numerosAjenos(texto: string): { inicio: number; fin: number; digitos: string }[] {
+  const salida: { inicio: number; fin: number; digitos: string }[] = [];
+  let desde = 0;
+  for (const frase of texto.split(FRASES)) {
+    const base = desde;
+    desde += frase.length;
     if (!LLAMADA.test(frase)) continue;
     for (const m of frase.matchAll(NUMERO)) {
       const digitos = m[1].replace(/\D/g, "");
       if (digitos.length < 3 || /^807/.test(digitos)) continue;
-      if (!TELEFONOS_VERIFICADOS.has(digitos)) salida.push(digitos);
+      if (!TELEFONOS_VERIFICADOS.has(digitos)) {
+        salida.push({ inicio: base + m.index, fin: base + m.index + m[0].length, digitos });
+      }
     }
   }
   return salida;
 }
 
-const ESCAPES = [[/\[\.\]|\(\.\)|\[dot\]/gi, "."], [/\[@\]|\(at\)|\[at\]/gi, "@"]] as const;
+const telefonosAjenos = (texto: string) => numerosAjenos(texto).map((n) => n.digitos);
+
+export const ESCAPES = [[/\[\.\]|\(\.\)|\[dot\]/gi, "."], [/\[@\]|\(at\)|\[at\]/gi, "@"]] as const;
 const limpiar = (texto: string) =>
   ESCAPES.reduce((t, [de, a]) => t.replace(de, a), texto);
 
