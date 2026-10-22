@@ -23,8 +23,8 @@ type Caso = (typeof dev)[number];
 const casos: Caso[] = dev;
 
 describe("dev.json: esquema", () => {
-  test("35 casos con los campos exactos", () => {
-    assert.equal(casos.length, 35);
+  test("41 casos con los campos exactos", () => {
+    assert.equal(casos.length, 41);
     for (const c of casos) assert.deepEqual(Object.keys(c).sort(), CAMPOS, c.id);
   });
 
@@ -56,11 +56,15 @@ describe("dev.json: esquema", () => {
 });
 
 describe("dev.json: reparto", () => {
-  test("14 no_oficial, 15 no_determinable, 6 oficial_verificado", () => {
+  test("17 no_oficial, 18 no_determinable, 6 oficial_verificado", () => {
     const cuenta = (v: string) => casos.filter((c) => c.esperado === v).length;
-    assert.equal(cuenta("no_oficial"), 14);
-    assert.equal(cuenta("no_determinable"), 15);
+    assert.equal(cuenta("no_oficial"), 17);
+    assert.equal(cuenta("no_determinable"), 18);
     assert.equal(cuenta("oficial_verificado"), 6);
+  });
+
+  test("al menos 20 casos sintéticos (LAB-39)", () => {
+    assert.ok(casos.filter((c) => c.sintetico).length >= 20);
   });
 
   test("los 10 mensajes de ejemplo, con su veredicto del repo", () => {
