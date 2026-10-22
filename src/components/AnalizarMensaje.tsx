@@ -288,7 +288,9 @@ export function AnalizarMensaje({
   const frase = respuesta
     ? respuesta.clasificado
       ? respuesta.motivo === MOTIVO_NO_DISPONIBLE
-        ? "No hemos podido analizar el texto del mensaje ahora mismo, así que no podemos confirmar nada. Las señales que ves salen de reglas fijas."
+        ? respuesta.veredicto === "oficial_verificado"
+          ? "La dirección está en nuestra lista de webs oficiales. No hemos podido analizar el resto del texto ahora mismo."
+          : "No hemos podido analizar el texto del mensaje ahora mismo, así que no podemos confirmar nada. Las señales que ves salen de reglas fijas."
         : respuesta.motivo
       : soloRemitente
       ? frases.remitente_dominio_ajeno

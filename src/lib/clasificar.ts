@@ -84,7 +84,8 @@ const sinDuplicados = (lista: SenalLlm[]) =>
 
 // Orden de las reglas (contexto.md §1.1, §1.4):
 // 1. un `no_oficial` determinista gana siempre;
-// 2. sin salida del modelo: `no_determinable` («clasificador no disponible»);
+// 2. sin salida del modelo: «clasificador no disponible» y `no_determinable`,
+//    salvo un `oficial_verificado` de la URL, que se mantiene;
 // 3. el `oficial_verificado` solo viene de la comprobación de la URL: si el modelo
 //    lo dice, baja a `no_determinable`; y si la URL es oficial pero el modelo
 //    sospecha, también baja a `no_determinable`;
@@ -117,7 +118,15 @@ export function combinarClasificacion(
       delModelo,
     );
   }
-  if (!llm) return salida("no_determinable", MOTIVO_NO_DISPONIBLE, []);
+  // Sin modelo, el `oficial_verificado` de la URL (LAB-34) se mantiene: la
+  // reserva solo sustituye al modelo, no a la comprobación determinista.
+  if (!llm) {
+    return salida(
+      resultado.veredicto === "oficial_verificado" ? "oficial_verificado" : "no_determinable",
+      MOTIVO_NO_DISPONIBLE,
+      [],
+    );
+  }
   if (resultado.veredicto === "oficial_verificado") {
     return llm.veredicto === "no_oficial"
       ? salida("no_determinable", motivoLlm, delModelo)
