@@ -114,6 +114,11 @@ describe("6. dinero, pagos y datos sensibles", () => {
   test("tasas no pagadas → roja", () => {
     assert.equal(nivel("no se han pagado las tasas de aduana", "pide_dinero"), "roja");
   });
+  test("formas con terminación de pagar, abonar, deudas y facturas → roja", () => {
+    assert.equal(nivel("Correos: pagando la tasa de aduana de 2 euros", "pide_dinero"), "roja");
+    assert.equal(nivel("Agencia Tributaria: abonarla ahora evita recargos. Pague sus deudas aquí.", "pide_dinero"), "roja");
+    assert.equal(nivel("Correos: abone las facturas pendientes de su envío.", "pide_dinero"), "roja");
+  });
   test("tarjeta, CVV, PIN → roja", () => {
     assert.equal(nivel("Indique el CVV y el PIN", "pide_datos"), "roja");
   });
@@ -161,6 +166,22 @@ describe("6. dinero, pagos y datos sensibles", () => {
       assert.equal(veredicto(t), "no_determinable", t);
     }
   });
+  test("el organismo informando («facilitamos», «enviamos») no cuenta", () => {
+    const frases = [
+      "Seguridad Social: facilitamos el trámite: acceda a la sede con su DNI electrónico.",
+      "SEPE: le enviamos la resolución; consulte su DNI electrónico en la sede.",
+    ];
+    for (const t of frases) {
+      assert.ok(!codigos(t).includes("pide_datos"), t);
+      assert.equal(veredicto(t), "no_determinable", t);
+    }
+  });
+  test("formas dirigidas al ciudadano sí cuentan", () => {
+    assert.equal(nivel("Envíenos su DNI", "pide_datos"), "roja");
+    assert.equal(nivel("Facilítenos su NIE", "pide_datos"), "roja");
+    assert.equal(nivel("Proporcione su DNI", "pide_datos"), "roja");
+    assert.equal(nivel("Actualice su DNI", "pide_datos"), "roja");
+  });
   test("pedir el NIE sí cuenta", () => {
     assert.equal(nivel("Por favor, facilite su NIE", "pide_datos"), "roja");
   });
@@ -189,6 +210,9 @@ describe("7. QR e instrucciones no estándar", () => {
   });
   test("llamar a un número ajeno → naranja", () => {
     assert.equal(nivel(`Llame al ${tel("612", "345", "678")}`, "instruccion_rara"), "naranja");
+  });
+  test("llámenos a los teléfonos → naranja", () => {
+    assert.equal(nivel(`DGT: llámenos a los teléfonos ${tel("912", "345", "678").replaceAll(" ", "")}.`, "instruccion_rara"), "naranja");
   });
   test("017 y 060 → sin señal", () => {
     assert.ok(!codigos("Si dudas llama al 017 o al 060").includes("instruccion_rara"));

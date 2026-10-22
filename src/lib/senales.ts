@@ -96,10 +96,14 @@ const ORTOGRAFIA = [
   /\d¿|¿(?=\s|$)/,
   regla(PALABRAS_SIN_TILDE.join("|")),
 ];
+// Solo formas dirigidas al ciudadano: «facilitamos» o «enviamos» son del organismo.
+const PEDIR =
+  String.raw`facilite|facil[ií]tenos|env[ií]e|env[ií]enos|confirme|conf[ií]rmenos|proporcione|proporci[oó]nenos|actualice|indique|ind[ií]quenos|introduzca|introduce|comunique|comun[ií]quenos`;
+
 const DINERO = [
   cerca(
-    String.raw`pag(?:ar|ue|ues|a|o|ad[oa]s?)|abon(?:ar|e|o|ad[oa]s?)|ingres(?:ar|e)`,
-    String.raw`multas?|tasas?|recargo|importe|deuda|factura|aduana`,
+    String.raw`pag\p{L}*|abon\p{L}*|ingres(?:ar|e)`,
+    String.raw`multas?|tasas?|recargos?|importes?|deudas?|facturas?|aduanas?`,
     40,
   ),
 ];
@@ -107,13 +111,13 @@ const DATOS = [
   regla(String.raw`cvv2?|cvc|contrase[ñn]a|password|iban`),
   regla(String.raw`n[uú]mero de (?:la )?tarjeta|datos (?:bancarios|de (?:la |su )?tarjeta)|fecha de caducidad`),
   cerca(
-    String.raw`facilit\p{L}*|env[ií]\p{L}*|indi(?:que|ca)|confirm\p{L}*|introduzca|introduce|proporcion\p{L}*|actualic\p{L}*|comunique`,
+    PEDIR,
     String.raw`dni|nif|nie|pasaporte`,
     40,
   ),
   // El PIN solo cuenta si se pide o va junto a la tarjeta; «Cl@ve PIN» es un acceso oficial.
   cerca(
-    String.raw`facilit\p{L}*|env[ií]\p{L}*|indi(?:que|ca)|confirm\p{L}*|introduzca|introduce|proporcion\p{L}*|comunique`,
+    PEDIR,
     String.raw`pin`,
     25,
   ),
@@ -128,7 +132,7 @@ const INSTRUCCION = [
 // §5.6.3: los únicos números verificados.
 const TELEFONOS_VERIFICADOS = new Set(["060", "017", ["900", "116", "117"].join(""), ["91", "926", "79", "70"].join("")]);
 const LLAMADA = cerca(
-  String.raw`llam\p{L}*|contact\p{L}*|tel[eé]fono|telefonee`,
+  String.raw`llam\p{L}*|ll[aá]m\p{L}*|contact\p{L}*|tel[eé]fonos?|telefonee`,
   String.raw`\+?(?:34)?[\s.-]?\d[\d\s.-]{1,12}\d`,
   30,
 );
