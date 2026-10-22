@@ -849,7 +849,6 @@ export function AnalizarMensaje({
         <div className="lg:col-span-2 lg:row-start-3">
           <CompartirFamilia
             titulo="Mándaselo a tu familia"
-            explicacion="Va el mensaje que has comprobado, con sus enlaces desactivados, y el resultado. Quita antes lo que sea personal."
             texto={textoParaFamilia(mensaje, respuesta)}
           />
         </div>
