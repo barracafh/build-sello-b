@@ -348,5 +348,65 @@
     "sintetico": true,
     "canal": "sms",
     "etiqueta_origen": "oficial_verificado"
+  },
+  {
+    "id": "dev-36",
+    "texto": "SEPE: Tiene una nueva comunicación sobre su prestación por desempleo. Puede consultarla accediendo por sus propios medios a la sede electrónica del SEPE.",
+    "esperado": "no_determinable",
+    "motivo_esperado": "Aviso legítimo sin enlace que remite a la sede: es compatible con el modelo oficial, pero sin enlace no hay nada que verificar (§5.4, §5.6).",
+    "fuente": "contexto.md §5.4",
+    "sintetico": true,
+    "canal": "sms",
+    "etiqueta_origen": "no_determinable"
+  },
+  {
+    "id": "dev-37",
+    "texto": "Seguridad Social: ÚLTIMO AVISO. Su expediente se cerrará hoy si no lo revisa. Entre en la sede electrónica con su Cl@ve.",
+    "esperado": "no_determinable",
+    "motivo_esperado": "Urgencia sin enlace y sin pedir datos bancarios, claves ni códigos: no hay señal concluyente (§5.6, paso 4).",
+    "fuente": "contexto.md §5.6",
+    "sintetico": true,
+    "canal": "sms",
+    "etiqueta_origen": "no_determinable"
+  },
+  {
+    "id": "dev-38",
+    "texto": "AEAT: Su devolución de la renta se anulará en 2 horas. Para confirmarla, responda a este SMS con el código que acaba de recibir en su móvil.",
+    "esperado": "no_oficial",
+    "motivo_esperado": "Sin enlace, pero pide en nombre de la AEAT un código recibido, con urgencia (§4.2, §5.6, paso 4).",
+    "fuente": "contexto.md §5.6",
+    "sintetico": true,
+    "canal": "sms",
+    "etiqueta_origen": "no_oficial"
+  },
+  {
+    "id": "dev-39",
+    "texto": "De: notificaciones[@]dgt-avisos.example. Asunto: DGT – Notificación de sanción. Tiene una notificación pendiente sobre su vehículo. Consúltela en https://dgt-avisos.example/notificacion",
+    "esperado": "no_oficial",
+    "motivo_esperado": "Remitente con el nombre de la DGT en otro dominio, y el enlace va a ese mismo dominio ajeno (§1.4, §5.4).",
+    "fuente": "contexto.md §5.4",
+    "sintetico": true,
+    "canal": "email",
+    "etiqueta_origen": "no_oficial"
+  },
+  {
+    "id": "dev-40",
+    "texto": "Correos: su envío tiene una incidencia en la entrega. Revise el estado en https://bit.ly/4zEjemplo",
+    "esperado": "no_determinable",
+    "motivo_esperado": "Acortador sin resolver: no se puede saber adónde lleva y no pide pago ni datos, así que nombrar a Correos no basta para concluir (§5.2, §5.4).",
+    "fuente": "contexto.md §5.2",
+    "sintetico": true,
+    "canal": "sms",
+    "etiqueta_origen": "no_determinable"
+  },
+  {
+    "id": "dev-41",
+    "texto": "Seguridad Social: tiene pendiente la actualización de sus datos de afiliación. Hágalo en https://sede.seg-social.gob.es.ejemplo.example/afiliacion",
+    "esperado": "no_oficial",
+    "motivo_esperado": "Dominio oficial usado como subdominio de un tercero (ejemplo.example) (§5.3).",
+    "fuente": "contexto.md §5.3",
+    "sintetico": true,
+    "canal": "sms",
+    "etiqueta_origen": "no_oficial"
   }
 ]
