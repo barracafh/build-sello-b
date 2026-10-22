@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { ExternalLink, Phone } from "lucide-react";
+import { ExternalLink, Link2, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ruta } from "@/config/sitio";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import {
   deEntidad,
   fichaDe,
   leerRespuesta,
+  mesDe,
   miles,
   webOficial,
   type Respuesta,
@@ -23,6 +24,18 @@ import ejemplos from "../../datos/mensajes-ejemplo.json";
 
 // El texto vive en el estado del navegador y se envía solo a /api/verificar,
 // que no lo guarda ni lo registra.
+//
+// Enlace para compartir: el mensaje va en el fragmento (#mensaje=…), que el
+// navegador nunca envía al servidor, así que no acaba en ningún log.
+const CLAVE_ENLACE = "mensaje";
+
+const mensajeDelEnlace = () => {
+  const valor = new URLSearchParams(window.location.hash.slice(1)).get(CLAVE_ENLACE);
+  return valor?.trim() ? valor : null;
+};
+
+const quitarDelEnlace = () =>
+  history.replaceState(null, "", window.location.pathname + window.location.search);
 const LIMITE = 2000;
 // El contador solo aparece cuando falta poco para el límite.
 const AVISO_LIMITE = 1800;
@@ -99,7 +112,8 @@ const contextoMd = (señales: Respuesta["señales"]) => {
 
 // `intro` va encima del formulario, en su columna: así el panel de ejemplos
 // arranca a la altura de la entradilla en escritorio. Los ejemplos solo se
-// enseñan con `conEjemplos` (la página lo activa con ?casos-test).
+// enseñan con `conEjemplos`: la página lo activa por defecto y lo apaga con
+// ?casos-test=false o =0. TODO(prod): volver a ocultarlo por defecto.
 export function AnalizarMensaje({
   intro,
   conEjemplos = false,
@@ -113,6 +127,7 @@ export function AnalizarMensaje({
   // Solo los errores del mensaje marcan el campo como no válido; los de red, no.
   const [error, setError] = useState<{ texto: string; delCampo: boolean } | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [avisoEnlace, setAvisoEnlace] = useState<string | null>(null);
   const campoRef = useRef<HTMLTextAreaElement>(null);
   const comprobarRef = useRef<HTMLButtonElement>(null);
   const tituloRef = useRef<HTMLHeadingElement>(null);
@@ -135,11 +150,13 @@ export function AnalizarMensaje({
     setRespuesta(null);
     setError(null);
     setEnviando(false);
+    setAvisoEnlace(null);
   }
 
-  // Al empezar de nuevo, el foco vuelve al campo.
+  // Al empezar de nuevo, el foco vuelve al campo y el enlace deja de llevar el mensaje.
   function cargar(texto: string) {
     cambiar(texto);
+    quitarDelEnlace();
     campoRef.current?.focus();
   }
 
@@ -150,16 +167,16 @@ export function AnalizarMensaje({
     comprobarRef.current?.focus();
   }
 
-  async function analizar(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function comprobar(texto: string) {
     setRespuesta(null);
-    if (mensaje.trim().length === 0) {
+    setAvisoEnlace(null);
+    if (texto.trim().length === 0) {
       setError({ texto: "Escribe o pega un mensaje antes de comprobar.", delCampo: true });
       return;
     }
-    if (mensaje.length > LIMITE) {
+    if (texto.length > LIMITE) {
       setError({
-        texto: `El mensaje es demasiado largo: tiene ${miles(mensaje.length)} caracteres y el máximo es ${miles(LIMITE)}.`,
+        texto: `El mensaje es demasiado largo: tiene ${miles(texto.length)} caracteres y el máximo es ${miles(LIMITE)}.`,
         delCampo: true,
       });
       return;
@@ -171,7 +188,7 @@ export function AnalizarMensaje({
     try {
       const res = await fetch(ruta("/api/verificar"), {
         method: "POST",
-        body: JSON.stringify({ texto: mensaje }),
+        body: JSON.stringify({ texto }),
       });
       if (res.ok) datos = leerRespuesta(await res.json());
     } catch {
@@ -182,6 +199,43 @@ export function AnalizarMensaje({
     setEnviando(false);
     if (datos) setRespuesta(datos);
     else setError({ texto: "No hemos podido comprobarlo. Inténtalo de nuevo.", delCampo: false });
+  }
+
+  function analizar(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void comprobar(mensaje);
+  }
+
+  // Si se abre un enlace con #mensaje=…, se rellena la caja y se comprueba solo.
+  // También al pegar otro enlace en la misma pestaña (hashchange).
+  const comprobarActual = useRef(comprobar);
+  comprobarActual.current = comprobar;
+  useEffect(() => {
+    function desdeEnlace() {
+      const texto = mensajeDelEnlace();
+      if (!texto) return;
+      peticion.current++;
+      setMensaje(texto);
+      void comprobarActual.current(texto);
+    }
+    desdeEnlace();
+    window.addEventListener("hashchange", desdeEnlace);
+    return () => window.removeEventListener("hashchange", desdeEnlace);
+  }, []);
+
+  async function copiarEnlace() {
+    const params = new URLSearchParams({ [CLAVE_ENLACE]: mensaje });
+    const enlace = `${window.location.origin}${window.location.pathname}${window.location.search}#${params}`;
+    // También en la barra de direcciones, por si el portapapeles no deja copiar.
+    history.replaceState(null, "", enlace);
+    try {
+      await navigator.clipboard.writeText(enlace);
+      setAvisoEnlace("Enlace copiado. Quien lo abra verá este mensaje y su resultado.");
+    } catch {
+      setAvisoEnlace(
+        "No hemos podido copiarlo. El enlace ya está en la barra de direcciones: cópialo desde ahí.",
+      );
+    }
   }
 
   const ficha = respuesta ? fichaDe(respuesta.veredicto) : null;
@@ -218,6 +272,10 @@ export function AnalizarMensaje({
         linea017,
       ].filter((f, i, todas) => todas.findIndex((o) => o.url === f.url) === i)
     : [];
+  // Cada verificador con su web, una sola vez (LAB-45).
+  const verificadores = (respuesta?.desmentidos ?? [])
+    .map((d) => ({ nombre: d.editor, url: new URL(d.url).origin }))
+    .filter((f, i, todas) => todas.findIndex((o) => o.url === f.url) === i);
   const cercaDelLimite = mensaje.length >= AVISO_LIMITE;
 
   return (
@@ -473,6 +531,42 @@ export function AnalizarMensaje({
             )}
           </Card>
 
+          {respuesta.desmentidos.length > 0 && (
+            // Señal de apoyo: enlaza los desmentidos, nunca la dirección analizada.
+            <Card
+              render={<section aria-labelledby={`${id}-desmentidos`} />}
+              className="gap-3 px-6 py-6 text-lg md:px-8 md:py-8"
+            >
+              <h3 id={`${id}-desmentidos`} className="text-xl font-semibold">
+                Ya lo han desmentido
+              </h3>
+              <p className="text-base text-(--text-secondary)">
+                Verificadores de noticias han publicado sobre mensajes parecidos a este.
+                {respuesta.veredicto !== "no_oficial" &&
+                  " Eso no prueba por sí solo que este sea falso."}
+              </p>
+              <ul className="grid gap-2">
+                {respuesta.desmentidos.map((d) => (
+                  <li key={d.url}>
+                    <a
+                      href={d.url}
+                      className="flex min-h-11 items-center justify-between gap-4 rounded-lg px-3 py-2 ring-1 ring-foreground/10 transition-colors outline-none hover:bg-muted focus-visible:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
+                    >
+                      <span className="min-w-0 [overflow-wrap:anywhere]">
+                        <span className="block font-medium">{d.editor}</span>
+                        <span className="block text-base text-(--text-secondary)">
+                          «{d.calificacion}»
+                          {mesDe(d.fecha) && ` · ${mesDe(d.fecha)}`}
+                        </span>
+                      </span>
+                      <span aria-hidden="true">↗</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+
           {/* 2 · Qué hacer ahora: fondo beige (naranja de marca al 10 %), pasos
               numerados y, si toca, la línea 017. */}
           {(ficha.pasos.length > 0 || ficha.ofrece017 || hayRoja) && (
@@ -538,7 +632,7 @@ export function AnalizarMensaje({
             aria-label="Fuentes y datos de la comprobación"
             className="rounded-xl bg-(--azul-importass) px-6 py-6 text-background md:px-8 md:py-8"
           >
-            <Fuentes fuentes={fuentes} />
+            <Fuentes fuentes={fuentes} verificadores={verificadores} />
             <ul className="mt-6 text-base text-background/90">
               <li>
                 Reputación del enlace:{" "}
@@ -555,15 +649,37 @@ export function AnalizarMensaje({
             </ul>
           </section>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            onClick={() => cargar("")}
-            className="h-12 px-5 text-lg max-sm:w-full"
-          >
-            Comprobar otro mensaje
-          </Button>
+          <div>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={copiarEnlace}
+                className="h-12 gap-2 px-5 text-lg max-sm:w-full"
+              >
+                <Link2 aria-hidden="true" className="size-5" />
+                Copiar enlace a este resultado
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={() => cargar("")}
+                className="h-12 px-5 text-lg max-sm:w-full"
+              >
+                Comprobar otro mensaje
+              </Button>
+            </div>
+            <p className="mt-3 text-base text-(--text-secondary)">
+              El mensaje va dentro del enlace y no llega a nuestro servidor, pero
+              quien tenga el enlace podrá leerlo. No lo compartas si lleva datos
+              personales.
+            </p>
+            <p role="status" className="mt-2 text-base font-medium empty:mt-0">
+              {avisoEnlace}
+            </p>
+          </div>
         </section>
       )}
     </div>

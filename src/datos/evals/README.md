@@ -1,6 +1,6 @@
 ## Conjunto de evaluación del clasificador
 
-50 casos curados a mano para evaluar el veredicto de Sello: 35 de desarrollo (`dev.json`, en el repo) y 15 de prueba que no se suben nunca. `bun run eval` (LAB-39) carga solo `dev.json`. `dev.test.ts` comprueba el esquema, el reparto, que no haya datos personales con aspecto real y que los casos `oficial_verificado` pasen el verificador determinista.
+50 casos curados a mano para evaluar el veredicto de Sello: 35 de desarrollo (`dev.json`, en el repo) y 15 de prueba que no se suben nunca. `bun run eval` (LAB-39) carga solo `dev.json`, a través de `dev.ts`. `dev.test.ts` comprueba el esquema, el reparto, que no haya datos personales con aspecto real y que los casos `oficial_verificado` pasen el verificador determinista.
 
 ## Formato
 
@@ -18,6 +18,8 @@ Una lista de objetos con estos campos:
 | `etiqueta_origen` | La etiqueta de la fuente: el veredicto del repo, `phishing`/`legitimo` (SpaPhish) o `spam`/`ham` (spam_ham_spanish)      |
 
 Las filas de spam_ham_spanish se cuentan desde 1 sin la cabecera.
+
+Los remitentes de correo que son fraudes publicados o direcciones oficiales (dev-12, dev-13, dev-17) llevan `[@]` en lugar de `@`, para que `buildnight revisar` no los tome por datos personales. Cargad siempre los casos con `dev.ts`, que devuelve el texto con la arroba real; no importéis `dev.json` directamente. `dev.test.ts` comprueba que no quede ningún `[@]` en lo que ve el clasificador.
 
 ## Fuentes y licencias
 

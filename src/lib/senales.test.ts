@@ -105,14 +105,83 @@ describe("5. remitente con el nombre del servicio y otro dominio", () => {
   test("remitente sin marca → sin señal", () => {
     assert.ok(!codigos(`De: juan${A}ejemplo.com Hola`).includes("remitente_falso"));
   });
+  test("«clave» o «hacienda» en la dirección no bastan → sin señal", () => {
+    assert.ok(!codigos(`De: juan.clave${A}gmail.com Hola`).includes("remitente_falso"));
+    assert.ok(!codigos(`De: info${A}hacienda-lasrosas.com Hola`).includes("remitente_falso"));
+  });
+  test("marca por token en la dirección y dominio ajeno → roja", () => {
+    assert.equal(nivel(`De: dgt-multas${A}gmail.com Pague ya`, "remitente_falso"), "roja");
+  });
+  test("nombre visible con marca y correo gratuito → roja", () => {
+    assert.equal(nivel(`De: Agencia Tributaria <x${A}gmail.com>`, "remitente_falso"), "roja");
+  });
 });
 
 describe("6. dinero, pagos y datos sensibles", () => {
   test("pagar la multa → roja", () => {
     assert.equal(nivel("Debe pagar su multa hoy", "pide_dinero"), "roja");
   });
-  test("tasas no pagadas → roja", () => {
-    assert.equal(nivel("no se han pagado las tasas de aduana", "pide_dinero"), "roja");
+  test("imperativos dirigidos al ciudadano → roja (P5–P7)", () => {
+    // P5 se reescribe en imperativo: «pagando la tasa» solo describe, no pide.
+    assert.equal(nivel("Correos: pague la tasa de aduana de 2 euros", "pide_dinero"), "roja");
+    assert.equal(nivel("Agencia Tributaria: abonarla ahora evita recargos. Pague sus deudas aquí.", "pide_dinero"), "roja");
+    assert.equal(nivel("Correos: abone las facturas pendientes de su envío.", "pide_dinero"), "roja");
+    assert.equal(nivel("Ingrese 2 euros para liberar su envío.", "pide_dinero"), "roja");
+    assert.equal(nivel("Transfieran el importe hoy.", "pide_dinero"), "roja");
+    assert.equal(nivel("Realice el pago de la tasa.", "pide_dinero"), "roja");
+    assert.equal(nivel("Efectúe el ingreso antes del viernes.", "pide_dinero"), "roja");
+  });
+  test("«ingrese» con dinero detrás → roja", () => {
+    assert.equal(nivel("Ingrese 50 € en la cuenta indicada.", "pide_dinero"), "roja");
+    assert.equal(nivel("Ingrese el importe antes del viernes.", "pide_dinero"), "roja");
+    assert.equal(nivel("Correos: ingrese 1.500,00 euros hoy.", "pide_dinero"), "roja");
+    assert.equal(nivel("Ingrese en la cuenta indicada la cantidad pendiente.", "pide_dinero"), "roja");
+    assert.equal(nivel("Ingresen en esta cuenta bancaria el recargo.", "pide_dinero"), "roja");
+    assert.equal(nivel("Ingrese en la cuenta número 0000 0000.", "pide_dinero"), "roja");
+    assert.equal(nivel("Ingrese en la cuenta ES00 0000 0000 00 0000000000.", "pide_dinero"), "roja");
+  });
+  test("«ingrese» como entrar no cuenta", () => {
+    const frases = [
+      "Agencia Tributaria: ingrese en la sede con Cl@ve para consultar la notificación.",
+      "Seguridad Social: ingrese en su área personal.",
+      "Agencia Tributaria: ingrese en su cuenta de Cl@ve para consultar la notificación.",
+      "Seguridad Social: ingrese en su cuenta de Import@ss para ver su vida laboral.",
+      "DGT: ingrese en la cuenta de usuario de la sede para consultar sus puntos.",
+      "SEPE: ingresen en su cuenta personal para descargar el certificado.",
+    ];
+    for (const t of frases) {
+      assert.ok(!codigos(t).includes("pide_dinero"), t);
+      assert.equal(veredicto(t), "no_determinable", t);
+    }
+  });
+  test("infinitivo tras obligación o finalidad → roja (F02)", () => {
+    assert.equal(nivel("DGT: Dispone de 24 horas restantes para pagar su multa.", "pide_dinero"), "roja");
+    assert.equal(nivel("Tiene que abonar la tasa.", "pide_dinero"), "roja");
+    assert.equal(nivel("Deberá transferir el importe.", "pide_dinero"), "roja");
+  });
+  test("«puede pagar» informa, no pide", () => {
+    const frases = [
+      "Agencia Tributaria: puede pagar sus impuestos en la sede electrónica con Cl@ve.",
+      "Agencia Tributaria: si lo desea, puede pagar la deuda en la sede.",
+    ];
+    for (const t of frases) {
+      assert.ok(!codigos(t).includes("pide_dinero"), t);
+      assert.equal(veredicto(t), "no_determinable", t);
+    }
+  });
+  test("un sustantivo solo o «pagina» sin tilde no cuentan", () => {
+    const frases = [
+      "Agencia Tributaria: consulte en la pagina de la sede el importe de la tasa.",
+      "Agencia Tributaria: el importe de su devolución aparece en la paginación de la sede.",
+      "SEPE: el pago de la prestación y los calendarios se publican en la sede.",
+      "Seguridad Social: en la sede puede ver sus pagos y el importe pendiente.",
+      "Correos: no se han pagado las tasas de aduana; consulte la sede.",
+      "Agencia Tributaria: el recargo y la deuda figuran en la sede.",
+    ];
+    for (const t of frases) {
+      assert.ok(!codigos(t).includes("pide_dinero"), t);
+      assert.equal(veredicto(t), "no_determinable", t);
+    }
   });
   test("tarjeta, CVV, PIN → roja", () => {
     assert.equal(nivel("Indique el CVV y el PIN", "pide_datos"), "roja");
@@ -161,6 +230,22 @@ describe("6. dinero, pagos y datos sensibles", () => {
       assert.equal(veredicto(t), "no_determinable", t);
     }
   });
+  test("el organismo informando («facilitamos», «enviamos») no cuenta", () => {
+    const frases = [
+      "Seguridad Social: facilitamos el trámite: acceda a la sede con su DNI electrónico.",
+      "SEPE: le enviamos la resolución; consulte su DNI electrónico en la sede.",
+    ];
+    for (const t of frases) {
+      assert.ok(!codigos(t).includes("pide_datos"), t);
+      assert.equal(veredicto(t), "no_determinable", t);
+    }
+  });
+  test("formas dirigidas al ciudadano sí cuentan", () => {
+    assert.equal(nivel("Envíenos su DNI", "pide_datos"), "roja");
+    assert.equal(nivel("Facilítenos su NIE", "pide_datos"), "roja");
+    assert.equal(nivel("Proporcione su DNI", "pide_datos"), "roja");
+    assert.equal(nivel("Actualice su DNI", "pide_datos"), "roja");
+  });
   test("pedir el NIE sí cuenta", () => {
     assert.equal(nivel("Por favor, facilite su NIE", "pide_datos"), "roja");
   });
@@ -189,6 +274,9 @@ describe("7. QR e instrucciones no estándar", () => {
   });
   test("llamar a un número ajeno → naranja", () => {
     assert.equal(nivel(`Llame al ${tel("612", "345", "678")}`, "instruccion_rara"), "naranja");
+  });
+  test("llámenos a los teléfonos → naranja", () => {
+    assert.equal(nivel(`DGT: llámenos a los teléfonos ${tel("912", "345", "678").replaceAll(" ", "")}.`, "instruccion_rara"), "naranja");
   });
   test("017 y 060 → sin señal", () => {
     assert.ok(!codigos("Si dudas llama al 017 o al 060").includes("instruccion_rara"));
@@ -247,7 +335,8 @@ describe("combinar con el veredicto", () => {
     assert.equal(combinar(r, senales(t, r), t).url_analizada, "dgt[.]es[.]multas-pago[.]com");
   });
   test("web oficial citada con remitente ajeno sigue en no_oficial", () => {
-    const t = "De: avisos@dgt-multas.com. Para pagar la multa con descuento acceda a sede.dgt.gob.es";
+    const remitente = ["avisos", "dgt-multas.com"].join("@");
+    const t = `De: ${remitente}. Para pagar la multa con descuento acceda a sede.dgt.gob.es`;
     const r = verificar(t);
     assert.equal(r.veredicto, "no_oficial");
     assert.equal(combinar(r, senales(t, r), t).veredicto, "no_oficial");

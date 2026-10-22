@@ -2,7 +2,7 @@ import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import { NOMBRES_EJEMPLOS } from "@/datos/ejemplos";
 import ejemplos from "../../datos/mensajes-ejemplo.json";
-import { VEREDICTOS, deEntidad, fichaDe, leerRespuesta, miles, webOficial } from "./veredicto";
+import { VEREDICTOS, deEntidad, fichaDe, leerRespuesta, mesDe, miles, webOficial } from "./veredicto";
 
 describe("fichaDe", () => {
   test("un veredicto desconocido es la duda, nunca «oficial»", () => {
@@ -62,7 +62,7 @@ describe("webOficial", () => {
     assert.equal(webOficial("hxxps://dgt[.]es"), null);
     assert.equal(webOficial("http://sede.dgt.gob.es"), null);
     assert.equal(webOficial("https://dgt-multas-pago.com/expediente"), null);
-    assert.equal(webOficial("https://sede.dgt.gob.es@dgt-multas-pago.com"), null);
+    assert.equal(webOficial(["https://sede.dgt.gob.es", "dgt-multas-pago.com"].join("@")), null);
     assert.equal(webOficial(null), null);
   });
 
@@ -104,6 +104,7 @@ describe("leerRespuesta", () => {
         motivo: null,
         señales: [],
         entidad_suplantada: null,
+        desmentidos: [],
       },
     );
   });
@@ -122,6 +123,31 @@ describe("leerRespuesta", () => {
     assert.equal(r?.entidad_suplantada, "DGT");
   });
 
+  test("solo deja desmentidos completos con enlace https", () => {
+    const bueno = {
+      editor: "Maldita.es",
+      sitio: "maldita.es",
+      calificacion: "Falso",
+      url: "https://maldita.es/x",
+      fecha: "2025-03-01T00:00:00Z",
+    };
+    const respuesta = leerRespuesta({
+      veredicto: "no_oficial",
+      desmentidos: [
+        bueno,
+        { ...bueno, url: "javascript:alert(1)" },
+        { ...bueno, url: "http://maldita.es/y" },
+        { ...bueno, editor: 3 },
+        { editor: "Newtral", calificacion: "Bulo", url: "https://newtral.es/z" },
+      ],
+    });
+    assert.deepEqual(respuesta?.desmentidos, [
+      bueno,
+      { editor: "Newtral", sitio: null, calificacion: "Bulo", url: "https://newtral.es/z", fecha: null },
+    ]);
+    assert.deepEqual(leerRespuesta({ veredicto: "no_oficial", desmentidos: "no_consultado" })?.desmentidos, []);
+  });
+
   test("neutraliza la URL analizada aunque llegue viva", () => {
     const respuesta = leerRespuesta({ veredicto: "no_oficial", url_analizada: "https://dgt-multas.com/x" });
     assert.equal(respuesta?.url_analizada, "hxxps://dgt-multas[.]com/x");
@@ -132,6 +158,12 @@ test("cada ejemplo tiene un nombre propio y no se repiten", () => {
   const nombres = ejemplos.map((caso) => NOMBRES_EJEMPLOS[caso.id]);
   for (const [i, nombre] of nombres.entries()) assert.ok(nombre, ejemplos[i].id);
   assert.equal(new Set(nombres).size, ejemplos.length);
+});
+
+test("mesDe", () => {
+  assert.equal(mesDe("2025-03-01T00:00:00Z"), "marzo de 2025");
+  assert.equal(mesDe("no es fecha"), null);
+  assert.equal(mesDe(null), null);
 });
 
 test("miles", () => {

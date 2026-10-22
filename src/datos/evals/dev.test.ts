@@ -1,10 +1,11 @@
-// Comprueba el conjunto dev de evaluación. Solo lee dev.json: el conjunto de
-// prueba vive fuera del repo y ningún test lo abre.
+// Comprueba el conjunto dev de evaluación. Solo lee dev.json (a través de
+// dev.ts): el conjunto de prueba vive fuera del repo y ningún test lo abre.
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { parse } from "tldts";
-import dev from "./dev.json";
+import crudo from "./dev.json";
+import { ARROBA, dev } from "./dev";
 import ejemplos from "../../../datos/mensajes-ejemplo.json";
 import dominios from "../../../datos/dominios-oficiales.json";
 import { indicadores } from "../indicadores";
@@ -112,6 +113,31 @@ describe("dev.json: sin datos personales con aspecto real", () => {
       assert.doesNotMatch(texto, /\b[XYZ]\d{7}[A-HJ-NP-TV-Z]\b/, "NIE");
     });
   }
+});
+
+describe("dev.ts: arroba de los remitentes", () => {
+  test("dev.json guarda los remitentes con el marcador", () => {
+    for (const id of ["dev-12", "dev-13", "dev-17"]) {
+      assert.ok(crudo.find((c) => c.id === id)?.texto.includes(ARROBA), id);
+    }
+  });
+
+  test("ningún texto cargado conserva el marcador", () => {
+    for (const c of casos) assert.ok(!c.texto.includes(ARROBA), c.id);
+  });
+
+  test("los remitentes cargados llevan una arroba real", () => {
+    // Por trozos, para que `buildnight revisar` no los tome por correos personales.
+    const remitentes = {
+      "dev-12": ["carpetaciudadana", "info.com.es"],
+      "dev-13": ["notificaciones", "policiaciberdelincuencia.com"],
+      "dev-17": ["correos", "correos.com"],
+    };
+    for (const [id, trozos] of Object.entries(remitentes)) {
+      const remitente = trozos.join("@");
+      assert.ok(casos.find((c) => c.id === id)?.texto.includes(`De: ${remitente}.`), id);
+    }
+  });
 });
 
 describe("dev.json: oficial_verificado pasa el verificador determinista", () => {

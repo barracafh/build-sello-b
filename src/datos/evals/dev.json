@@ -111,7 +111,7 @@
   },
   {
     "id": "dev-12",
-    "texto": "De: carpetaciudadana@info.com.es. Asunto: Ingreso disponible – importe 552,97 €. Le informamos de que tiene un ingreso disponible en Mi Carpeta Ciudadana conforme a la Ley 39/2015. Para gestionarlo, responda a este correo indicando su nombre completo y su número de cuenta.",
+    "texto": "De: carpetaciudadana[@]info.com.es. Asunto: Ingreso disponible – importe 552,97 €. Le informamos de que tiene un ingreso disponible en Mi Carpeta Ciudadana conforme a la Ley 39/2015. Para gestionarlo, responda a este correo indicando su nombre completo y su número de cuenta.",
     "esperado": "no_oficial",
     "motivo_esperado": "Remitente publicado por INCIBE (info.com.es) y petición de responder con datos bancarios (§5.4, §5.6).",
     "fuente": "contexto.md §4.4",
@@ -121,7 +121,7 @@
   },
   {
     "id": "dev-13",
-    "texto": "De: notificaciones@policiaciberdelincuencia.com. Asunto: Citación judicial. La Policía Nacional, en colaboración con Europol e INCIBE, le comunica que se ha abierto una investigación por delitos informáticos a su nombre. Dispone de 72 horas para responder a este correo; de lo contrario, su caso se publicará en los medios.",
+    "texto": "De: notificaciones[@]policiaciberdelincuencia.com. Asunto: Citación judicial. La Policía Nacional, en colaboración con Europol e INCIBE, le comunica que se ha abierto una investigación por delitos informáticos a su nombre. Dispone de 72 horas para responder a este correo; de lo contrario, su caso se publicará en los medios.",
     "esperado": "no_oficial",
     "motivo_esperado": "Remitente publicado por INCIBE y amenaza de publicación en 72 h en nombre de la Policía (§5.4).",
     "fuente": "contexto.md §4.4",
@@ -161,7 +161,7 @@
   },
   {
     "id": "dev-17",
-    "texto": "De: correos@correos.com. Asunto: Tu envío está en camino. Hola, tu envío con referencia PQ00000000000000000000 está en reparto. Puedes seguirlo en el Localizador de Envíos de www.correos.es o en la app de Correos. Código seguro: XXXX-XXXX (recuadro amarillo al final del mensaje).",
+    "texto": "De: correos[@]correos.com. Asunto: Tu envío está en camino. Hola, tu envío con referencia PQ00000000000000000000 está en reparto. Puedes seguirlo en el Localizador de Envíos de www.correos.es o en la app de Correos. Código seguro: XXXX-XXXX (recuadro amarillo al final del mensaje).",
     "esperado": "no_determinable",
     "motivo_esperado": "Aviso de envío sin pago; el remitente oficial se puede falsificar.",
     "fuente": "repo:mensajes-ejemplo:L03",
