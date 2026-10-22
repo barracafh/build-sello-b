@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { enlaceWhatsApp } from "@/lib/compartir";
 import { diccionario, type Idioma } from "@/i18n";
 
-const boton = "h-12 gap-2 px-5 text-lg max-sm:w-full";
+// Con altura libre: en euskera algunos textos no caben en una línea a 320 px.
+const boton = "h-auto min-h-12 gap-2 px-5 py-2 text-lg whitespace-normal max-sm:w-full";
 
 // Enseña el texto que se va a mandar en una caja como la principal, editable,
 // y lo envía por WhatsApp, por el menú de compartir del móvil o copiándolo. El

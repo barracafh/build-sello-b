@@ -370,7 +370,7 @@ export function AnalizarMensaje({
               focusableWhenDisabled
               aria-describedby={`${id}-imagen-ayuda`}
               onClick={() => imagenRef.current?.click()}
-              className="h-12 gap-2 px-5 text-lg max-sm:w-full"
+              className="h-auto min-h-12 gap-2 px-5 py-2 text-lg whitespace-normal max-sm:w-full"
             >
               <ImageUp aria-hidden="true" className="size-5" />
               {leyendo ? a.leyendoImagen : a.subirCaptura}
@@ -682,7 +682,7 @@ export function AnalizarMensaje({
                     href="tel:017"
                     className={cn(
                       buttonVariants({ variant: "outline", size: "lg" }),
-                      "h-12 gap-2 px-5 text-lg max-md:w-full",
+                      "h-auto min-h-12 gap-2 px-5 py-2 text-lg whitespace-normal max-md:w-full",
                     )}
                   >
                     <Phone aria-hidden="true" className="size-5" />
@@ -722,7 +722,7 @@ export function AnalizarMensaje({
                 variant="outline"
                 size="lg"
                 onClick={copiarEnlace}
-                className="h-12 gap-2 px-5 text-lg max-sm:w-full"
+                className="h-auto min-h-12 gap-2 px-5 py-2 text-lg whitespace-normal max-sm:w-full"
               >
                 <Link2 aria-hidden="true" className="size-5" />
                 {a.copiarEnlace}
@@ -732,7 +732,7 @@ export function AnalizarMensaje({
                 variant="outline"
                 size="lg"
                 onClick={() => cargar("")}
-                className="h-12 px-5 text-lg max-sm:w-full"
+                className="h-auto min-h-12 px-5 py-2 text-lg whitespace-normal max-sm:w-full"
               >
                 {a.otroMensaje}
               </Button>
