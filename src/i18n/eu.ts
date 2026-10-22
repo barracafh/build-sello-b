@@ -151,6 +151,7 @@ export const eu = {
       "Helbidea gure webgune ofizialen zerrendan dago. Oraingoz ezin izan dugu testuaren gainerakoa aztertu.",
     sinClasificador:
       "Oraingoz ezin izan dugu mezuaren testua aztertu, beraz ezin dugu ezer baieztatu. Ikusten dituzun seinaleak arau finkoetatik datoz.",
+    motivoSuplantacion: "Mezuak iruzur-itxuraren seinale argiak ditu.",
     webCitadaDe: (entidad: string) =>
       `Mezuak aipatzen duen helbidea ${erakundearen(entidad)} webgune ofiziala da. Horrek ez du frogatzen nork bidaltzen duen: sartu zuk zeuk helbidea idatzita.`,
   },

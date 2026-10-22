@@ -1,6 +1,7 @@
 // Clasificador de mensajes con LLM (HelmCode). El modelo propone; las reglas de
 // `combinarClasificacion` deciden, y son puras para poder probarlas sin red.
 // No guarda ni registra el texto del ciudadano.
+import type { Idioma } from "@/i18n";
 import { completar as completarReal, type Mensaje, type OpcionesIa } from "./ia";
 import { SISTEMA, mensajeUsuario, type Determinista } from "./clasificar-prompt";
 import type { Senal } from "./senales";
@@ -141,6 +142,8 @@ export type OpcionesClasificador = {
   completar?: (mensajes: Mensaje[], opciones?: OpcionesIa) => Promise<string>;
   modelo?: string;
   timeoutMs?: number;
+  /** Idioma en que se pide el `motivo`; no cambia el veredicto. */
+  idioma?: Idioma;
   alUso?: OpcionesIa["alUso"];
 };
 
@@ -167,7 +170,7 @@ export async function clasificarMensaje(
       completar(
         [
           { role: "system", content: SISTEMA },
-          { role: "user", content: mensajeUsuario(texto, det) },
+          { role: "user", content: mensajeUsuario(texto, det, opciones.idioma) },
         ],
         {
           modelo: opciones.modelo ?? modeloClasificador(),

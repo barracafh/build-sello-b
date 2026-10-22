@@ -136,6 +136,7 @@ export const es = {
       "La dirección está en nuestra lista de webs oficiales. No hemos podido analizar el resto del texto ahora mismo.",
     sinClasificador:
       "No hemos podido analizar el texto del mensaje ahora mismo, así que no podemos confirmar nada. Las señales que ves salen de reglas fijas.",
+    motivoSuplantacion: "El mensaje tiene señales claras de suplantación.",
     webCitadaDe: (entidad: string) =>
       `El mensaje cita una dirección que sí es la web oficial de ${entidad}. Eso no prueba quién lo envía: entra tecleando tú la dirección.`,
   },

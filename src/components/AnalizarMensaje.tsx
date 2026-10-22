@@ -65,6 +65,9 @@ const EJEMPLOS = (ejemplos as Ejemplo[])
   }));
 
 const MOTIVO_NO_DISPONIBLE = "clasificador no disponible";
+// Motivo fijo de src/lib/clasificar.ts cuando la URL ya es no_oficial y el
+// modelo no responde: viene en castellano, así que se enseña el del diccionario.
+const MOTIVO_SUPLANTACION = "El mensaje tiene señales claras de suplantación.";
 
 // Los apartados de contexto.md en los que se apoyan las señales del clasificador.
 const contextoMd = (señales: Respuesta["señales"], t: Diccionario) => {
@@ -261,7 +264,9 @@ export function AnalizarMensaje({
         ? respuesta.veredicto === "oficial_verificado"
           ? a.sinClasificadorOficial
           : a.sinClasificador
-        : respuesta.motivo
+        : respuesta.motivo === MOTIVO_SUPLANTACION
+          ? a.motivoSuplantacion
+          : respuesta.motivo
       : soloRemitente
       ? t.motivos.remitente_dominio_ajeno
       : webCitada && respuesta.entidad
@@ -522,7 +527,10 @@ export function AnalizarMensaje({
                                 a.otraSenal}
                               .
                             </span>{" "}
-                            {s.evidencia}
+                            {/* La evidencia de una señal fija es su texto en castellano: se traduce por código. */}
+                            {respuesta.senales.some((x) => x.codigo === s.codigo && x.texto === s.evidencia)
+                              ? t.senales.texto({ codigo: s.codigo, texto: s.evidencia })
+                              : s.evidencia}
                           </span>
                         </li>
                       );

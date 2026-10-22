@@ -147,6 +147,7 @@ export const gl = {
       "O enderezo está na nosa lista de webs oficiais. Agora mesmo non puidemos analizar o resto do texto.",
     sinClasificador:
       "Agora mesmo non puidemos analizar o texto da mensaxe, así que non podemos confirmar nada. Os sinais que ves saen de regras fixas.",
+    motivoSuplantacion: "A mensaxe ten sinais claros de suplantación.",
     webCitadaDe: (entidad: string) =>
       `A mensaxe cita un enderezo que si é a web oficial ${daEntidade(entidad)}. Iso non proba quen a envía: entra ti tecleando o enderezo.`,
   },

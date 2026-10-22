@@ -149,6 +149,7 @@ export const ca = {
       "L'adreça és a la nostra llista de webs oficials. Ara mateix no hem pogut analitzar la resta del text.",
     sinClasificador:
       "Ara mateix no hem pogut analitzar el text del missatge, així que no podem confirmar res. Els senyals que veus surten de regles fixes.",
+    motivoSuplantacion: "El missatge té senyals clars de suplantació.",
     webCitadaDe: (entidad: string) =>
       `El missatge cita una adreça que sí que és el web oficial ${deEntitat(entidad)}. Això no demostra qui l'envia: entra-hi escrivint tu l'adreça.`,
   },

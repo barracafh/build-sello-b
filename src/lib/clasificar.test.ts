@@ -10,6 +10,7 @@ import {
 import { combinar, senales } from "./senales";
 import { verificar } from "./verificar";
 import type { Determinista } from "./clasificar-prompt";
+import { es } from "@/i18n/es";
 
 const determinista = (texto: string): Determinista => {
   const url = verificar(texto);
@@ -160,6 +161,35 @@ describe("clasificarMensaje", () => {
     assert.ok(sistema.includes("contexto.md §5.4"));
   });
 
+  // Solo cambia el idioma del motivo: ni SISTEMA ni el resto del mensaje.
+  const mensajesCon = async (idioma?: "es" | "eu" | "va") => {
+    let mensajes: { content: unknown }[] = [];
+    await clasificarMensaje(FRAUDE, determinista(FRAUDE), {
+      idioma,
+      completar: async (m) => {
+        mensajes = m;
+        return JSON.stringify(llm());
+      },
+    });
+    return mensajes.map((m) => String(m.content));
+  };
+
+  test("en castellano el mensaje no cambia", async () => {
+    assert.deepEqual(await mensajesCon("es"), await mensajesCon());
+  });
+
+  test("en otro idioma añade una sola línea que pide el motivo en ese idioma", async () => {
+    const [sistemaEs, usuarioEs] = await mensajesCon("es");
+    const [sistemaEu, usuarioEu] = await mensajesCon("eu");
+    assert.equal(sistemaEu, sistemaEs);
+    assert.ok(usuarioEu.startsWith(usuarioEs));
+    const extra = usuarioEu.slice(usuarioEs.length).trim();
+    assert.equal(extra.split("\n").length, 1);
+    assert.match(extra, /motivo/);
+    assert.match(extra, /euskera/);
+    assert.match((await mensajesCon("va"))[1], /valenciano/);
+  });
+
   test("acepta JSON envuelto en un bloque de código", async () => {
     const r = await clasificarMensaje(NEUTRO, det, {
       completar: responde("```json\n" + JSON.stringify(llm({ veredicto: "no_oficial" })) + "\n```"),
@@ -226,4 +256,11 @@ describe("clasificarMensaje", () => {
     }
     assert.ok(!vistos.some((v) => v.includes("dgt-multas-pago")));
   });
+});
+
+// AnalizarMensaje reconoce este motivo de reserva para enseñarlo traducido.
+test("el motivo de reserva de un no_oficial coincide con el del diccionario", () => {
+  const det = determinista(FRAUDE);
+  assert.equal(det.resultado.veredicto, "no_oficial");
+  assert.equal(combinarClasificacion(null, det).motivo, es.analizar.motivoSuplantacion);
 });
