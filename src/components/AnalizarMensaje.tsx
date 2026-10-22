@@ -334,7 +334,7 @@ export function AnalizarMensaje({
                 type="button"
                 variant="outline"
                 onClick={() => probarEjemplo(ejemplo.texto)}
-                className="h-auto min-h-12 px-4 py-2 text-base whitespace-normal lg:justify-start lg:text-left"
+                className="h-auto min-h-12 max-w-full px-4 py-2 text-base whitespace-normal lg:justify-start lg:text-left"
               >
                 {ejemplo.nombre}
               </Button>
