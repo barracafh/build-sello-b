@@ -100,12 +100,13 @@ const ORTOGRAFIA = [
 const PEDIR =
   String.raw`facilite|facil[ií]tenos|env[ií]e|env[ií]enos|confirme|conf[ií]rmenos|proporcione|proporci[oó]nenos|actualice|indique|ind[ií]quenos|introduzca|introduce|comunique|comun[ií]quenos`;
 
+// Solo una petición dirigida al ciudadano: un imperativo o un infinitivo tras
+// «debe», «para»… Listas cerradas: un sustantivo («pago», «importe», «tasa») no
+// basta, y sin raíces abiertas «pagina» o «paginación» no entran.
 const DINERO = [
-  cerca(
-    String.raw`pag\p{L}*|abon\p{L}*|ingres(?:ar|e)`,
-    String.raw`multas?|tasas?|recargos?|importes?|deudas?|facturas?|aduanas?`,
-    40,
-  ),
+  regla(String.raw`paguen?|abonen?|ingresen?|transfieran?`),
+  regla(String.raw`(?:realice|efect[uú]e)\s+(?:el\s+)?(?:pago|ingreso|abono)`),
+  regla(String.raw`(?:debe|tiene\s+que|deber[aá]|para|puede)\s+(?:pagar|abonar|ingresar|transferir)`),
 ];
 const DATOS = [
   regla(String.raw`cvv2?|cvc|contrase[ñn]a|password|iban`),

@@ -111,13 +111,34 @@ describe("6. dinero, pagos y datos sensibles", () => {
   test("pagar la multa → roja", () => {
     assert.equal(nivel("Debe pagar su multa hoy", "pide_dinero"), "roja");
   });
-  test("tasas no pagadas → roja", () => {
-    assert.equal(nivel("no se han pagado las tasas de aduana", "pide_dinero"), "roja");
-  });
-  test("formas con terminación de pagar, abonar, deudas y facturas → roja", () => {
-    assert.equal(nivel("Correos: pagando la tasa de aduana de 2 euros", "pide_dinero"), "roja");
+  test("imperativos dirigidos al ciudadano → roja (P5–P7)", () => {
+    // P5 se reescribe en imperativo: «pagando la tasa» solo describe, no pide.
+    assert.equal(nivel("Correos: pague la tasa de aduana de 2 euros", "pide_dinero"), "roja");
     assert.equal(nivel("Agencia Tributaria: abonarla ahora evita recargos. Pague sus deudas aquí.", "pide_dinero"), "roja");
     assert.equal(nivel("Correos: abone las facturas pendientes de su envío.", "pide_dinero"), "roja");
+    assert.equal(nivel("Ingrese 2 euros para liberar su envío.", "pide_dinero"), "roja");
+    assert.equal(nivel("Transfieran el importe hoy.", "pide_dinero"), "roja");
+    assert.equal(nivel("Realice el pago de la tasa.", "pide_dinero"), "roja");
+    assert.equal(nivel("Efectúe el ingreso antes del viernes.", "pide_dinero"), "roja");
+  });
+  test("infinitivo tras obligación o finalidad → roja (F02)", () => {
+    assert.equal(nivel("DGT: Dispone de 24 horas restantes para pagar su multa.", "pide_dinero"), "roja");
+    assert.equal(nivel("Tiene que abonar la tasa.", "pide_dinero"), "roja");
+    assert.equal(nivel("Deberá transferir el importe.", "pide_dinero"), "roja");
+  });
+  test("un sustantivo solo o «pagina» sin tilde no cuentan", () => {
+    const frases = [
+      "Agencia Tributaria: consulte en la pagina de la sede el importe de la tasa.",
+      "Agencia Tributaria: el importe de su devolución aparece en la paginación de la sede.",
+      "SEPE: el pago de la prestación y los calendarios se publican en la sede.",
+      "Seguridad Social: en la sede puede ver sus pagos y el importe pendiente.",
+      "Correos: no se han pagado las tasas de aduana; consulte la sede.",
+      "Agencia Tributaria: el recargo y la deuda figuran en la sede.",
+    ];
+    for (const t of frases) {
+      assert.ok(!codigos(t).includes("pide_dinero"), t);
+      assert.equal(veredicto(t), "no_determinable", t);
+    }
   });
   test("tarjeta, CVV, PIN → roja", () => {
     assert.equal(nivel("Indique el CVV y el PIN", "pide_datos"), "roja");
