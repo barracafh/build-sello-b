@@ -135,6 +135,13 @@ export function webOficial(
 
 export type Senal = { codigo: string; nivel: "roja" | "naranja"; texto: string };
 type Enlace = { nombre: string; url: string };
+export type Desmentido = {
+  editor: string;
+  sitio: string | null;
+  calificacion: string;
+  url: string;
+  fecha: string | null;
+};
 
 export type Respuesta = {
   veredicto: string;
@@ -152,6 +159,8 @@ export type Respuesta = {
   senales: Senal[];
   reputacion: string | null;
   rdap: string | null;
+  /** Desmentidos publicados de mensajes parecidos; vacío si no se consultó. */
+  desmentidos: Desmentido[];
 };
 
 const textoO = (valor: unknown) =>
@@ -171,6 +180,21 @@ const esSenal = (s: unknown): s is Senal => {
     typeof x.texto === "string" &&
     (x.nivel === "roja" || x.nivel === "naranja")
   );
+};
+
+// Los desmentidos se enlazan: solo con https, nunca otro esquema.
+const leerDesmentido = (valor: unknown): Desmentido | null => {
+  const d = valor as Record<string, unknown> | null;
+  const editor = textoO(d?.editor);
+  const calificacion = textoO(d?.calificacion);
+  const url = textoO(d?.url);
+  if (!editor || !calificacion || !url) return null;
+  try {
+    if (new URL(url).protocol !== "https:") return null;
+  } catch {
+    return null;
+  }
+  return { editor, sitio: textoO(d?.sitio), calificacion, url, fecha: textoO(d?.fecha) };
 };
 
 /** Lee la respuesta de /api/verificar sin fiarse de su forma; null si no trae veredicto. */
@@ -195,8 +219,18 @@ export function leerRespuesta(datos: unknown): Respuesta | null {
     senales: Array.isArray(d.senales) ? d.senales.filter(esSenal) : [],
     reputacion: textoO(d.reputacion),
     rdap: textoO(d.rdap),
+    desmentidos: Array.isArray(d.desmentidos)
+      ? d.desmentidos.map(leerDesmentido).filter((x): x is Desmentido => x !== null)
+      : [],
   };
 }
 
 /** 2000 → «2.000» (en español, `toLocaleString` no agrupa los números de 4 cifras). */
 export const miles = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+/** «2025-03-01T00:00:00Z» → «marzo de 2025»; null si no es una fecha. */
+export function mesDe(fecha: string | null): string | null {
+  const ms = fecha ? Date.parse(fecha) : NaN;
+  if (Number.isNaN(ms)) return null;
+  return new Intl.DateTimeFormat("es-ES", { month: "long", year: "numeric", timeZone: "UTC" }).format(ms);
+}

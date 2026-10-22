@@ -15,6 +15,7 @@ import {
   deEntidad,
   fichaDe,
   leerRespuesta,
+  mesDe,
   miles,
   webOficial,
   type Respuesta,
@@ -207,6 +208,10 @@ export function AnalizarMensaje({
         linea017,
       ].filter((f, i, todas) => todas.findIndex((o) => o.url === f.url) === i)
     : [];
+  // Cada verificador con su web, una sola vez (LAB-45).
+  const verificadores = (respuesta?.desmentidos ?? [])
+    .map((d) => ({ nombre: d.editor, url: new URL(d.url).origin }))
+    .filter((f, i, todas) => todas.findIndex((o) => o.url === f.url) === i);
   const cercaDelLimite = mensaje.length >= AVISO_LIMITE;
 
   return (
@@ -440,6 +445,42 @@ export function AnalizarMensaje({
             )}
           </div>
 
+          {respuesta.desmentidos.length > 0 && (
+            // Señal de apoyo: enlaza los desmentidos, nunca la dirección analizada.
+            <Card
+              render={<section aria-labelledby={`${id}-desmentidos`} />}
+              className="gap-3 px-6 py-6 text-lg"
+            >
+              <h3 id={`${id}-desmentidos`} className="font-semibold">
+                Ya lo han desmentido
+              </h3>
+              <p className="text-base text-(--text-secondary)">
+                Verificadores de noticias han publicado sobre mensajes parecidos a este.
+                {respuesta.veredicto !== "no_oficial" &&
+                  " Eso no prueba por sí solo que este sea falso."}
+              </p>
+              <ul className="grid gap-2">
+                {respuesta.desmentidos.map((d) => (
+                  <li key={d.url}>
+                    <a
+                      href={d.url}
+                      className="flex min-h-11 items-center justify-between gap-4 rounded-lg px-3 py-2 ring-1 ring-foreground/10 transition-colors outline-none hover:bg-muted focus-visible:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
+                    >
+                      <span className="min-w-0 [overflow-wrap:anywhere]">
+                        <span className="block font-medium">{d.editor}</span>
+                        <span className="block text-base text-(--text-secondary)">
+                          «{d.calificacion}»
+                          {mesDe(d.fecha) && ` · ${mesDe(d.fecha)}`}
+                        </span>
+                      </span>
+                      <span aria-hidden="true">↗</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+
           {ficha.pasos.length > 0 && (
             <div>
               <h3 className="font-semibold">Qué hacer ahora</h3>
@@ -506,7 +547,7 @@ export function AnalizarMensaje({
             </li>
           </ul>
 
-          <Fuentes fuentes={fuentes} />
+          <Fuentes fuentes={fuentes} verificadores={verificadores} />
 
           <Button
             type="button"
