@@ -8,6 +8,8 @@
   },
   "scripts": {
     "dev": "bun scripts/dev.ts",
+    "lint:tema": "bun scripts/lint-tema.ts",
+    "prebuild": "bun run lint:tema",
     "build": "next build --webpack",
     "typecheck": "tsc --noEmit",
     "test": "bun test scripts/ src/"
