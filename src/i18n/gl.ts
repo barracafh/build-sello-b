@@ -238,9 +238,8 @@ export const gl = {
     copiar: "Copiar o texto",
     copiado: "Texto copiado. Pégao no chat da túa familia.",
     noCopiado: "Non puidemos copialo. Proba con «Enviar por WhatsApp».",
-    meHaLlegado: "Chegoume esta mensaxe:",
     pie: (nombre: string, url: string) =>
-      `Comprobeino con ${nombre}, unha ferramenta experimental que non é un servizo oficial: ${url}`,
+      `Comprobeino con ${nombre}: ${url}`,
     ayuda017: "Se tes dúbidas ou xa deches datos, chama de balde ao 017 de INCIBE.",
     laWeb: (entidad: string | null, direccion: string) =>
       `A web oficial${entidad ? ` ${daEntidade(entidad)}` : ""} é ${direccion}`,

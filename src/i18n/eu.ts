@@ -242,9 +242,8 @@ export const eu = {
     copiar: "Kopiatu testua",
     copiado: "Testua kopiatu da. Itsatsi zure familiaren txatean.",
     noCopiado: "Ezin izan dugu kopiatu. Probatu «Bidali WhatsApp bidez» botoiarekin.",
-    meHaLlegado: "Mezu hau iritsi zait:",
     pie: (nombre: string, url: string) =>
-      `${nombre} tresnarekin egiaztatu dut. Tresna esperimentala da, ez zerbitzu ofiziala: ${url}`,
+      `${nombre} tresnarekin egiaztatu dut: ${url}`,
     ayuda017: "Zalantzarik baduzu edo datuak eman badituzu, deitu doan INCIBEren 017ra.",
     laWeb: (entidad: string | null, direccion: string) =>
       entidad

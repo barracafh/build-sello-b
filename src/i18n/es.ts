@@ -233,9 +233,8 @@ export const es = {
     copiado: "Texto copiado. Pégalo en el chat de tu familia.",
     noCopiado: "No hemos podido copiarlo. Prueba con «Enviar por WhatsApp».",
     // Texto que se manda (src/lib/compartir.ts).
-    meHaLlegado: "Me ha llegado este mensaje:",
     pie: (nombre: string, url: string) =>
-      `Lo he comprobado con ${nombre}, una herramienta experimental que no es un servicio oficial: ${url}`,
+      `Lo he comprobado con ${nombre}: ${url}`,
     ayuda017: "Si dudas o ya has dado datos, llama gratis al 017 de INCIBE.",
     laWeb: (entidad: string | null, direccion: string) =>
       `La web oficial${entidad ? ` ${deEntidad(entidad)}` : ""} es ${direccion}`,
