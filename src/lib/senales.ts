@@ -227,8 +227,9 @@ export function suplantaOrganismo(texto: string, resultadoUrl: Resultado): boole
 
 // Las señales solo empujan hacia `no_oficial`. Una roja con suplantación de uno de
 // los cinco organismos da `no_oficial`, lleve enlace o no. Si la URL es una
-// coincidencia exacta de la allowlist, el contenido sospechoso solo la baja a
-// `no_determinable`. En cualquier otro caso manda el veredicto de la URL.
+// coincidencia exacta de la allowlist, o una web oficial citada sin esquema, el
+// contenido sospechoso solo la baja a `no_determinable`. En cualquier otro caso
+// manda el veredicto de la URL.
 export function combinar(resultadoUrl: Resultado, lista: Senal[], texto: string): Resultado {
   const roja = lista.some((s) => s.nivel === "roja");
   if (roja && resultadoUrl.veredicto === "oficial_verificado") {
@@ -236,6 +237,18 @@ export function combinar(resultadoUrl: Resultado, lista: Senal[], texto: string)
       ...resultadoUrl,
       veredicto: "no_determinable",
       motivos: ["contenido_sospechoso", ...resultadoUrl.motivos],
+    };
+  }
+  // `web_oficial_citada` sigue primero: la interfaz lo lee de `motivos[0]`.
+  if (
+    roja &&
+    resultadoUrl.veredicto === "no_determinable" &&
+    resultadoUrl.motivos[0] === "web_oficial_citada"
+  ) {
+    return {
+      ...resultadoUrl,
+      veredicto: "no_determinable",
+      motivos: [...resultadoUrl.motivos, "contenido_sospechoso"],
     };
   }
   if (

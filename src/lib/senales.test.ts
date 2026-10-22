@@ -227,6 +227,36 @@ describe("combinar con el veredicto", () => {
     assert.equal(c.veredicto, "no_determinable");
     assert.equal(c.motivos[0], "contenido_sospechoso");
   });
+  test("web oficial citada sin esquema con señal roja baja a no_determinable, nunca a no_oficial", () => {
+    const t = "DGT: para pagar la multa con descuento acceda a sede.dgt.gob.es";
+    const r = verificar(t);
+    assert.equal(r.veredicto, "no_determinable");
+    assert.equal(r.motivos[0], "web_oficial_citada");
+    const lista = senales(t, r);
+    assert.ok(lista.some((s) => s.nivel === "roja"));
+    const c = combinar(r, lista, t);
+    assert.equal(c.veredicto, "no_determinable");
+    assert.deepEqual(c.motivos.slice(0, 2), ["web_oficial_citada", "contenido_sospechoso"]);
+    assert.equal(c.url_analizada, "sede[.]dgt[.]gob[.]es");
+  });
+  test("trampa sin esquema con señal roja sigue en no_oficial", () => {
+    const t = "DGT: para pagar la multa con descuento acceda a dgt.es.multas-pago.com";
+    const r = verificar(t);
+    assert.equal(r.veredicto, "no_oficial");
+    assert.equal(veredicto(t), "no_oficial");
+    assert.equal(combinar(r, senales(t, r), t).url_analizada, "dgt[.]es[.]multas-pago[.]com");
+  });
+  test("web oficial citada con remitente ajeno sigue en no_oficial", () => {
+    const t = "De: avisos@dgt-multas.com. Para pagar la multa con descuento acceda a sede.dgt.gob.es";
+    const r = verificar(t);
+    assert.equal(r.veredicto, "no_oficial");
+    assert.equal(combinar(r, senales(t, r), t).veredicto, "no_oficial");
+  });
+  test("importes y abreviaturas con puntos no cuentan como enlace", () => {
+    const t = "DGT: importe 1.500,00 euros, recargos, etc.";
+    assert.equal(verificar(t).url_analizada, null);
+    assert.equal(veredicto(t), "no_determinable");
+  });
   test("paro suelto no cuenta como organismo", () => {
     assert.equal(veredicto("Pague su multa por el paro del metro"), "no_determinable");
     assert.equal(
