@@ -29,12 +29,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         >
           Saltar al contenido
         </a>
-        <p
-          role="note"
-          className="bg-muted px-(--page-gutter) py-2 text-center text-sm text-(--text-secondary)"
-        >
-          Herramienta experimental. No es un servicio oficial.
-        </p>
+        <aside aria-label="Aviso">
+          <p className="bg-muted px-(--page-gutter) py-2 text-center text-sm text-(--text-secondary)">
+            Herramienta experimental. No es un servicio oficial.
+          </p>
+        </aside>
         {children}
       </body>
     </html>
