@@ -1,9 +1,7 @@
 // Desmentidos publicados (Google Fact Check Tools, `claims:search`). Solo en el
-// servidor. La consulta se arma con un vocabulario fijo y el dominio registrable
-// del enlace: nunca lleva el texto del ciudadano, así que no puede llevar nombres,
-// teléfonos, correos, importes ni IBAN. No se guarda ni se registra nada.
-import { parse } from "tldts";
-import { desneutralizar } from "./url";
+// servidor. La consulta se arma solo con un vocabulario fijo: nunca lleva el texto
+// del ciudadano ni su enlace, así que no puede llevar nombres, teléfonos, correos,
+// importes ni IBAN. No se guarda ni se registra nada.
 import type { Desmentido } from "./veredicto";
 import type { Resultado } from "./verificar";
 
@@ -27,51 +25,35 @@ const ORGANISMOS: [RegExp, string][] = [
   [regla(String.raw`correos`), "Correos"],
 ];
 
-// Patrones de estafa. Un aviso legítimo («tiene una notificación», «su envío está
-// en camino») no casa con ninguno, así que no se consulta.
+// Patrones de estafa, del más general al más concreto. Un aviso legítimo («tiene
+// una notificación», «su envío está en camino») no casa con ninguno, así que no
+// se consulta. Varios patrones dan la misma etiqueta: la general encuentra más
+// desmentidos («Correos paquete» sí; «Correos aduana» o «paquete retenido», no).
 const PATRONES: [RegExp, string][] = [
   [regla(String.raw`multas?`), "multa"],
   [regla(String.raw`devoluci[oó]n|reembolso`), "devolución"],
-  [cerca(String.raw`paquete|env[ií]o`, String.raw`retenid[oa]`), "paquete retenido"],
-  [regla(String.raw`aduanas?`), "aduana"],
+  [cerca(String.raw`paquete|env[ií]o`, String.raw`retenid[oa]`), "paquete"],
+  [regla(String.raw`aduanas?`), "paquete"],
   [regla(String.raw`tarjeta sanit[aà]ria`), "tarjeta sanitaria"],
   [regla(String.raw`embargo|embargar`), "embargo"],
 ];
 
-/** Todas las palabras que puede llevar una consulta, además del dominio. */
+/** Todas las palabras que puede llevar una consulta. */
 export const VOCABULARIO = [
   ...new Set([...ORGANISMOS, ...PATRONES].flatMap(([, etiqueta]) => etiqueta.split(" "))),
 ];
 
-// Motivos con los que el enlace es (o cita) una web oficial: ese dominio no es la estafa.
-const ENLACE_OFICIAL = new Set(["en_allowlist", "web_oficial_citada"]);
-const ACORTADO = "acortador_no_resuelto";
-
-// Solo el registrable (sin subdominio, ruta ni parámetros, que pueden llevar
-// identificadores) y sin tiradas de cifras que parezcan un teléfono o un DNI.
-function dominioDe(resultado: Resultado): string | null {
-  if (!resultado.url_analizada) return null;
-  if (resultado.motivos.some((m) => ENLACE_OFICIAL.has(m) || m === ACORTADO)) return null;
-  const dominio = parse(desneutralizar(resultado.url_analizada)).domain?.toLowerCase();
-  if (!dominio || !/^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/.test(dominio) || /\d{4}/.test(dominio)) {
-    return null;
-  }
-  return dominio;
-}
-
 /**
- * La consulta para `claims:search`, o null si no hay que preguntar: con
- * `oficial_verificado`, o sin un patrón de estafa y algo con lo que acotarlo
- * (organismo o dominio).
+ * La consulta para `claims:search`: el organismo y el primer patrón que casa,
+ * nada más. Ni el texto ni el dominio del enlace. Null, sin llamada, con
+ * `oficial_verificado` o si falta el organismo o el patrón.
  */
 export function consultaDesmentido(texto: string, resultado: Resultado): string | null {
   if (resultado.veredicto === "oficial_verificado") return null;
   const donde = `${texto} ${resultado.entidad ?? ""}`;
   const organismo = ORGANISMOS.find(([patron]) => patron.test(donde))?.[1];
-  const patrones = PATRONES.filter(([patron]) => patron.test(texto)).map(([, e]) => e);
-  const dominio = dominioDe(resultado);
-  if (patrones.length === 0 || (!organismo && !dominio)) return null;
-  return [organismo, ...patrones, dominio].filter(Boolean).join(" ");
+  const patron = PATRONES.find(([p]) => p.test(texto))?.[1];
+  return organismo && patron ? `${organismo} ${patron}` : null;
 }
 
 const API = "https://factchecktools.googleapis.com/v1alpha1/claims:search";
@@ -79,7 +61,8 @@ const DIAS = 730;
 const MAXIMO = 3;
 
 type Opciones = {
-  clave?: string;
+  /** Si se pasa (también `undefined`, `null` o ""), manda sobre el entorno: vacío es «sin clave». */
+  clave?: string | null;
   fetch?: typeof fetch;
   ahora?: Date;
   /** Milisegundos antes de cortar. */
@@ -122,13 +105,10 @@ function leer(datos: unknown, desde: number): Desmentido[] {
  */
 export async function buscarDesmentidos(
   consulta: string | null,
-  {
-    clave = process.env.FACTCHECK_API_KEY,
-    fetch: pedir = fetch,
-    ahora = new Date(),
-    espera = 3000,
-  }: Opciones = {},
+  opciones: Opciones = {},
 ): Promise<Desmentidos> {
+  const { fetch: pedir = fetch, ahora = new Date(), espera = 3000 } = opciones;
+  const clave = "clave" in opciones ? opciones.clave : process.env.FACTCHECK_API_KEY;
   if (!consulta || !clave) return "no_consultado";
   const url = new URL(API);
   url.search = new URLSearchParams({

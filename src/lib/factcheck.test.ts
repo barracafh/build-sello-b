@@ -1,4 +1,4 @@
-import { describe, test } from "node:test";
+import { after, before, describe, test } from "node:test";
 import assert from "node:assert/strict";
 import {
   aplicarDesmentidos,
@@ -28,50 +28,38 @@ const final = (texto: string) => {
 const consulta = (texto: string) => consultaDesmentido(texto, final(texto));
 
 describe("consultaDesmentido", () => {
-  test("solo lleva términos de la lista y el dominio registrable", () => {
+  test("solo lleva términos de la lista: ni datos personales ni el enlace", () => {
     const texto =
       "DGT: Sr. Juan Pérez García, tiene una multa pendiente de 127,50 € (exp. 2024/88331). " +
       "Llame al 612 345 678 o escriba a juan.perez@gmail.com. Pague con su IBAN " +
       "ES91 2100 0418 4502 0005 1332 en hxxps://pago.dgt-multas[.]com/pagar/48291?dni=12345678Z";
     const q = consulta(texto);
-    assert.ok(q, "debería haber consulta");
-    const permitidos = new Set([...VOCABULARIO, "dgt-multas.com"]);
-    for (const token of q.split(" ")) {
-      assert.ok(permitidos.has(token), `token no permitido: ${token}`);
+    assert.equal(q, "DGT multa");
+    for (const token of q!.split(" ")) {
+      assert.ok(VOCABULARIO.includes(token), `token no permitido: ${token}`);
     }
-    for (const prohibido of [
-      "juan", "pérez", "garcía", "612", "345", "678", "gmail", "127", "es91",
-      "2100", "pagar/48291", "dni", "12345678z", "pago.dgt-multas", "2024",
-    ]) {
-      assert.ok(!q.toLowerCase().includes(prohibido), `se cuela «${prohibido}» en «${q}»`);
-    }
-    assert.match(q, /\bDGT\b/);
-    assert.match(q, /\bmulta\b/);
   });
 
-  test("DGT, AEAT y Correos dan consultas cortas con organismo y patrón", () => {
+  test("DGT, AEAT y Correos dan el organismo y el patrón más general", () => {
     assert.equal(
       consulta("DGT: Dispone de 24 horas para pagar su multa. hxxps://dgt-multas[.]top/x"),
-      "DGT multa dgt-multas.top",
+      "DGT multa",
     );
     assert.equal(
       consulta("AGENCIA TRIBUTARIA: Tiene una devolucion de 411,00€ pendiente. Acceda: hxxps://aeat-reembolso[.]com/r?id=99"),
-      "Agencia Tributaria devolución aeat-reembolso.com",
+      "Agencia Tributaria devolución",
     );
     assert.equal(
       consulta("[CORREOS] Su paquete está retenido en aduana. Pague 1,99€ en hxxps://correos-envio[.]info/p/7731"),
-      "Correos paquete retenido aduana correos-envio.info",
+      "Correos paquete",
     );
+    assert.equal(consulta("Correos: pague las tasas de aduana en hxxps://correos-envio[.]info"), "Correos paquete");
   });
 
-  test("sin patrón de estafa no hay consulta", () => {
+  test("sin organismo o sin patrón de estafa no hay consulta", () => {
     assert.equal(consulta("Hola Marta, ¿quedamos mañana? Llámame al 600 111 222"), null);
     assert.equal(consulta("AEAT: tiene una nueva notificación en la sede"), null);
-  });
-
-  test("un dominio con números largos no se manda", () => {
-    const q = consulta("DGT: pague su multa en hxxps://multa612345678[.]com");
-    assert.equal(q, "DGT multa");
+    assert.equal(consulta("Pague su multa ya en hxxps://multas-pago[.]top/x"), null);
   });
 
   test("nunca consulta un veredicto oficial_verificado", () => {
@@ -126,14 +114,41 @@ const respuesta = (cuerpo: unknown, ok = true) =>
   (async () => new Response(JSON.stringify(cuerpo), { status: ok ? 200 : 500 })) as unknown as typeof fetch;
 
 describe("buscarDesmentidos", () => {
-  test("sin clave no hace ninguna llamada", async () => {
-    let llamadas = 0;
-    const espia = (async () => {
-      llamadas++;
+  // Ningún test sale a la red: cada uno inyecta `fetch`, y el global falla si alguien lo olvida.
+  const fetchReal = globalThis.fetch;
+  const claveReal = process.env.FACTCHECK_API_KEY;
+  before(() => {
+    globalThis.fetch = (() => {
+      throw new Error("los tests no llaman a la API real");
+    }) as unknown as typeof fetch;
+    process.env.FACTCHECK_API_KEY = "clave-de-prueba";
+  });
+  after(() => {
+    globalThis.fetch = fetchReal;
+    if (claveReal === undefined) delete process.env.FACTCHECK_API_KEY;
+    else process.env.FACTCHECK_API_KEY = claveReal;
+  });
+
+  test("sin clave no hace ninguna llamada, aunque el entorno tenga una", async () => {
+    for (const clave of [undefined, null, ""]) {
+      let llamadas = 0;
+      const espia = (async () => {
+        llamadas++;
+        return new Response("{}");
+      }) as unknown as typeof fetch;
+      assert.equal(await buscarDesmentidos("DGT multa", { clave, fetch: espia }), "no_consultado");
+      assert.equal(llamadas, 0, `clave=${JSON.stringify(clave)}`);
+    }
+  });
+
+  test("si no se pasa `clave`, usa la del entorno", async () => {
+    let pedida = "";
+    const espia = (async (url: string) => {
+      pedida = url;
       return new Response("{}");
     }) as unknown as typeof fetch;
-    assert.equal(await buscarDesmentidos("DGT multa", { clave: undefined, fetch: espia }), "no_consultado");
-    assert.equal(llamadas, 0);
+    assert.deepEqual(await buscarDesmentidos("DGT multa", { fetch: espia }), []);
+    assert.equal(new URL(pedida).searchParams.get("key"), "clave-de-prueba");
   });
 
   test("sin consulta no hace ninguna llamada", async () => {
