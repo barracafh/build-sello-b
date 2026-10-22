@@ -21,6 +21,10 @@ export type FichaVeredicto = {
   entradilla: string;
   /** Clases de la píldora. Solo tokens de Sol; el significado lo llevan el icono y la palabra. */
   tono: string;
+  /** Fondo de la cabecera del bloque del veredicto (tokens de Sol). */
+  fondo: string;
+  /** Color del icono de la píldora sobre la cabecera. */
+  colorIcono: string;
   /** Pasos de «Qué hacer ahora». */
   pasos: readonly string[];
   /** Si se ofrece llamar al 017. */
@@ -38,6 +42,8 @@ export const VEREDICTOS: Record<Veredicto, FichaVeredicto> = {
     entradilla: "No pulses sus enlaces y no respondas al mensaje.",
     // Texto en foreground: destructive sobre su tinte se queda en 4,2:1. El rojo va en el icono.
     tono: "bg-destructive/10 text-foreground [&>svg]:text-destructive",
+    fondo: "bg-destructive/10",
+    colorIcono: "[&>svg]:text-destructive",
     pasos: [
       "No pulses el enlace ni respondas al mensaje.",
       "Si quieres comprobar algo, entra tú en la web oficial escribiendo la dirección.",
@@ -54,6 +60,8 @@ export const VEREDICTOS: Record<Veredicto, FichaVeredicto> = {
         : "No podemos saber quién lo envía",
     entradilla: "Que el texto parezca oficial no prueba quién lo envía.",
     tono: "bg-(--warning) text-(--warning-foreground)",
+    fondo: "bg-(--warning)",
+    colorIcono: "[&>svg]:text-(--warning-foreground)",
     pasos: [
       "No pulses el enlace ni respondas al mensaje.",
       "Entra tú en la web oficial escribiendo la dirección.",
@@ -73,6 +81,8 @@ export const VEREDICTOS: Record<Veredicto, FichaVeredicto> = {
     // Neutro a propósito: Sol no tiene verde y es el veredicto con el que menos
     // queremos que alguien se relaje.
     tono: "bg-muted text-foreground",
+    fondo: "bg-muted",
+    colorIcono: "[&>svg]:text-foreground",
     pasos: [
       "Aun así, no des datos si no lo esperabas.",
       "Si dudas, entra tú escribiendo la dirección de la web oficial.",
