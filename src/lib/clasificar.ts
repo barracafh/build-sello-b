@@ -159,7 +159,7 @@ export type OpcionesClasificador = {
 export const modeloClasificador = () =>
   process.env.HELMCODE_MODEL_CLASIFICADOR || MODELO_POR_DEFECTO;
 
-// Una sola llamada al modelo, temperatura 0 y JSON. Cualquier fallo (red, 429
+// Una sola llamada al modelo, temperatura 0, JSON y sin razonamiento. Cualquier fallo (red, 429
 // agotado, tiempo, JSON no válido) devuelve `no_determinable` y la página sigue.
 export async function clasificarMensaje(
   texto: string,
@@ -185,6 +185,9 @@ export async function clasificarMensaje(
           modelo: opciones.modelo ?? modeloClasificador(),
           temperatura: 0,
           formatoJson: true,
+          // Sin razonamiento: en los casos dudosos el modelo razonaba 1.000-3.800
+          // tokens (~7 ms cada uno) y pasaba de los 8 s (LAB-73).
+          razonar: false,
           signal,
           alUso: opciones.alUso,
         },

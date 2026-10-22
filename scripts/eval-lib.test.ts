@@ -92,3 +92,25 @@ describe("ejecutarEvals", () => {
     assert.deepEqual(idiomas, ["eu", "eu"]);
   });
 });
+
+describe("ejecutarEvals: tokens y tiempo límite", () => {
+  test("separa tokens de salida y de razonamiento, y pasa el tiempo límite", async () => {
+    const tiempos: unknown[] = [];
+    const falso = async (_t: string, o?: { timeoutMs?: number; alUso?: (u: object) => void }) => {
+      tiempos.push(o?.timeoutMs);
+      o?.alUso?.({
+        prompt_tokens: 100, completion_tokens: 40, total_tokens: 140,
+        completion_tokens_details: { reasoning_tokens: 25 },
+      });
+      return {
+        veredicto: "no_determinable", motivos: [], url_analizada: null,
+        senales: [], clasificado: true, motivo: "m",
+      } as unknown as Analisis;
+    };
+    const [e] = await ejecutarEvals({ modelo: "m", casos: CASOS.slice(0, 1), pausaMs: 0, timeoutMs: 30000, analizar: falso });
+    assert.deepEqual(tiempos, [30000]);
+    assert.equal(e.tokens, 140);
+    assert.equal(e.tokens_salida, 40);
+    assert.equal(e.tokens_razonamiento, 25);
+  });
+});
