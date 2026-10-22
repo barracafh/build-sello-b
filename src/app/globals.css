@@ -41,3 +41,11 @@
     }
   }
 }
+
+/* Azul del portal Import@ss de la Seguridad Social (ss-components.css), que el
+   equipo ha pedido para el pie. Está fuera de Sol: AGENTS.md no permite añadir
+   colores. Para volver a Sol, borra este bloque y el pie de page.tsx. */
+:root {
+  --azul-importass: #0129ae; /* tema-ok: azul de Import@ss pedido por el equipo para el pie */
+  --azul-importass-oscuro: #011865; /* tema-ok: hover y foco del azul de Import@ss */
+}

@@ -29,12 +29,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         >
           Saltar al contenido
         </a>
-        <p
-          role="note"
-          className="bg-muted px-(--page-gutter) py-2 text-center text-sm text-(--text-secondary)"
-        >
-          Herramienta experimental. No es un servicio oficial.
-        </p>
+        {/* El aviso «Herramienta experimental. No es un servicio oficial.» (regla 5) vive en el pie de page.tsx. */}
         {children}
       </body>
     </html>
