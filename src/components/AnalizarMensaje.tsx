@@ -125,8 +125,7 @@ const contextoMd = (señales: Respuesta["señales"]) => {
 
 // `intro` va encima del formulario, en su columna: así el panel de ejemplos
 // arranca a la altura de la entradilla en escritorio. Los ejemplos solo se
-// enseñan con `conEjemplos`: la página lo activa por defecto y lo apaga con
-// ?casos-test=false o =0. TODO(prod): volver a ocultarlo por defecto.
+// enseñan con `conEjemplos`, que la página activa solo con ?casos-test=true.
 export function AnalizarMensaje({
   intro,
   conEjemplos = false,
@@ -474,8 +473,10 @@ export function AnalizarMensaje({
                   Comprobando…
                 </>
               ) : (
+                // Dos textos enteros: con uno partido, el hueco del botón (gap) separa las palabras de más.
                 <>
-                  Comprobar<span className="max-sm:hidden"> mensaje</span>
+                  <span className="sm:hidden">Comprobar</span>
+                  <span className="max-sm:hidden">Comprobar mensaje</span>
                 </>
               )}
             </Button>
