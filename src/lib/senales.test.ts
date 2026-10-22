@@ -105,6 +105,16 @@ describe("5. remitente con el nombre del servicio y otro dominio", () => {
   test("remitente sin marca → sin señal", () => {
     assert.ok(!codigos(`De: juan${A}ejemplo.com Hola`).includes("remitente_falso"));
   });
+  test("«clave» o «hacienda» en la dirección no bastan → sin señal", () => {
+    assert.ok(!codigos(`De: juan.clave${A}gmail.com Hola`).includes("remitente_falso"));
+    assert.ok(!codigos(`De: info${A}hacienda-lasrosas.com Hola`).includes("remitente_falso"));
+  });
+  test("marca por token en la dirección y dominio ajeno → roja", () => {
+    assert.equal(nivel(`De: dgt-multas${A}gmail.com Pague ya`, "remitente_falso"), "roja");
+  });
+  test("nombre visible con marca y correo gratuito → roja", () => {
+    assert.equal(nivel(`De: Agencia Tributaria <x${A}gmail.com>`, "remitente_falso"), "roja");
+  });
 });
 
 describe("6. dinero, pagos y datos sensibles", () => {
