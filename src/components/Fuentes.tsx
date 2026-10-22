@@ -14,7 +14,7 @@ export function Fuentes({ fuentes }: { fuentes: readonly Source[] }) {
           <li key={source.url}>
             <a
               href={source.url}
-              className="flex min-h-11 items-center justify-between gap-4 px-4 py-3 transition-colors outline-none hover:bg-muted focus-visible:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+              className="flex min-h-11 items-center justify-between gap-4 px-4 py-3 transition-colors outline-none hover:bg-muted focus-visible:bg-muted focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-inset"
             >
               <span className="min-w-0 [overflow-wrap:anywhere]">
                 <span className="block font-medium">{source.nombre}</span>

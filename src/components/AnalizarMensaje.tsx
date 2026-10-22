@@ -206,6 +206,8 @@ export function AnalizarMensaje() {
             variant="sunset"
             size="lg"
             disabled={enviando}
+            // Sin esto, al desactivarse el foco del teclado cae al <body>.
+            focusableWhenDisabled
             className="h-11 px-5 text-base max-sm:w-full"
           >
             Comprobar
