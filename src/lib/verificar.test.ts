@@ -31,6 +31,25 @@ const esperar = (texto: string, veredicto: string, motivo?: string) =>
     if (motivo) assert.ok(r.motivos.includes(motivo), r.motivos.join());
   });
 
+describe("avisos que citan la web oficial sin enlace", () => {
+  const porId = (id: string) => ejemplos.find((c) => c.id === id) as Ejemplo;
+  for (const [id, entidad] of [
+    ["L01", "Agencia Tributaria"],
+    ["L02", "Dirección General de Tráfico"],
+    ["L03", "Correos"],
+    ["L04", "Dirección Electrónica Habilitada"],
+  ]) {
+    test(`${id} reconoce la web oficial citada`, () => {
+      const r = verificar(textoDeEjemplo(porId(id)));
+      assert.equal(r.veredicto, "no_determinable");
+      assert.equal(r.motivos[0], "web_oficial_citada", r.motivos.join());
+      assert.ok(r.entidad?.includes(entidad), r.entidad);
+      assert.ok(r.web_oficial?.startsWith("https://"));
+      assert.ok(r.url_analizada?.includes("[.]"), r.url_analizada ?? "");
+    });
+  }
+});
+
 describe("§5.3 sin red", () => {
   esperar("sede.agenciatributaria.gob.es", "oficial_verificado", "en_allowlist");
   esperar("www.dgt.es", "oficial_verificado");
@@ -73,7 +92,10 @@ describe("otros", () => {
     assert.equal(verificar("Pague su multa en dgt-pagos.com").veredicto, "no_oficial");
   });
   test("un dominio oficial citado en prosa, sin esquema, no confirma el mensaje", () => {
-    assert.equal(verificar("Consulta sede.dgt.gob.es").veredicto, "no_determinable");
+    const r = verificar("Consulta sede.dgt.gob.es");
+    assert.equal(r.veredicto, "no_determinable");
+    assert.deepEqual(r.motivos, ["web_oficial_citada"]);
+    assert.ok(r.web_oficial);
   });
   test("sede.dival.es exacto es oficial, un inquilino no", () => {
     assert.equal(verificar("https://sede.dival.es").veredicto, "oficial_verificado");

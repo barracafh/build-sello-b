@@ -248,10 +248,11 @@ function verificarEnlace(texto: string): Resultado {
     const avisos: string[] = [];
     if (enlace.conEsquema && url.protocol === "http:") avisos.push("sin_cifrado");
     if (url.port) avisos.push("puerto_no_estandar");
-    // Una web citada en prosa, sin enlace, no confirma el mensaje que la cita.
+    // Una web oficial citada en prosa, sin enlace, se reconoce, pero no
+    // confirma el mensaje que la cita: el remitente se puede falsificar.
     const sueltas = texto.replace(enlace.crudo, "").trim().length > 0;
     if (!enlace.conEsquema && sueltas) {
-      return devolver("no_determinable", ["sin_enlace"], propia.entidad);
+      return devolver("no_determinable", ["web_oficial_citada"], propia.entidad);
     }
     return devolver("oficial_verificado", ["en_allowlist", ...avisos], propia.entidad);
   }
