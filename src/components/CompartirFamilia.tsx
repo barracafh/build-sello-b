@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import { Copy, MessageCircle, Share2 } from "lucide-react";
+import { Copy, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { IconoWhatsApp } from "@/components/IconoWhatsApp";
 import { Textarea } from "@/components/ui/textarea";
 import { enlaceWhatsApp } from "@/lib/compartir";
 
@@ -82,9 +83,14 @@ export function CompartirFamilia({
           href={enlaceWhatsApp(valor)}
           target="_blank"
           rel="noopener noreferrer"
-          className={cn(buttonVariants({ variant: "outline", size: "lg" }), boton)}
+          // Verde de WhatsApp (src/styles/marcas.css) con el texto oscuro: así llega a AA.
+          className={cn(
+            buttonVariants({ size: "lg" }),
+            boton,
+            "bg-whatsapp text-foreground hover:bg-whatsapp/85",
+          )}
         >
-          <MessageCircle aria-hidden="true" className="size-5" />
+          <IconoWhatsApp className="size-5" />
           Enviar por WhatsApp
           <span className="sr-only"> (se abre en otra ventana)</span>
         </a>
