@@ -5,7 +5,7 @@ const sinProtocolo = (url: string) =>
 
 function Lista({ fuentes }: { fuentes: readonly Source[] }) {
   return (
-    <ul className="mt-3 divide-y overflow-hidden rounded-xl ring-1 ring-foreground/10">
+    <ul className="mt-4 divide-y overflow-hidden rounded-xl bg-background text-foreground ring-1 ring-foreground/10">
       {fuentes.map((source) => (
         <li key={source.url}>
           <a
@@ -13,14 +13,14 @@ function Lista({ fuentes }: { fuentes: readonly Source[] }) {
             className="flex min-h-11 items-center justify-between gap-4 px-4 py-3 transition-colors outline-none hover:bg-muted focus-visible:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
           >
             <span className="min-w-0 [overflow-wrap:anywhere]">
-              <span className="block font-medium">{source.nombre}</span>
+              <span className="block font-medium text-(--azul-importass)">{source.nombre}</span>
               {sinProtocolo(source.url) !== source.nombre && (
                 <span className="block font-mono text-sm text-(--text-secondary)">
                   {sinProtocolo(source.url)}
                 </span>
               )}
             </span>
-            <span aria-hidden="true">↗</span>
+            <span aria-hidden="true" className="text-(--azul-importass)">↗</span>
           </a>
         </li>
       ))}
@@ -38,13 +38,13 @@ export function Fuentes({
 }) {
   return (
     <aside aria-label="Fuentes" className="text-base">
-      <h3 className="text-sm font-medium text-(--text-secondary)">
+      <h3 className="text-xl font-semibold">
         Fuentes oficiales
       </h3>
       <Lista fuentes={fuentes} />
       {verificadores.length > 0 && (
         <>
-          <h3 className="mt-6 text-sm font-medium text-(--text-secondary)">
+          <h3 className="mt-6 text-xl font-semibold">
             Verificadores
           </h3>
           <Lista fuentes={verificadores} />

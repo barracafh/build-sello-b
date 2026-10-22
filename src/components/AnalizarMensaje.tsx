@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { ClipboardPaste, ExternalLink, Phone } from "lucide-react";
+import { ExternalLink, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ruta } from "@/config/sitio";
 import { Badge } from "@/components/ui/badge";
@@ -82,18 +82,11 @@ export function AnalizarMensaje({
   // Solo los errores del mensaje marcan el campo como no válido; los de red, no.
   const [error, setError] = useState<{ texto: string; delCampo: boolean } | null>(null);
   const [enviando, setEnviando] = useState(false);
-  const [puedePegar, setPuedePegar] = useState(false);
-  const [avisoPegar, setAvisoPegar] = useState<string | null>(null);
   const campoRef = useRef<HTMLTextAreaElement>(null);
   const comprobarRef = useRef<HTMLButtonElement>(null);
   const tituloRef = useRef<HTMLHeadingElement>(null);
   // Descarta respuestas que llegan después de cambiar el mensaje.
   const peticion = useRef(0);
-
-  // En el servidor no hay portapapeles: se decide en el navegador.
-  useEffect(() => {
-    setPuedePegar(typeof navigator.clipboard?.readText === "function");
-  }, []);
 
   // Con zoom o en el móvil, el resultado sale por debajo: llevamos ahí el foco
   // y la vista para que nadie se lo pierda.
@@ -111,10 +104,9 @@ export function AnalizarMensaje({
     setRespuesta(null);
     setError(null);
     setEnviando(false);
-    setAvisoPegar(null);
   }
 
-  // Tras pegar o empezar de nuevo, el foco vuelve al campo.
+  // Al empezar de nuevo, el foco vuelve al campo.
   function cargar(texto: string) {
     cambiar(texto);
     campoRef.current?.focus();
@@ -130,7 +122,6 @@ export function AnalizarMensaje({
   async function analizar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setRespuesta(null);
-    setAvisoPegar(null);
     if (mensaje.trim().length === 0) {
       setError({ texto: "Escribe o pega un mensaje antes de comprobar.", delCampo: true });
       return;
@@ -160,23 +151,6 @@ export function AnalizarMensaje({
     setEnviando(false);
     if (datos) setRespuesta(datos);
     else setError({ texto: "No hemos podido comprobarlo. Inténtalo de nuevo.", delCampo: false });
-  }
-
-  async function pegar() {
-    try {
-      const texto = await navigator.clipboard.readText();
-      if (texto.trim().length === 0) {
-        setAvisoPegar(
-          "No hay nada copiado. Copia el mensaje y vuelve a pulsar «Pegar».",
-        );
-        return;
-      }
-      cargar(texto);
-    } catch {
-      setAvisoPegar(
-        "No hemos podido pegarlo. Mantén pulsado el cuadro de texto y elige «Pegar».",
-      );
-    }
   }
 
   const ficha = respuesta ? fichaDe(respuesta.veredicto) : null;
@@ -281,26 +255,6 @@ export function AnalizarMensaje({
               {error.texto}
             </p>
           )}
-          {puedePegar && (
-            <div className="mt-4">
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                onClick={pegar}
-                className="h-12 gap-2 px-5 text-lg max-sm:w-full"
-              >
-                <ClipboardPaste aria-hidden="true" className="size-5" />
-                Pegar
-              </Button>
-              <p
-                role="status"
-                className="mt-2 text-base text-(--text-secondary) empty:mt-0"
-              >
-                {avisoPegar}
-              </p>
-            </div>
-          )}
           <Button
             ref={comprobarRef}
             type="submit"
@@ -339,7 +293,7 @@ export function AnalizarMensaje({
                 type="button"
                 variant="outline"
                 onClick={() => probarEjemplo(ejemplo.texto)}
-                className="h-auto min-h-12 px-4 py-2 text-base whitespace-normal lg:justify-start lg:text-left"
+                className="h-auto min-h-12 max-w-full px-4 py-2 text-base whitespace-normal lg:justify-start lg:text-left"
               >
                 {ejemplo.nombre}
               </Button>
@@ -349,109 +303,117 @@ export function AnalizarMensaje({
       )}
 
       {respuesta && ficha && (
+        // Tres bloques: el veredicto y por qué, qué hacer ahora y las fuentes.
         <section
           aria-labelledby={`${id}-resultado`}
-          className="[&>*+*]:mt-10 lg:col-start-1 lg:row-start-2"
+          className="[&>*+*]:mt-8 lg:col-start-1 lg:row-start-2"
         >
-          <div>
-            <h2
-              ref={tituloRef}
-              id={`${id}-resultado`}
-              tabIndex={-1}
-              className="scroll-mt-6 text-[clamp(30px,5vw,44px)] leading-[1.12] tracking-[-0.03em] outline-none"
-            >
-              <Badge
-                className={cn(
-                  "h-auto justify-start gap-2 px-3 py-1.5 text-left font-sans text-xl font-semibold tracking-normal whitespace-normal [&>svg]:size-6!",
-                  ficha.tono,
-                )}
+          {/* 1 · Veredicto: cabecera teñida según el resultado y, debajo, el porqué. */}
+          <Card render={<article />} className="gap-0 py-0 text-lg">
+            <div className={cn("px-6 py-6 md:px-8 md:py-8", ficha.fondo)}>
+              <h2
+                ref={tituloRef}
+                id={`${id}-resultado`}
+                tabIndex={-1}
+                className="scroll-mt-6 text-[clamp(30px,5vw,44px)] leading-[1.12] tracking-[-0.03em] outline-none"
               >
-                <ficha.icono aria-hidden="true" />
-                {ficha.etiqueta}
-              </Badge>
-              <span className="sr-only">. </span>
-              <span className="mt-4 block">
-                {ficha.titular({ deEntidad: de, hayEnlace: !soloRemitente && !!respuesta.url_analizada })}
-              </span>
-            </h2>
-            <p className="mt-4 text-xl font-semibold">{ficha.entradilla}</p>
-          </div>
+                <Badge
+                  className={cn(
+                    "h-auto justify-start gap-2 bg-background px-3 py-1.5 text-left font-sans text-xl font-semibold tracking-normal whitespace-normal text-foreground ring-1 ring-foreground/10 [&>svg]:size-6!",
+                    ficha.colorIcono,
+                  )}
+                >
+                  <ficha.icono aria-hidden="true" />
+                  {ficha.etiqueta}
+                </Badge>
+                <span className="sr-only">. </span>
+                <span className="mt-4 block">
+                  {ficha.titular({ deEntidad: de, hayEnlace: !soloRemitente && !!respuesta.url_analizada })}
+                </span>
+              </h2>
+              <p className="mt-4 text-xl font-semibold">{ficha.entradilla}</p>
+            </div>
 
-          {web && (
-            // Una sola tarjeta con el sol por vista: la web oficial, el dato que más importa.
-            <Card
-              render={<section aria-labelledby={`${id}-web`} />}
-              className="gap-3 bg-brand-yellow px-6 py-6 text-lg ring-0"
-            >
-              <h3 id={`${id}-web`} className="font-medium">
-                {de ? `La web oficial ${de} es` : "La web oficial es"}
-              </h3>
-              <p className="font-mono text-2xl leading-snug [overflow-wrap:anywhere] md:text-3xl">
-                {web.direccion}
-              </p>
-              <a
-                href={web.href}
-                className={cn(
-                  buttonVariants({ variant: "sunset", size: "lg" }),
-                  "mt-2 h-14 w-fit gap-2 px-6 text-lg max-sm:w-full",
+            <div className="px-6 py-6 md:px-8 md:py-8 [&>*+*]:mt-8">
+              <div>
+                <h3 className="text-xl font-semibold">Por qué lo decimos</h3>
+                <p className="mt-2">
+                  {frase}
+                  {respuesta.motivos.includes("sin_cifrado") &&
+                    " Eso sí, el enlace no está cifrado (http)."}
+                </p>
+                {respuesta.senales.length > 0 && (
+                  <ul className="mt-4 grid gap-3" aria-label="Señales encontradas">
+                    {respuesta.senales.map((senal) => (
+                      <li key={senal.codigo} className="flex flex-wrap items-start gap-x-3 gap-y-1">
+                        {/* Texto en foreground o warning: el rojo sobre su tinte no llega a AA. */}
+                        <Badge
+                          className={cn(
+                            "h-auto px-2.5 py-1 text-base font-semibold",
+                            senal.nivel === "roja"
+                              ? "bg-destructive/10 text-foreground"
+                              : "bg-(--warning) text-(--warning-foreground)",
+                          )}
+                        >
+                          {senal.nivel === "roja" ? "Señal roja" : "Señal naranja"}
+                        </Badge>
+                        <span className="min-w-0 flex-[1_1_220px]">{senal.texto}</span>
+                      </li>
+                    ))}
+                  </ul>
                 )}
-              >
-                Ir a la web oficial
-                <ExternalLink aria-hidden="true" className="size-5" />
-              </a>
-            </Card>
-          )}
+                {(soloRemitente ? respuesta.remitente_analizado : respuesta.url_analizada) && (
+                  // Neutralizada y como texto: la dirección analizada nunca es un enlace.
+                  <p className="mt-4 text-(--text-secondary)">
+                    {soloRemitente
+                      ? "Remitente del mensaje"
+                      : webCitada
+                        ? "Dirección citada"
+                        : "Dirección del mensaje"}{" "}
+                    (no la abras):{" "}
+                    <code className="font-mono text-foreground [overflow-wrap:anywhere]">
+                      {soloRemitente ? respuesta.remitente_analizado : respuesta.url_analizada}
+                    </code>
+                  </p>
+                )}
+              </div>
 
-          <div>
-            <h3 className="font-semibold">Por qué lo decimos</h3>
-            <p className="mt-2">
-              {frase}
-              {respuesta.motivos.includes("sin_cifrado") &&
-                " Eso sí, el enlace no está cifrado (http)."}
-            </p>
-            {respuesta.senales.length > 0 && (
-              <ul className="mt-4 grid gap-3" aria-label="Señales encontradas">
-                {respuesta.senales.map((senal) => (
-                  <li key={senal.codigo} className="flex flex-wrap items-start gap-x-3 gap-y-1">
-                    {/* Texto en foreground o warning: el rojo sobre su tinte no llega a AA. */}
-                    <Badge
-                      className={cn(
-                        "h-auto px-2.5 py-1 text-base font-semibold",
-                        senal.nivel === "roja"
-                          ? "bg-destructive/10 text-foreground"
-                          : "bg-(--warning) text-(--warning-foreground)",
-                      )}
-                    >
-                      {senal.nivel === "roja" ? "Señal roja" : "Señal naranja"}
-                    </Badge>
-                    <span className="min-w-0 flex-[1_1_220px]">{senal.texto}</span>
-                  </li>
-                ))}
-              </ul>
+            </div>
+
+            {web && (
+              // Una sola tarjeta con el sol por vista: la web oficial, el dato que
+              // más importa. A sangre, sin márgenes, cerrando el bloque del veredicto.
+              <section
+                aria-labelledby={`${id}-web`}
+                className="flex flex-col gap-3 bg-brand-yellow px-6 py-6 md:px-8 md:py-8"
+              >
+                <h3 id={`${id}-web`} className="font-medium">
+                  {de ? `La web oficial ${de} es` : "La web oficial es"}
+                </h3>
+                <p className="font-mono text-2xl leading-snug [overflow-wrap:anywhere] md:text-3xl">
+                  {web.direccion}
+                </p>
+                <a
+                  href={web.href}
+                  className={cn(
+                    buttonVariants({ variant: "sunset", size: "lg" }),
+                    "mt-2 h-14 w-fit gap-2 px-6 text-lg max-sm:w-full",
+                  )}
+                >
+                  Ir a la web oficial
+                  <ExternalLink aria-hidden="true" className="size-5" />
+                </a>
+              </section>
             )}
-            {(soloRemitente ? respuesta.remitente_analizado : respuesta.url_analizada) && (
-              // Neutralizada y como texto: la dirección analizada nunca es un enlace.
-              <p className="mt-4 text-(--text-secondary)">
-                {soloRemitente
-                  ? "Remitente del mensaje"
-                  : webCitada
-                    ? "Dirección citada"
-                    : "Dirección del mensaje"}{" "}
-                (no la abras):{" "}
-                <code className="font-mono text-foreground [overflow-wrap:anywhere]">
-                  {soloRemitente ? respuesta.remitente_analizado : respuesta.url_analizada}
-                </code>
-              </p>
-            )}
-          </div>
+          </Card>
 
           {respuesta.desmentidos.length > 0 && (
             // Señal de apoyo: enlaza los desmentidos, nunca la dirección analizada.
             <Card
               render={<section aria-labelledby={`${id}-desmentidos`} />}
-              className="gap-3 px-6 py-6 text-lg"
+              className="gap-3 px-6 py-6 text-lg md:px-8 md:py-8"
             >
-              <h3 id={`${id}-desmentidos`} className="font-semibold">
+              <h3 id={`${id}-desmentidos`} className="text-xl font-semibold">
                 Ya lo han desmentido
               </h3>
               <p className="text-base text-(--text-secondary)">
@@ -481,73 +443,87 @@ export function AnalizarMensaje({
             </Card>
           )}
 
-          {ficha.pasos.length > 0 && (
-            <div>
-              <h3 className="font-semibold">Qué hacer ahora</h3>
-              <ol className="mt-4 grid gap-5">
-                {ficha.pasos.map((paso, i) => (
-                  <li
-                    key={paso}
-                    className="grid grid-cols-[24px_minmax(0,1fr)] gap-x-3 md:grid-cols-[32px_minmax(0,1fr)] md:gap-x-4"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="text-[22px] leading-[1.1] font-light text-brand tabular-nums md:text-[26px]"
-                    >
-                      {i + 1}
-                    </span>
-                    <p>{paso}</p>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
-
-          {(ficha.ofrece017 || hayRoja) && (
+          {/* 2 · Qué hacer ahora: fondo beige (naranja de marca al 10 %), pasos
+              numerados y, si toca, la línea 017. */}
+          {(ficha.pasos.length > 0 || ficha.ofrece017 || hayRoja) && (
             <Card
-              render={<section aria-labelledby={`${id}-017`} />}
-              className="flex-row flex-wrap items-center justify-between gap-x-6 gap-y-4 px-6 py-6 text-lg"
+              render={<section aria-labelledby={`${id}-pasos`} />}
+              className="gap-0 bg-(--brand-orange)/10 py-0 text-lg ring-0"
             >
-              <div className="min-w-0 flex-[1_1_260px]">
-                <p className="text-base text-(--text-secondary)">
-                  ¿Dudas o ya has dado datos?
-                </p>
-                <h3 id={`${id}-017`} className="mt-1 leading-snug font-medium">
-                  Línea 017 de INCIBE, gratuita y confidencial
-                </h3>
-                <p className="mt-1 text-base text-(--text-secondary)">
-                  {horario017}
-                </p>
-              </div>
-              <a
-                href="tel:017"
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "lg" }),
-                  "h-12 gap-2 px-5 text-lg max-md:w-full",
-                )}
-              >
-                <Phone aria-hidden="true" className="size-5" />
-                Llamar al 017
-              </a>
+              {ficha.pasos.length > 0 && (
+                <div className="px-6 py-6 md:px-8 md:py-8">
+                  <h3 id={`${id}-pasos`} className="text-xl font-semibold">
+                    Qué hacer ahora
+                  </h3>
+                  <ol className="mt-5 grid gap-5">
+                    {ficha.pasos.map((paso, i) => (
+                      <li
+                        key={paso}
+                        className="grid grid-cols-[24px_minmax(0,1fr)] gap-x-3 md:grid-cols-[32px_minmax(0,1fr)] md:gap-x-4"
+                      >
+                        <span
+                          aria-hidden="true"
+                          // 24 px como mínimo: así cuenta como texto grande (3:1) sobre el beige.
+                          className="text-[24px] leading-[1.1] font-light text-brand tabular-nums md:text-[26px]"
+                        >
+                          {i + 1}
+                        </span>
+                        <p>{paso}</p>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+
+              {(ficha.ofrece017 || hayRoja) && (
+                <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-t border-(--brand-orange)/25 px-6 py-6 md:px-8">
+                  <div className="min-w-0 flex-[1_1_260px]">
+                    <p className="text-base text-(--text-secondary)">
+                      ¿Dudas o ya has dado datos?
+                    </p>
+                    <p className="mt-1 leading-snug font-medium">
+                      Línea 017 de INCIBE, gratuita y confidencial
+                    </p>
+                    <p className="mt-1 text-base text-(--text-secondary)">
+                      {horario017}
+                    </p>
+                  </div>
+                  <a
+                    href="tel:017"
+                    className={cn(
+                      buttonVariants({ variant: "outline", size: "lg" }),
+                      "h-12 gap-2 px-5 text-lg max-md:w-full",
+                    )}
+                  >
+                    <Phone aria-hidden="true" className="size-5" />
+                    Llamar al 017
+                  </a>
+                </div>
+              )}
             </Card>
           )}
 
-          <ul className="text-base text-(--text-secondary)">
-            <li>
-              Reputación del enlace:{" "}
-              {respuesta.reputacion === "no_consultada" || !respuesta.reputacion
-                ? "no consultada"
-                : respuesta.reputacion}
-            </li>
-            <li>
-              Registro del dominio:{" "}
-              {respuesta.rdap === "no_disponible" || !respuesta.rdap
-                ? "no disponible"
-                : respuesta.rdap}
-            </li>
-          </ul>
-
-          <Fuentes fuentes={fuentes} verificadores={verificadores} />
+          {/* 3 · Fuentes oficiales: en el azul de Import@ss, como los enlaces del pie. */}
+          <section
+            aria-label="Fuentes y datos de la comprobación"
+            className="rounded-xl bg-(--azul-importass) px-6 py-6 text-background md:px-8 md:py-8"
+          >
+            <Fuentes fuentes={fuentes} verificadores={verificadores} />
+            <ul className="mt-6 text-base text-background/90">
+              <li>
+                Reputación del enlace:{" "}
+                {respuesta.reputacion === "no_consultada" || !respuesta.reputacion
+                  ? "no consultada"
+                  : respuesta.reputacion}
+              </li>
+              <li>
+                Registro del dominio:{" "}
+                {respuesta.rdap === "no_disponible" || !respuesta.rdap
+                  ? "no disponible"
+                  : respuesta.rdap}
+              </li>
+            </ul>
+          </section>
 
           <Button
             type="button"
