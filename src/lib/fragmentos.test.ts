@@ -129,6 +129,22 @@ describe("fusionar", () => {
     ]);
   });
 
+  test("F01: no queda un rango que solo sea un espacio entre dos rojos", () => {
+    const f01 = (ejemplos as Caso[]).find((c) => c.id === "F01")!;
+    const texto = textoDe(f01);
+    const rango = (cita: string, nivel: "roja" | "naranja", codigo: string) => {
+      const inicio = texto.indexOf(cita);
+      return { inicio, fin: inicio + cita.length, nivel, codigo };
+    };
+    const fs = fusionar(texto, [
+      rango("Se ha ordenado el pago 411,00¿", "roja", "pide_dinero"),
+      rango("0¿ de", "naranja", "ortografia"),
+      rango("de su devolucion del IRPF", "roja", "devolucion_con_enlace"),
+    ]);
+    assert.ok(fs.length > 0);
+    for (const f of fs) assert.match(texto.slice(f.inicio, f.fin), /\S/u);
+  });
+
   test("todo rango queda dentro de [0, texto.length]", () => {
     const texto = "corto";
     const fs = fusionar(texto, [

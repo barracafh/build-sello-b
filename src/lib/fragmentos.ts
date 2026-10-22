@@ -112,7 +112,8 @@ const RANGO: Record<Nivel, number> = { naranja: 1, roja: 2 };
 
 /**
  * Funde los rangos: los solapes se unen y gana la roja; un rango que toca una
- * URL la cubre entera, para que nunca se parta una dirección al pintarla.
+ * URL la cubre entera, para que nunca se parta una dirección al pintarla. Los
+ * tramos que solo son espacio se descartan.
  */
 export function fusionar(texto: string, fragmentos: Fragmento[]): Fragmento[] {
   const urls = rangosDeUrl(texto);
@@ -141,5 +142,7 @@ export function fusionar(texto: string, fragmentos: Fragmento[]): Fragmento[] {
     if (ultimo && ultimo.fin === i && ultimo.nivel === c.nivel) ultimo.fin = i + 1;
     else salida.push({ inicio: i, fin: i + 1, ...c });
   });
-  return salida;
+  // Un tramo que solo es espacio no señala nada y el lector de pantalla
+  // anunciaría «señal naranja:» antes de un blanco.
+  return salida.filter((f) => /\S/u.test(texto.slice(f.inicio, f.fin)));
 }
