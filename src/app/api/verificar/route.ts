@@ -1,12 +1,12 @@
-import { combinar, senales } from "@/lib/senales";
-import { verificar } from "@/lib/verificar";
+import { analizar } from "@/lib/analizar";
 
 const LIMITE = 2000;
 
 const error = (mensaje: string) =>
   Response.json({ error: mensaje }, { status: 400 });
 
-// Valida la entrada y verifica la URL. No guarda ni registra el texto.
+// Valida la entrada, verifica la URL y, si es un mensaje, lo clasifica con una
+// sola llamada al modelo. No guarda ni registra el texto.
 export async function POST(request: Request) {
   let cuerpo: unknown;
   try {
@@ -22,11 +22,8 @@ export async function POST(request: Request) {
   if (texto.length > LIMITE) return error("«texto» supera los 2.000 caracteres");
 
   // Marcadores hasta que existan Safe Browsing y RDAP.
-  const url = verificar(texto);
-  const lista = senales(texto, url);
   return Response.json({
-    ...combinar(url, lista, texto),
-    senales: lista,
+    ...(await analizar(texto)),
     reputacion: "no_consultada",
     rdap: "no_disponible",
   });
