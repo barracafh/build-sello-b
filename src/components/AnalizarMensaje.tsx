@@ -493,43 +493,48 @@ export function AnalizarMensaje({
       </div>
 
       {conEjemplos && (
-        <section
-          aria-labelledby={`${id}-ejemplos`}
-          className="lg:sticky lg:top-8 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:rounded-xl lg:bg-muted lg:p-6"
-        >
-          <h2 id={`${id}-ejemplos`} className="font-sans text-lg font-medium">
-            ¿Quieres probar con un ejemplo?
-          </h2>
-          <div className="mt-3 flex flex-wrap gap-3 lg:flex-col">
-            {EJEMPLOS.map((ejemplo) => (
-              <Button
-                key={ejemplo.id}
-                type="button"
-                variant="outline"
-                onClick={() => probarEjemplo(ejemplo.texto)}
-                className={cn(
-                  "h-auto min-h-12 max-w-full flex-col items-start gap-1.5 border-l-4 px-4 py-2 text-left text-base whitespace-normal",
-                  ejemplo.tipo === "Fraude" ? "border-l-destructive" : "border-l-muted-foreground",
-                )}
-              >
-                <span>{ejemplo.nombre}</span>
-                <span className="flex flex-wrap items-center gap-2 text-sm font-normal">
-                  {ejemplo.tipo && <span className="font-semibold">{ejemplo.tipo}</span>}
-                  <Badge
-                    className={cn(
-                      "h-auto gap-1.5 px-2 py-0.5 text-sm font-medium whitespace-normal [&>svg]:size-4!",
-                      ejemplo.esperado.tono,
-                    )}
-                  >
-                    <ejemplo.esperado.icono aria-hidden="true" />
-                    <span className="sr-only">Debería dar: </span>
-                    {ejemplo.esperado.etiqueta}
-                  </Badge>
-                </span>
-              </Button>
-            ))}
-          </div>
-        </section>
+        // La columna ocupa solo las filas del formulario y el resultado: el panel
+        // se queda fijo al hacer scroll, pero se para al llegar al final del
+        // resultado y no pisa «Mándaselo a tu familia», que va en la fila de abajo.
+        <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-stretch">
+          <section
+            aria-labelledby={`${id}-ejemplos`}
+            className="lg:sticky lg:top-8 lg:rounded-xl lg:bg-muted lg:p-6"
+          >
+            <h2 id={`${id}-ejemplos`} className="font-sans text-lg font-medium">
+              ¿Quieres probar con un ejemplo?
+            </h2>
+            <div className="mt-3 flex flex-wrap gap-3 lg:flex-col">
+              {EJEMPLOS.map((ejemplo) => (
+                <Button
+                  key={ejemplo.id}
+                  type="button"
+                  variant="outline"
+                  onClick={() => probarEjemplo(ejemplo.texto)}
+                  className={cn(
+                    "h-auto min-h-12 max-w-full flex-col items-start gap-1.5 border-l-4 px-4 py-2 text-left text-base whitespace-normal",
+                    ejemplo.tipo === "Fraude" ? "border-l-destructive" : "border-l-muted-foreground",
+                  )}
+                >
+                  <span>{ejemplo.nombre}</span>
+                  <span className="flex flex-wrap items-center gap-2 text-sm font-normal">
+                    {ejemplo.tipo && <span className="font-semibold">{ejemplo.tipo}</span>}
+                    <Badge
+                      className={cn(
+                        "h-auto gap-1.5 px-2 py-0.5 text-sm font-medium whitespace-normal [&>svg]:size-4!",
+                        ejemplo.esperado.tono,
+                      )}
+                    >
+                      <ejemplo.esperado.icono aria-hidden="true" />
+                      <span className="sr-only">Debería dar: </span>
+                      {ejemplo.esperado.etiqueta}
+                    </Badge>
+                  </span>
+                </Button>
+              ))}
+            </div>
+          </section>
+        </div>
       )}
 
       <div aria-busy={mostrarCarga} className="empty:hidden lg:col-start-1 lg:row-start-2">
