@@ -60,36 +60,35 @@ export interface Paso {
 export const PASOS: Record<PasoId, Paso> = {
   banco: {
     id: "banco",
-    texto: "Llama a tu banco ahora para bloquear la tarjeta o cuenta",
+    texto: "Llama ahora a tu banco y diles que bloqueen la tarjeta o la cuenta. El teléfono está en el reverso de la tarjeta.",
     urgente: true,
     enlaces: [],
     fuente: "contexto.md §5.6.6 — INCIBE-2026-666/566/375",
   },
   "banco-pago": {
     id: "banco-pago",
-    texto: "Llama a tu banco y pregunta si pueden revertir el cargo",
+    texto: "Llama a tu banco, explícales lo que pasó y pregunta si pueden devolverte el dinero.",
     urgente: true,
     enlaces: [],
     fuente: "contexto.md §5.6.6 — INCIBE-2026-666",
   },
   capturas: {
     id: "capturas",
-    texto: "Guarda capturas del SMS, el correo y la web",
+    texto: "Haz una foto con el móvil al mensaje que recibiste, para tenerlo guardado por si hace falta después.",
     urgente: false,
     enlaces: [],
     fuente: "contexto.md §5.6.6",
   },
   "cambiar-clave": {
     id: "cambiar-clave",
-    texto: "Cambia tu contraseña de Cl@ve Permanente ahora en clave.gob.es",
+    texto: "Cambia tu contraseña de Cl@ve cuanto antes. Escribe tú mismo la dirección en el navegador, no pulses ningún enlace.",
     urgente: true,
     enlaces: [{ texto: "clave.gob.es", url: "https://clave.gob.es" }],
     fuente: "INCIBE-2026-077, contexto.md §4.4",
   },
   "revisar-dehu": {
     id: "revisar-dehu",
-    texto:
-      "Entra en DEHú y Carpeta Ciudadana tecleando la URL (no por enlace) y revisa accesos",
+    texto: "Entra en tu buzón de notificaciones y en tu Carpeta Ciudadana escribiendo tú mismo la dirección, y mira si hay algo raro.",
     urgente: false,
     enlaces: [
       { texto: "dehu.redsara.es", url: "https://dehu.redsara.es" },
@@ -102,22 +101,21 @@ export const PASOS: Record<PasoId, Paso> = {
   },
   "no-dispositivo": {
     id: "no-dispositivo",
-    texto:
-      "No uses ese dispositivo para banca ni contraseñas hasta limpiarlo",
+    texto: "No uses ese teléfono u ordenador para entrar al banco ni para poner contraseñas hasta que alguien de confianza lo revise.",
     urgente: true,
     enlaces: [],
     fuente: "INCIBE 017",
   },
   "no-enlace": {
     id: "no-enlace",
-    texto: "No vuelvas a abrir ese enlace ni llames al número del mensaje",
+    texto: "No vuelvas a pulsar ese enlace ni llames al número que aparecía en el mensaje.",
     urgente: false,
     enlaces: [],
     fuente: "contexto.md §5.6.3",
   },
   denuncia: {
     id: "denuncia",
-    texto: "Denuncia ante la Policía Nacional o la Guardia Civil",
+    texto: "Pon una denuncia en la Policía Nacional o en la Guardia Civil. Puedes hacerlo por internet o yendo en persona.",
     urgente: false,
     enlaces: [
       { texto: "policia.es", url: "https://www.policia.es" },
@@ -127,7 +125,7 @@ export const PASOS: Record<PasoId, Paso> = {
   },
   "017": {
     id: "017",
-    texto: "Llama al 017 (gratuito, 8:00–23:00, los 365 días)",
+    texto: "Llama al 017, es gratis. Te atienden todos los días de 8 de la mañana a 11 de la noche y te explican exactamente qué hacer.",
     urgente: false,
     enlaces: [
       {
@@ -139,7 +137,7 @@ export const PASOS: Record<PasoId, Paso> = {
   },
   "reporte-incibe": {
     id: "reporte-incibe",
-    texto: "Reporta el fraude a INCIBE",
+    texto: "Avisa al organismo oficial de ciberseguridad (INCIBE) de lo que ha pasado.",
     urgente: false,
     enlaces: [
       {

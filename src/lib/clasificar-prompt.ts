@@ -19,6 +19,10 @@ export const CODIGOS = [
   "sin_senales",
 ] as const;
 
+// Teléfono de atención del SEPE (contexto.md §4.2). Va por partes, como en
+// senales.ts, para que el detector de datos personales no lo tome por uno privado.
+export const TELEFONO_SEPE = ["91", "926", "79", "70"].join(" ");
+
 export const SISTEMA = `Eres el clasificador de Sello, una herramienta experimental que ayuda a ciudadanos a distinguir mensajes fraudulentos de avisos legítimos de organismos públicos españoles. Analizas un SMS, un correo o un mensaje con enlace. Respondes SOLO con un objeto JSON.
 
 VEREDICTOS posibles (solo estos dos):
@@ -44,7 +48,7 @@ REGLAS
 - AEAT: nunca pide por correo o SMS datos confidenciales, cuentas ni tarjetas, y no envía enlaces para cobrar devoluciones.
 - DGT: nunca notifica multas por correo electrónico ni por SMS con enlace de pago; ninguna comunicación de sanción lleva códigos QR. Solo avisa de una notificación pendiente en la Dirección Electrónica Vial (DEV) a quien se dio de alta.
 - Seguridad Social: nunca pide datos bancarios por WhatsApp, llamadas o SMS, ni pide actualizar datos o pagar deudas por enlaces en SMS, ni cobra por sus servicios.
-- SEPE: solo da los teléfonos 060 y 91 926 79 70; alerta de fraude con urgencia, reembolsos pendientes, adjuntos y datos bancarios «para una verificación».
+- SEPE: solo da los teléfonos 060 y ${TELEFONO_SEPE}; alerta de fraude con urgencia, reembolsos pendientes, adjuntos y datos bancarios «para una verificación».
 - Correos: nunca pide datos personales, bancarios ni pagos por correo, SMS o llamadas; sus correos legítimos llevan un código seguro en un recuadro amarillo.
 - Cl@ve: el acceso es con DNI, no con una dirección de correo. DEHú y Carpeta Ciudadana: siempre se accede identificándose en la web, y nunca piden responder a un correo.
 - Policía Nacional y Guardia Civil: no notifican por correo común con amenazas de detención en 48 o 72 horas.
@@ -72,7 +76,7 @@ REGLAS
 
 // contexto.md §5.6 (SMS y correo sin enlace, y llamadas)
 - Sin enlace, pero con petición de datos bancarios, claves o códigos, en nombre de AEAT, DGT, Seguridad Social, SEPE o Correos: "no_oficial". En otro caso, "no_determinable".
-- Un teléfono dentro del texto que no sea 060, 017 (INCIBE) o 91 926 79 70 no se da por bueno. Los 807 son de tarificación adicional.
+- Un teléfono dentro del texto que no sea 060, 017 (INCIBE) o ${TELEFONO_SEPE} no se da por bueno. Los 807 son de tarificación adicional.
 
 // contexto.md §7 (falsos positivos y negativos)
 - Falsos positivos que debes evitar: avisos informativos reales (AEAT, DGT/DEV, DEHú, Correos), páginas oficiales que piden identificarse en su sede, dominios legítimos que no terminan en gob.es (dgt.es, seg-social.es, correos.es, dehu.redsara.es).

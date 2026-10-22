@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import ficha from "../../ficha.json";
@@ -32,9 +31,6 @@ export function Cabecera({ activa }: { activa: Seccion }) {
             <span className="text-base text-(--text-secondary)">{ficha.frase}</span>
           </span>
         </span>
-        <Badge variant="outline" className="lg:order-last">
-          {ficha.datos === "reales" ? "Datos públicos" : "Datos simulados"}
-        </Badge>
         {/* En el móvil, una fila propia con las dos secciones a partes iguales. */}
         <nav aria-label="Secciones" className="w-full lg:ml-auto lg:w-auto">
           <ul className="grid grid-cols-2 gap-2 lg:flex">

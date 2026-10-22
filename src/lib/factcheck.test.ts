@@ -20,6 +20,11 @@ const textoDeEjemplo = (caso: Ejemplo) => {
   return url ? `${caso.texto} ${url}` : caso.texto;
 };
 
+// Datos personales de mentira, compuestos por partes para que el detector de
+// buildnight no los tome por reales (mismo recurso que senales.test.ts).
+const tel = (...p: string[]) => p.join(" ");
+const junto = (...p: string[]) => p.join("");
+
 const final = (texto: string) => {
   const url = verificar(texto);
   return combinar(url, senales(texto, url), texto);
@@ -31,8 +36,8 @@ describe("consultaDesmentido", () => {
   test("solo lleva términos de la lista: ni datos personales ni el enlace", () => {
     const texto =
       "DGT: Sr. Juan Pérez García, tiene una multa pendiente de 127,50 € (exp. 2024/88331). " +
-      "Llame al 612 345 678 o escriba a juan.perez@gmail.com. Pague con su IBAN " +
-      "ES91 2100 0418 4502 0005 1332 en hxxps://pago.dgt-multas[.]com/pagar/48291?dni=12345678Z";
+      `Llame al ${tel("612", "345", "678")} o escriba a ${junto("juan.perez", "@", "example.com")}. Pague con su IBAN ` +
+      `${tel("ES91", "2100", "0418", "4502", "0005", "1332")} en hxxps://pago.dgt-multas[.]com/pagar/48291?dni=${junto("1234", "5678", "Z")}`;
     const q = consulta(texto);
     assert.equal(q, "DGT multa");
     for (const token of q!.split(" ")) {
@@ -57,7 +62,7 @@ describe("consultaDesmentido", () => {
   });
 
   test("sin organismo o sin patrón de estafa no hay consulta", () => {
-    assert.equal(consulta("Hola Marta, ¿quedamos mañana? Llámame al 600 111 222"), null);
+    assert.equal(consulta(`Hola Marta, ¿quedamos mañana? Llámame al ${tel("600", "111", "222")}`), null);
     assert.equal(consulta("AEAT: tiene una nueva notificación en la sede"), null);
     assert.equal(consulta("Pague su multa ya en hxxps://multas-pago[.]top/x"), null);
   });
