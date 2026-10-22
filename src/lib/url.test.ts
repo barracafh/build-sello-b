@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { extraerPrimeraUrl, neutralizar } from "./url";
+import { extraerEnlace, extraerPrimeraUrl, neutralizar } from "./url";
 
 describe("extraerPrimeraUrl", () => {
   test("encuentra una URL en vivo", () => {
@@ -17,6 +17,27 @@ describe("extraerPrimeraUrl", () => {
 
   test("devuelve solo la primera", () => {
     assert.equal(extraerPrimeraUrl("http://a.com y http://b.com"), "http://a.com");
+  });
+});
+
+describe("extraerEnlace", () => {
+  test("extrae un dominio oficial sin esquema", () => {
+    assert.deepEqual(extraerEnlace("Para pagar acceda a sede.dgt.gob.es"), {
+      crudo: "sede.dgt.gob.es",
+      conEsquema: false,
+    });
+  });
+
+  test("extrae una trampa sin esquema", () => {
+    assert.deepEqual(extraerEnlace("Acceda a dgt.es.multas-pago.com ya"), {
+      crudo: "dgt.es.multas-pago.com",
+      conEsquema: false,
+    });
+  });
+
+  test("no toma importes ni abreviaturas por dominios", () => {
+    assert.equal(extraerEnlace("Importe 1.500,00 euros"), null);
+    assert.equal(extraerEnlace("Multas, recargos, etc. DGT"), null);
   });
 });
 
