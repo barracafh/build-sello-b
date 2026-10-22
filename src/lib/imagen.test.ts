@@ -11,7 +11,7 @@ import {
   recortar,
   validarImagen,
 } from "./imagen";
-import type { Mensaje } from "./ia";
+import type { Mensaje, OpcionesIa } from "./ia";
 
 // Primeros bytes de cada formato: el tipo se decide por el contenido, no por el nombre.
 const FIRMAS: Record<string, number[]> = {
@@ -87,6 +87,17 @@ describe("mensajesParaImagen", () => {
     assert.match(sistema, /sin comentarios/i);
   });
 
+  // LAB-78: el modelo cambiaba letras de los dominios (dgt→dgi, agenciatriibutaria).
+  test("pide copiar URLs, dominios y remitentes carácter a carácter", () => {
+    const sistema = mensajes.find((m) => m.role === "system")?.content as string;
+    assert.match(sistema, /carácter a carácter/i);
+    assert.match(sistema, /dominios/i);
+    assert.match(sistema, /remitente/i);
+    assert.match(sistema, /i\/l\/1/);
+    assert.match(sistema, /rn\/m/);
+    assert.match(sistema, /marca conocida/i);
+  });
+
   test("sin texto, pide el marcador fijo en vez de una respuesta vacía", () => {
     const sistema = mensajes.find((m) => m.role === "system")?.content as string;
     assert.ok(sistema.includes(SIN_TEXTO));
@@ -144,6 +155,15 @@ describe("leerImagen", () => {
     const res = await leerImagen(conImagen(archivo("image/png", 16)), async () => "  ");
     assert.equal(res.status, 503);
     assert.deepEqual(await res.json(), { error: ERROR_IA, codigo: "ia" });
+  });
+
+  test("transcribe con temperatura 0", async () => {
+    let opciones: OpcionesIa | undefined;
+    await leerImagen(conImagen(archivo("image/png", 16)), async (_m, o) => {
+      opciones = o;
+      return "Hola";
+    });
+    assert.equal(opciones?.temperatura, 0);
   });
 
   test("200 con el texto transcrito, una sola llamada", async () => {
