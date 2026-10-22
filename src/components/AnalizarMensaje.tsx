@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { ExternalLink, Link2, Phone } from "lucide-react";
+import { ExternalLink, ImageUp, Link2, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ruta } from "@/config/sitio";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Fuentes } from "@/components/Fuentes";
 import { avisosIncibe, horario017, linea017 } from "@/datos/incibe";
@@ -22,7 +23,8 @@ import {
 import ejemplos from "../../datos/mensajes-ejemplo.json";
 
 // El texto vive en el estado del navegador y se envía solo a /api/verificar,
-// que no lo guarda ni lo registra.
+// que no lo guarda ni lo registra. Una captura va a /api/imagen, que devuelve
+// su texto para revisarlo aquí; la imagen tampoco se guarda.
 //
 // Enlace para compartir: el mensaje va en el fragmento (#mensaje=…), que el
 // navegador nunca envía al servidor, así que no acaba en ningún log.
@@ -95,6 +97,8 @@ export function AnalizarMensaje({
   const [error, setError] = useState<{ texto: string; delCampo: boolean } | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [avisoEnlace, setAvisoEnlace] = useState<string | null>(null);
+  const [leyendo, setLeyendo] = useState(false);
+  const imagenRef = useRef<HTMLInputElement>(null);
   const campoRef = useRef<HTMLTextAreaElement>(null);
   const comprobarRef = useRef<HTMLButtonElement>(null);
   const tituloRef = useRef<HTMLHeadingElement>(null);
@@ -132,6 +136,36 @@ export function AnalizarMensaje({
   function probarEjemplo(texto: string) {
     cambiar(texto);
     comprobarRef.current?.focus();
+  }
+
+  // Una sola llamada por imagen elegida. El texto rellena el campo para que la
+  // persona lo revise antes de comprobarlo; la imagen no se conserva.
+  async function leerCaptura(imagen: File | undefined) {
+    if (imagenRef.current) imagenRef.current.value = "";
+    if (!imagen) return;
+    cambiar(mensaje);
+    setLeyendo(true);
+    const esta = peticion.current;
+    let texto: string | null = null;
+    let fallo = "No hemos podido leer la imagen. Copia el texto del mensaje y pégalo.";
+    try {
+      const cuerpo = new FormData();
+      cuerpo.set("imagen", imagen);
+      const res = await fetch(ruta("/api/imagen"), { method: "POST", body: cuerpo });
+      const datos = await res.json();
+      if (res.ok && typeof datos.texto === "string") texto = datos.texto;
+      else if (typeof datos.error === "string") fallo = datos.error;
+    } catch {
+      // Sin red o sin JSON: se queda el mensaje de error por defecto.
+    }
+    setLeyendo(false);
+    if (esta !== peticion.current) return;
+    if (texto) cargar(texto);
+    else
+      setError({
+        texto: texto === "" ? "No hemos encontrado texto en la imagen. Copia el mensaje y pégalo." : fallo,
+        delCampo: false,
+      });
   }
 
   async function comprobar(texto: string) {
@@ -294,6 +328,38 @@ export function AnalizarMensaje({
               {miles(mensaje.length)} de {miles(LIMITE)} caracteres como máximo
             </p>
           )}
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+            {/* El selector nativo queda oculto; se abre con el botón, que sí se ve y tiene foco. */}
+            <Input
+              ref={imagenRef}
+              id={`${id}-imagen`}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              tabIndex={-1}
+              aria-hidden="true"
+              className="hidden"
+              onChange={(event) => leerCaptura(event.target.files?.[0])}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              disabled={leyendo || enviando}
+              focusableWhenDisabled
+              aria-describedby={`${id}-imagen-ayuda`}
+              onClick={() => imagenRef.current?.click()}
+              className="h-12 gap-2 px-5 text-lg max-sm:w-full"
+            >
+              <ImageUp aria-hidden="true" className="size-5" />
+              {leyendo ? "Leyendo la imagen…" : "Subir una captura"}
+            </Button>
+            <p id={`${id}-imagen-ayuda`} className="min-w-0 flex-[1_1_200px] text-base text-(--text-secondary)">
+              PNG, JPG o WebP de hasta 4 MB. Sacamos el texto para que lo revises.
+            </p>
+          </div>
+          <p role="status" className="sr-only">
+            {leyendo ? "Leyendo la imagen…" : ""}
+          </p>
           {error && (
             <p
               id={`${id}-error`}
@@ -310,7 +376,7 @@ export function AnalizarMensaje({
             // oficial), esta pasa a secundaria: una sola por pantalla.
             variant={web ? "outline" : "sunset"}
             size="lg"
-            disabled={enviando}
+            disabled={enviando || leyendo}
             // Sin perder el foco mientras comprueba (un botón deshabilitado lo suelta).
             focusableWhenDisabled
             className="mt-6 h-14 px-6 text-lg max-sm:w-full"
@@ -321,7 +387,7 @@ export function AnalizarMensaje({
             id={`${id}-privacidad`}
             className="mt-3 text-base text-(--text-secondary)"
           >
-            No guardamos lo que pegas ni abrimos sus enlaces.
+            No guardamos lo que pegas ni las imágenes, ni abrimos sus enlaces.
           </p>
         </form>
       </div>
