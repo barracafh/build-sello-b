@@ -7,3 +7,7 @@ out/
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store
+
+# Conjunto de prueba de evals: nunca en el repo (LAB-47)
+*evals-holdout/
+src/datos/evals/**/test.json
