@@ -78,11 +78,11 @@ export const VEREDICTOS: Record<Veredicto, FichaVeredicto> = {
         : "Esta web está en nuestra lista de webs oficiales",
     entradilla:
       "Solo comprobamos la dirección, no lo que te pidan dentro. Para volver a entrar, escribe tú la dirección.",
-    // Neutro a propósito: Sol no tiene verde y es el veredicto con el que menos
-    // queremos que alguien se relaje.
-    tono: "bg-muted text-foreground",
-    fondo: "bg-muted",
-    colorIcono: "[&>svg]:text-foreground",
+    // Verde de éxito de Import@ss (src/styles/importass.css, LAB-58): el texto
+    // sigue en foreground sobre el tinte y el verde va en el icono (4,97:1).
+    tono: "bg-iss-success-700/20 text-foreground [&>svg]:text-iss-success-700",
+    fondo: "bg-iss-success-700/20",
+    colorIcono: "[&>svg]:text-iss-success-700",
     pasos: [
       "Aun así, no des datos si no lo esperabas.",
       "Si dudas, entra tú escribiendo la dirección de la web oficial.",
