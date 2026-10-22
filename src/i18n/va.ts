@@ -66,7 +66,7 @@ export const va = {
     ayudaCampo:
       "Pot ser un SMS, un correu o l'enllaç d'una web. Inclou el remitent i l'enllaç tal com apareixen.",
     noPulses: "No toques l'enllaç.",
-    ayudaImagen: "PNG, JPG o WebP de fins a 4 MB. Traiem el text perquè el revises.",
+    ayudaImagen: "Captura en PNG, JPG o WebP, fins a 4 MB.",
     privacidad: "No guardem el que apegues ni les imatges, ni obrim els seus enllaços.",
     ejemplos: "Vols provar amb un exemple?",
     remitente: "Remitent del missatge",
@@ -100,9 +100,8 @@ export const va = {
   compartir: {
     ...ca.compartir,
     titulo: "Envia-ho a la teua família",
-    explicacion:
-      "Hi va el missatge que has comprovat, amb els enllaços desactivats, i el resultat. Lleva abans el que siga personal.",
     copiado: "Text copiat. Apega'l en el xat de la teua família.",
+    noCopiado: "No l'hem pogut copiar. Prova amb «Envia per WhatsApp».",
     meHaLlegado: "M'ha arribat este missatge:",
     pie: (nombre: string, url: string) =>
       `Ho he comprovat amb ${nombre}, una ferramenta experimental que no és un servei oficial: ${url}`,

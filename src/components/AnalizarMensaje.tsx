@@ -86,8 +86,7 @@ const contextoMd = (señales: Respuesta["señales"], t: Diccionario) => {
 
 // `intro` va encima del formulario, en su columna: así el panel de ejemplos
 // arranca a la altura de la entradilla en escritorio. Los ejemplos solo se
-// enseñan con `conEjemplos`: la página lo activa por defecto y lo apaga con
-// ?casos-test=false o =0. TODO(prod): volver a ocultarlo por defecto.
+// enseñan con `conEjemplos`, que la página activa solo con ?casos-test=true.
 export function AnalizarMensaje({
   intro,
   conEjemplos = false,
@@ -349,10 +348,10 @@ export function AnalizarMensaje({
           aria-describedby={`${id}-privacidad`}
           className={intro ? "mt-10" : undefined}
         >
-          <label htmlFor={`${id}-mensaje`} className="block text-xl font-medium">
+          <label htmlFor={`${id}-mensaje`} className="block text-lg font-medium">
             {a.etiquetaCampo}
           </label>
-          <p id={`${id}-ayuda`} className="mt-1 text-(--text-secondary)">
+          <p id={`${id}-ayuda`} className="mt-1 text-base text-(--text-secondary)">
             {a.ayudaCampo}{" "}
             <strong className="font-semibold text-foreground">{a.noPulses}</strong>
           </p>
@@ -372,7 +371,8 @@ export function AnalizarMensaje({
             spellCheck={false}
             autoComplete="off"
             placeholder={a.placeholder}
-            className="mt-4 min-h-44 px-4 py-3 text-lg leading-relaxed md:text-lg [overflow-wrap:anywhere]"
+            // Fondo amarillo suave: aquí es donde se pega el mensaje.
+            className="mt-3 min-h-40 bg-brand-yellow/15 px-4 py-3 text-base leading-relaxed md:text-base [overflow-wrap:anywhere]"
           />
           {cercaDelLimite && (
             <p
@@ -387,18 +387,31 @@ export function AnalizarMensaje({
               {a.contador(miles(mensaje.length), miles(LIMITE))}
             </p>
           )}
-          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-            {/* El selector nativo queda oculto; se abre con el botón, que sí se ve y tiene foco. */}
-            <Input
-              ref={imagenRef}
-              id={`${id}-imagen`}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              tabIndex={-1}
-              aria-hidden="true"
-              className="hidden"
-              onChange={(event) => leerCaptura(event.target.files?.[0])}
-            />
+          {/* El selector nativo queda oculto; se abre con el botón, que sí se ve y tiene foco. */}
+          <Input
+            ref={imagenRef}
+            id={`${id}-imagen`}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            tabIndex={-1}
+            aria-hidden="true"
+            className="hidden"
+            onChange={(event) => leerCaptura(event.target.files?.[0])}
+          />
+          <p role="status" className="sr-only">
+            {leyendo ? a.leyendoImagen : ""}
+          </p>
+          {error && (
+            <p
+              id={`${id}-error`}
+              role="alert"
+              className="mt-2 text-base font-medium text-destructive"
+            >
+              {error.texto}
+            </p>
+          )}
+          {/* Las dos acciones en una fila, también en el móvil (a partes iguales). */}
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:flex">
             <Button
               type="button"
               variant="outline"
@@ -407,48 +420,42 @@ export function AnalizarMensaje({
               focusableWhenDisabled
               aria-describedby={`${id}-imagen-ayuda`}
               onClick={() => imagenRef.current?.click()}
-              className="h-auto min-h-12 gap-2 px-5 py-2 text-lg whitespace-normal max-sm:w-full"
+              className="h-12 gap-2 px-3 text-base sm:px-4"
             >
-              <ImageUp aria-hidden="true" className="size-5" />
-              {leyendo ? a.leyendoImagen : a.subirCaptura}
+              {/* A 320 px no cabe con icono. */}
+              <ImageUp aria-hidden="true" className="size-5 max-[22.5rem]:hidden" />
+              {leyendo ? a.leyendoCorto : a.subirCaptura}
             </Button>
-            <p id={`${id}-imagen-ayuda`} className="min-w-0 flex-[1_1_200px] text-base text-(--text-secondary)">
-              {a.ayudaImagen}
-            </p>
-          </div>
-          <p role="status" className="sr-only">
-            {leyendo ? a.leyendoImagen : ""}
-          </p>
-          {error && (
-            <p
-              id={`${id}-error`}
-              role="alert"
-              className="mt-2 font-medium text-destructive"
+            <Button
+              ref={comprobarRef}
+              type="submit"
+              // Si el resultado trae su propia acción principal (ir a la web
+              // oficial), esta pasa a secundaria: una sola por pantalla.
+              variant={web ? "outline" : "sunset"}
+              size="lg"
+              disabled={enviando || leyendo}
+              // Sin perder el foco mientras comprueba (un botón deshabilitado lo suelta).
+              focusableWhenDisabled
+              className="h-12 px-3 text-base sm:px-5"
             >
-              {error.texto}
-            </p>
-          )}
-          <Button
-            ref={comprobarRef}
-            type="submit"
-            // Si el resultado trae su propia acción principal (ir a la web
-            // oficial), esta pasa a secundaria: una sola por pantalla.
-            variant={web ? "outline" : "sunset"}
-            size="lg"
-            disabled={enviando || leyendo}
-            // Sin perder el foco mientras comprueba (un botón deshabilitado lo suelta).
-            focusableWhenDisabled
-            className="mt-6 h-14 px-6 text-lg max-sm:w-full"
-          >
-            {enviando ? (
-              <>
-                <Spinner />
-                {a.comprobando}
-              </>
-            ) : (
-              a.comprobar
-            )}
-          </Button>
+              {enviando ? (
+                <>
+                  <Spinner />
+                  {a.comprobando}
+                </>
+              ) : (
+                // Dos textos enteros: con uno partido, el hueco del botón (gap) separa las palabras de más.
+                <>
+                  <span className="sm:hidden">{a.comprobarCorto}</span>
+                  <span className="max-sm:hidden">{a.comprobar}</span>
+                </>
+              )}
+            </Button>
+          </div>
+          {/* Notas secundarias: más pequeñas y finas que el resto, a petición. */}
+          <p id={`${id}-imagen-ayuda`} className="mt-2 text-sm font-light text-(--text-secondary)">
+            {a.ayudaImagen}
+          </p>
           {/* Un solo anuncio al empezar. El veredicto lo lee el lector al recibir
               el foco su titular, y los errores ya son role="alert": aquí no se repiten. */}
           <p aria-live="polite" className="sr-only">
@@ -456,7 +463,7 @@ export function AnalizarMensaje({
           </p>
           <p
             id={`${id}-privacidad`}
-            className="mt-3 text-base text-(--text-secondary)"
+            className="mt-0.5 text-sm font-light text-(--text-secondary)"
           >
             {a.privacidad}
           </p>
@@ -815,7 +822,6 @@ export function AnalizarMensaje({
         <div className="lg:col-span-2 lg:row-start-3">
           <CompartirFamilia
             titulo={t.compartir.titulo}
-            explicacion={t.compartir.explicacion}
             texto={textoParaFamilia(mensaje, respuesta, idioma)}
             idioma={idioma}
           />

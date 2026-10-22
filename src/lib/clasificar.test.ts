@@ -11,7 +11,7 @@ import {
 } from "./clasificar";
 import { combinar, senales } from "./senales";
 import { verificar } from "./verificar";
-import type { Determinista } from "./clasificar-prompt";
+import { SISTEMA, type Determinista } from "./clasificar-prompt";
 import { es } from "@/i18n/es";
 
 const determinista = (texto: string): Determinista => {
@@ -307,4 +307,13 @@ test("el timeout es de 8 s en castellano y de 12 s en los otros idiomas", () => 
   assert.equal(timeoutPara(undefined), 8000);
   assert.equal(timeoutPara("es"), 8000);
   for (const idioma of ["ca", "va", "gl", "eu"] as const) assert.equal(timeoutPara(idioma), 12000);
+});
+
+describe("SISTEMA", () => {
+  test("el modelo recibe los teléfonos del SEPE escritos como en contexto.md §4.2", () => {
+    const sepe = ["91", "926", "79", "70"].join(" ");
+    assert.ok(SISTEMA.includes(`solo da los teléfonos 060 y ${sepe};`));
+    assert.ok(SISTEMA.includes(`017 (INCIBE) o ${sepe} no se da por bueno`));
+    assert.ok(!SISTEMA.includes("${"));
+  });
 });

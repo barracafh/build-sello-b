@@ -1,6 +1,5 @@
 import { ExternalLink, Phone } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
-import { site } from "@/config/sitio";
+import { BotonAviso } from "@/components/BotonAviso";
 import { avisosIncibe, linea017 } from "@/datos/incibe";
 import { cn } from "@/lib/utils";
 import ficha from "../../ficha.json";
@@ -92,15 +91,11 @@ export function Pie({ idioma = "es" }: { idioma?: Idioma }) {
           <p className="mt-3 text-(--text-secondary)">
             {t.pie.privacidad}
           </p>
-          <a
-            href={site.feedbackUrl}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "lg" }),
-              "mt-4 h-auto min-h-12 px-5 py-2 text-base whitespace-normal",
-            )}
-          >
-            {t.botonAviso}
-          </a>
+          <BotonAviso
+            variant="outline"
+            idioma={idioma}
+            className="mt-4 h-auto min-h-12 px-5 py-2 text-base whitespace-normal"
+          />
         </section>
       </div>
 

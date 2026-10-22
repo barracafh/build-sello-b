@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import ficha from "../../ficha.json";
@@ -36,11 +35,8 @@ export function Cabecera({ activa, idioma = "es" }: { activa: Seccion; idioma?: 
             <span className="text-base text-(--text-secondary)">{ficha.frase}</span>
           </span>
         </span>
-        <span className="flex flex-wrap items-center gap-4 lg:order-last">
+        <span className="lg:order-last">
           <SelectorIdioma idioma={idioma} etiqueta={t.selector.etiqueta} />
-          <Badge variant="outline">
-            {ficha.datos === "reales" ? t.cabecera.datosReales : t.cabecera.datosSimulados}
-          </Badge>
         </span>
         {/* En el móvil, una fila propia con las dos secciones a partes iguales. */}
         <nav aria-label="Secciones" className="w-full lg:ml-auto lg:w-auto">

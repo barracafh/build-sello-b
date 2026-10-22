@@ -7,9 +7,8 @@ import { mostrarCasosTest } from "@/lib/casos-test";
 import { diccionario } from "@/i18n";
 import { idiomaDePeticion } from "@/i18n/servidor";
 
-// El panel de ejemplos (para demos y pruebas) se enseña por defecto; con
-// ?casos-test=false o =0 se oculta y el verificador ocupa todo el ancho.
-// TODO(prod): antes de producción, volver a ocultarlo por defecto.
+// El panel de ejemplos (para demos y pruebas) solo sale con ?casos-test=true;
+// sin él, el verificador ocupa todo el ancho.
 // Anchos del portal Import@ss (evidencia en docs/evidencias/ancho-importass.md):
 // header y pie a 1024 px (max-w-5xl = 64rem, como .ss-header y .ss-wrapper) y el
 // contenido a 58rem con 2rem de margen, como .ss-content. Con el panel de

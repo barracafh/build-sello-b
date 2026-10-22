@@ -85,10 +85,12 @@ export const es = {
     placeholder:
       "DGT: Dispone de 24 horas para pagar su multa. Consulte en el siguiente enlace: hxxps://…",
     contador: (actual: string, maximo: string) => `${actual} de ${maximo} caracteres como máximo`,
-    subirCaptura: "Subir una captura",
+    subirCaptura: "Subir captura",
     leyendoImagen: "Leyendo la imagen…",
-    ayudaImagen: "PNG, JPG o WebP de hasta 4 MB. Sacamos el texto para que lo revises.",
-    comprobar: "Comprobar el mensaje",
+    ayudaImagen: "Captura en PNG, JPG o WebP, hasta 4 MB.",
+    comprobar: "Comprobar mensaje",
+    comprobarCorto: "Comprobar",
+    leyendoCorto: "Leyendo…",
     comprobando: "Comprobando…",
     privacidad: "No guardamos lo que pegas ni las imágenes, ni abrimos sus enlaces.",
     ejemplos: "¿Quieres probar con un ejemplo?",
@@ -222,15 +224,12 @@ export const es = {
   },
   compartir: {
     titulo: "Mándaselo a tu familia",
-    explicacion:
-      "Va el mensaje que has comprobado, con sus enlaces desactivados, y el resultado. Quita antes lo que sea personal.",
-    etiqueta: "Esto es lo que se envía. Puedes cambiarlo:",
     whatsapp: "Enviar por WhatsApp",
     otraVentana: " (se abre en otra ventana)",
     otraApp: "Otra app",
     copiar: "Copiar el texto",
     copiado: "Texto copiado. Pégalo en el chat de tu familia.",
-    noCopiado: "No hemos podido copiarlo. Selecciona el texto de la caja y cópialo.",
+    noCopiado: "No hemos podido copiarlo. Prueba con «Enviar por WhatsApp».",
     // Texto que se manda (src/lib/compartir.ts).
     meHaLlegado: "Me ha llegado este mensaje:",
     pie: (nombre: string, url: string) =>

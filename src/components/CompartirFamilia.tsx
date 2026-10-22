@@ -1,37 +1,35 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import { Copy, MessageCircle, Share2 } from "lucide-react";
+import { Copy, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+import { IconoWhatsApp } from "@/components/IconoWhatsApp";
 import { enlaceWhatsApp } from "@/lib/compartir";
 import { diccionario, type Idioma } from "@/i18n";
 
+// Botones blancos sobre el verde. El anillo de foco en foreground: el gris de
+// Sol apenas se ve sobre el verde.
 // Con altura libre: en euskera algunos textos no caben en una línea a 320 px.
-const boton = "h-auto min-h-12 gap-2 px-5 py-2 text-lg whitespace-normal max-sm:w-full";
+const boton =
+  "h-auto min-h-12 gap-2 border-transparent px-5 py-2 text-lg whitespace-normal focus-visible:ring-foreground/60 max-sm:w-full";
 
-// Enseña el texto que se va a mandar en una caja como la principal, editable,
-// y lo envía por WhatsApp, por el menú de compartir del móvil o copiándolo. El
-// texto vive en el navegador: no pasa por nuestro servidor.
+// Franja verde WhatsApp con el título y los botones. El texto no se enseña: va
+// dentro de los botones y se ve (y se puede cambiar) en WhatsApp o en la app
+// elegida antes de enviarlo. Vive en el navegador: no pasa por nuestro servidor.
 export function CompartirFamilia({
   titulo,
-  explicacion,
   texto,
   idioma = "es",
 }: {
   titulo: string;
-  explicacion: string;
   texto: string;
   idioma?: Idioma;
 }) {
   const id = useId();
   const t = diccionario(idioma).compartir;
   const [aviso, setAviso] = useState<string | null>(null);
-  // Se puede editar; si cambia el resultado, vuelve al texto propuesto.
-  const [valor, setValor] = useState(texto);
-  useEffect(() => setValor(texto), [texto]);
   // `navigator.share` solo existe en el navegador (y no en todos): se mira al montar.
   const [puedeCompartir, setPuedeCompartir] = useState(false);
   useEffect(() => setPuedeCompartir(typeof navigator.share === "function"), []);
@@ -39,7 +37,7 @@ export function CompartirFamilia({
 
   async function compartir() {
     try {
-      await navigator.share({ text: valor });
+      await navigator.share({ text: texto });
     } catch {
       // Cancelado por la persona o sin permiso: no hay nada que avisar.
     }
@@ -47,7 +45,7 @@ export function CompartirFamilia({
 
   async function copiar() {
     try {
-      await navigator.clipboard.writeText(valor);
+      await navigator.clipboard.writeText(texto);
       setAviso(t.copiado);
     } catch {
       setAviso(t.noCopiado);
@@ -55,41 +53,25 @@ export function CompartirFamilia({
   }
 
   return (
+    // Verde de WhatsApp (src/styles/marcas.css) con el texto en foreground: 10:1.
     <Card
       render={<section aria-labelledby={`${id}-titulo`} />}
-      className="gap-0 px-6 py-6 text-lg md:px-8 md:py-8"
+      className="flex-row flex-wrap items-center justify-between gap-x-6 gap-y-4 bg-whatsapp px-6 py-6 text-lg ring-0 md:px-8"
     >
       {/* h2: va fuera del resultado, al mismo nivel que él. */}
       <h2 id={`${id}-titulo`} className="font-sans text-xl font-semibold">
         {titulo}
       </h2>
-      <p className="mt-2 text-(--text-secondary)">{explicacion}</p>
 
-      <label htmlFor={`${id}-texto`} className="mt-4 block font-medium">
-        {t.etiqueta}
-      </label>
-      {/* Las mismas clases que la caja principal de AnalizarMensaje. */}
-      <Textarea
-        id={`${id}-texto`}
-        value={valor}
-        onChange={(event) => {
-          setValor(event.target.value);
-          setAviso(null);
-        }}
-        rows={10}
-        spellCheck={false}
-        autoComplete="off"
-        className="mt-4 min-h-44 px-4 py-3 text-lg leading-relaxed md:text-lg [overflow-wrap:anywhere]"
-      />
-
-      <div className="mt-5 flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 max-sm:w-full">
         <a
-          href={enlaceWhatsApp(valor)}
+          href={enlaceWhatsApp(texto)}
           target="_blank"
           rel="noopener noreferrer"
           className={cn(buttonVariants({ variant: "outline", size: "lg" }), boton)}
         >
-          <MessageCircle aria-hidden="true" className="size-5" />
+          {/* El logotipo en su verde, como lo usa la marca sobre blanco. */}
+          <IconoWhatsApp className="size-5 text-whatsapp" />
           {t.whatsapp}
           <span className="sr-only">{t.otraVentana}</span>
         </a>
@@ -104,7 +86,9 @@ export function CompartirFamilia({
           {t.copiar}
         </Button>
       </div>
-      <p role="status" className="mt-3 text-base font-medium empty:mt-0">
+
+      {/* Vacío, fuera de la fila pero en el árbol accesible: así el aviso se anuncia al llegar. */}
+      <p role="status" className="w-full text-base font-medium empty:sr-only">
         {aviso}
       </p>
     </Card>

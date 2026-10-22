@@ -1,12 +1,20 @@
+import type { VariantProps } from "class-variance-authority";
 import { buttonVariants } from "@/components/ui/button";
 import { site } from "@/config/sitio";
+import { cn } from "@/lib/utils";
 import { diccionario, type Idioma } from "@/i18n";
 
-export function BotonAviso({ idioma = "es" }: { idioma?: Idioma }) {
+type BotonAvisoProps = {
+  className?: string;
+  variant?: VariantProps<typeof buttonVariants>["variant"];
+  idioma?: Idioma;
+};
+
+export function BotonAviso({ className, variant = "sunset", idioma = "es" }: BotonAvisoProps) {
   return (
     <a
       href={site.feedbackUrl}
-      className={buttonVariants({ variant: "sunset", size: "lg" })}
+      className={cn(buttonVariants({ variant, size: "lg" }), className)}
     >
       {diccionario(idioma).botonAviso}
     </a>
