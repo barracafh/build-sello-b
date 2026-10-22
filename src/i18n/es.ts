@@ -16,7 +16,6 @@ export const es = {
     datosSimulados: "Datos simulados",
   },
   pagina: {
-    antetitulo: "Verificador de mensajes",
     titulo: "¿Este mensaje es de verdad?",
     intro:
       "Pega un SMS, un correo o una web que dice ser de la DGT, Hacienda u otro organismo y te decimos si podemos confirmarlo.",

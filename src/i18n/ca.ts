@@ -35,7 +35,6 @@ export const ca = {
     datosSimulados: "Dades simulades",
   },
   pagina: {
-    antetitulo: "Verificador de missatges",
     titulo: "Aquest missatge és de veritat?",
     intro:
       "Enganxa un SMS, un correu o una web que diu ser de la DGT, d'Hisenda o d'un altre organisme i et direm si ho podem confirmar.",

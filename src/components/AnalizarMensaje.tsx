@@ -339,10 +339,10 @@ export function AnalizarMensaje({
           aria-describedby={`${id}-privacidad`}
           className={intro ? "mt-10" : undefined}
         >
-          <label htmlFor={`${id}-mensaje`} className="block text-lg font-medium">
+          <label htmlFor={`${id}-mensaje`} className="block text-base font-medium">
             {a.etiquetaCampo}
           </label>
-          <p id={`${id}-ayuda`} className="mt-1 text-base text-(--text-secondary)">
+          <p id={`${id}-ayuda`} className="mt-1 text-sm text-(--text-secondary)">
             {a.ayudaCampo}{" "}
             <strong className="font-semibold text-foreground">{a.noPulses}</strong>
           </p>
@@ -362,8 +362,8 @@ export function AnalizarMensaje({
             spellCheck={false}
             autoComplete="off"
             placeholder={a.placeholder}
-            // Fondo amarillo suave: aquí es donde se pega el mensaje.
-            className="mt-3 min-h-40 bg-brand-yellow/15 px-4 py-3 text-base leading-relaxed md:text-base [overflow-wrap:anywhere]"
+            // Fondo gris claro: el muted de Sol al 70 % sobre blanco da #f8f8f8, sin color nuevo.
+            className="mt-3 min-h-40 bg-muted/70 px-4 py-3 text-base leading-relaxed md:text-base [overflow-wrap:anywhere]"
           />
           {cercaDelLimite && (
             <p

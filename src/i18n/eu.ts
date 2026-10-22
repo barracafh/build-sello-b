@@ -35,7 +35,6 @@ export const eu = {
     datosSimulados: "Datu simulatuak",
   },
   pagina: {
-    antetitulo: "Mezu-egiaztatzailea",
     titulo: "Mezu hau benetakoa da?",
     intro:
       "Itsatsi DGTrena, Ogasunarena edo beste erakunde batena dela dioen SMS, mezu elektroniko edo webgune bat, eta baieztatu dezakegun esango dizugu.",

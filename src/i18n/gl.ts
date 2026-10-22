@@ -35,7 +35,6 @@ export const gl = {
     datosSimulados: "Datos simulados",
   },
   pagina: {
-    antetitulo: "Verificador de mensaxes",
     titulo: "Esta mensaxe é de verdade?",
     intro:
       "Pega un SMS, un correo ou unha web que di ser da DGT, de Facenda ou doutro organismo e dicímosche se podemos confirmalo.",
