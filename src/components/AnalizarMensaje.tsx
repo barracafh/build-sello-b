@@ -66,8 +66,15 @@ const frases: Record<string, string> = {
 };
 
 // `intro` va encima del formulario, en su columna: así el panel de ejemplos
-// arranca a la altura de la entradilla en escritorio.
-export function AnalizarMensaje({ intro }: { intro?: ReactNode }) {
+// arranca a la altura de la entradilla en escritorio. Los ejemplos solo se
+// enseñan con `conEjemplos` (la página lo activa con ?casos-test).
+export function AnalizarMensaje({
+  intro,
+  conEjemplos = false,
+}: {
+  intro?: ReactNode;
+  conEjemplos?: boolean;
+}) {
   const id = useId();
   const [mensaje, setMensaje] = useState("");
   const [respuesta, setRespuesta] = useState<Respuesta | null>(null);
@@ -204,7 +211,14 @@ export function AnalizarMensaje({ intro }: { intro?: ReactNode }) {
 
   return (
     // En escritorio, dos columnas: formulario y resultado a la izquierda; ejemplos a la derecha.
-    <div className="text-lg leading-relaxed max-lg:[&>*+*]:mt-12 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-x-16 lg:gap-y-12">
+    <div
+      className={cn(
+        "text-lg leading-relaxed",
+        conEjemplos
+          ? "max-lg:[&>*+*]:mt-12 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-x-16 lg:gap-y-12"
+          : "[&>*+*]:mt-12",
+      )}
+    >
       <div className="lg:col-start-1 lg:row-start-1">
         {intro}
         <form
@@ -305,27 +319,29 @@ export function AnalizarMensaje({ intro }: { intro?: ReactNode }) {
         </form>
       </div>
 
-      <section
-        aria-labelledby={`${id}-ejemplos`}
-        className="lg:sticky lg:top-8 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:rounded-xl lg:bg-muted lg:p-6"
-      >
-        <h2 id={`${id}-ejemplos`} className="font-sans text-lg font-medium">
-          ¿Quieres probar con un ejemplo?
-        </h2>
-        <div className="mt-3 flex flex-wrap gap-3 lg:flex-col">
-          {EJEMPLOS.map((ejemplo) => (
-            <Button
-              key={ejemplo.id}
-              type="button"
-              variant="outline"
-              onClick={() => probarEjemplo(ejemplo.texto)}
-              className="h-auto min-h-12 px-4 py-2 text-base whitespace-normal lg:justify-start lg:text-left"
-            >
-              {ejemplo.nombre}
-            </Button>
-          ))}
-        </div>
-      </section>
+      {conEjemplos && (
+        <section
+          aria-labelledby={`${id}-ejemplos`}
+          className="lg:sticky lg:top-8 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:rounded-xl lg:bg-muted lg:p-6"
+        >
+          <h2 id={`${id}-ejemplos`} className="font-sans text-lg font-medium">
+            ¿Quieres probar con un ejemplo?
+          </h2>
+          <div className="mt-3 flex flex-wrap gap-3 lg:flex-col">
+            {EJEMPLOS.map((ejemplo) => (
+              <Button
+                key={ejemplo.id}
+                type="button"
+                variant="outline"
+                onClick={() => probarEjemplo(ejemplo.texto)}
+                className="h-auto min-h-12 px-4 py-2 text-base whitespace-normal lg:justify-start lg:text-left"
+              >
+                {ejemplo.nombre}
+              </Button>
+            ))}
+          </div>
+        </section>
+      )}
 
       {respuesta && ficha && (
         <section

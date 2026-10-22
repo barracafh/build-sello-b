@@ -34,7 +34,17 @@ const columnasPie = [
 const enlacePie =
   "inline-block py-2.5 text-(--azul-importass) underline underline-offset-4 hover:text-(--azul-importass-oscuro) hover:decoration-2 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-(--azul-importass-oscuro)";
 
-export default function Home() {
+// ?casos-test enseña el panel de ejemplos (para demos y pruebas); sin él, el
+// verificador ocupa todo el ancho. ?casos-test=false o =0 también lo ocultan.
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const casosTest = (await searchParams)["casos-test"];
+  const valor = Array.isArray(casosTest) ? casosTest[0] : casosTest;
+  const conEjemplos = valor !== undefined && valor !== "false" && valor !== "0";
+
   return (
     <>
       <header className="border-b border-border bg-background">
@@ -75,6 +85,7 @@ export default function Home() {
 
         <div className="mt-6">
           <AnalizarMensaje
+            conEjemplos={conEjemplos}
             intro={
               <p className="max-w-[760px] text-(--text-secondary)">
                 Pega un SMS, un correo o una web que dice ser de la DGT,
