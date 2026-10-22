@@ -1,0 +1,352 @@
+[
+  {
+    "id": "dev-01",
+    "texto": "AGENCIA TRIBUTARIA: Se ha ordenado el pago 411,00¿ de su devolucion del IRPF de la renta 2023. mas informacion en la web: https://agenciatributaria-devolucion.top/renta2023",
+    "esperado": "no_oficial",
+    "motivo_esperado": "Devolución de la AEAT con enlace para cobrar, a un dominio ajeno con TLD barato (§5.4).",
+    "fuente": "repo:mensajes-ejemplo:F01",
+    "sintetico": false,
+    "canal": "sms",
+    "etiqueta_origen": "no_oficial"
+  },
+  {
+    "id": "dev-02",
+    "texto": "DGT: Dispone de 24 horas restantes para pagar su multa del 13/06/2024. Consulte en el siguiente enlace: https://dgt-multas-pago.com/expediente",
+    "esperado": "no_oficial",
+    "motivo_esperado": "Multa de la DGT con plazo de 24 h y enlace de pago (§5.4).",
+    "fuente": "repo:mensajes-ejemplo:F02",
+    "sintetico": false,
+    "canal": "sms",
+    "etiqueta_origen": "no_oficial"
+  },
+  {
+    "id": "dev-03",
+    "texto": "[CORREOS] Estimado cliente: Su paquete no se ha podido entregar el aa/mm porque no se han pagado las tasas de aduana X,XX€: Siga las instrucciones: https://correos-aduanas-pago.com/envio",
+    "esperado": "no_oficial",
+    "motivo_esperado": "Pago de tasas de aduana por enlace en nombre de Correos, a un dominio que no es correos.es (§5.4).",
+    "fuente": "repo:mensajes-ejemplo:F03",
+    "sintetico": false,
+    "canal": "sms",
+    "etiqueta_origen": "no_oficial"
+  },
+  {
+    "id": "dev-04",
+    "texto": "SEGURIDAD SOCIAL: Su tarjeta sanitària requiere una actualización. Por favor actualícelo a través del sitio seguro para mantener sus servicios: https://seg-social-tarjeta.info/actualizar",
+    "esperado": "no_oficial",
+    "motivo_esperado": "Actualización de datos por enlace en nombre de la Seguridad Social, a un dominio ajeno (§5.4).",
+    "fuente": "repo:mensajes-ejemplo:F04",
+    "sintetico": false,
+    "canal": "sms",
+    "etiqueta_origen": "no_oficial"
+  },
+  {
+    "id": "dev-05",
+    "texto": "Asunto: Ultimo recordatorio antes del recargo de su multa – Expediente n,º XXXXXXX https://sede-dgt-gob-es.click/revisar",
+    "esperado": "no_oficial",
+    "motivo_esperado": "La DGT no notifica multas por correo; enlace a un dominio que imita sede.dgt.gob.es (§5.4).",
+    "fuente": "repo:mensajes-ejemplo:F05",
+    "sintetico": false,
+    "canal": "email",
+    "etiqueta_origen": "no_oficial"
+  },
+  {
+    "id": "dev-06",
+    "texto": "SEG-SOCIAL: Tiene una actualización pendiente en su vida laboral. Acceda hoy para evitar la suspensión: https://portal.seg-socioal.cfd/",
+    "esperado": "no_oficial",
+    "motivo_esperado": "Indicador publicado por la Seguridad Social e imitación de marca con TLD .cfd.",
+    "fuente": "contexto.md §5.3",
+    "sintetico": true,
+    "canal": "sms",
+    "etiqueta_origen": "no_oficial"
+  },
+  {
+    "id": "dev-07",
+    "texto": "Seguridad Social: tiene un pago complementario de cuotas pendiente. Regularícelo antes de 24 h en https://portalseiq.eu.cc/",
+    "esperado": "no_oficial",
+    "motivo_esperado": "Dominio publicado como fraudulento por la Seguridad Social (Ciberalertas).",
+    "fuente": "contexto.md §5.3",
+    "sintetico": true,
+    "canal": "sms",
+    "etiqueta_origen": "no_oficial"
+  },
+  {
+    "id": "dev-08",
+    "texto": "DGT: su multa ya está disponible. Consulte el expediente en https://dgt.es@ejemplo.example/pago",
+    "esperado": "no_oficial",
+    "motivo_esperado": "Credenciales en la URL: el host real es ejemplo.example, no dgt.es.",
+    "fuente": "contexto.md §5.3",
+    "sintetico": true,
+    "canal": "sms",
+    "etiqueta_origen": "no_oficial"
+  },
+  {
+    "id": "dev-09",
+    "texto": "Asunto: Comunicación de la Agencia Tributaria. Tiene una comunicación pendiente sobre su declaración. Acceda a la sede: https://agenciatributaria.gob.es.ejemplo.example/",
+    "esperado": "no_oficial",
+    "motivo_esperado": "Marca oficial usada como subdominio de un tercero (ejemplo.example).",
+    "fuente": "contexto.md §5.3",
+    "sintetico": true,
+    "canal": "email",
+    "etiqueta_origen": "no_oficial"
+  },
+  {
+    "id": "dev-10",
+    "texto": "DGT: compruebe el saldo de puntos de su permiso en https://www.dgт.es/permisos",
+    "esperado": "no_oficial",
+    "motivo_esperado": "Homógrafo: la «т» es cirílica, así que el host no es dgt.es.",
+    "fuente": "contexto.md §5.3",
+    "sintetico": true,
+    "canal": "sms",
+    "etiqueta_origen": "no_oficial"
+  },
+  {
+    "id": "dev-11",
+    "texto": "DGT: Tiene una denuncia de tráfico pendiente de 140 €, rebajada a 70 € si paga hoy. Escanee el código QR de la notificación para pagar con tarjeta.",
+    "esperado": "no_oficial",
+    "motivo_esperado": "Multa de tráfico con QR y pago con tarjeta en nombre de la DGT (§4.4, §5.4).",
+    "fuente": "contexto.md §4.4",
+    "sintetico": true,
+    "canal": "sms",
+    "etiqueta_origen": "no_oficial"
+  },
+  {
+    "id": "dev-12",
+    "texto": "De: carpetaciudadana@info.com.es. Asunto: Ingreso disponible – importe 552,97 €. Le informamos de que tiene un ingreso disponible en Mi Carpeta Ciudadana conforme a la Ley 39/2015. Para gestionarlo, responda a este correo indicando su nombre completo y su número de cuenta.",
+    "esperado": "no_oficial",
+    "motivo_esperado": "Remitente publicado por INCIBE (info.com.es) y petición de responder con datos bancarios (§5.4, §5.6).",
+    "fuente": "contexto.md §4.4",
+    "sintetico": true,
+    "canal": "email",
+    "etiqueta_origen": "no_oficial"
+  },
+  {
+    "id": "dev-13",
+    "texto": "De: notificaciones@policiaciberdelincuencia.com. Asunto: Citación judicial. La Policía Nacional, en colaboración con Europol e INCIBE, le comunica que se ha abierto una investigación por delitos informáticos a su nombre. Dispone de 72 horas para responder a este correo; de lo contrario, su caso se publicará en los medios.",
+    "esperado": "no_oficial",
+    "motivo_esperado": "Remitente publicado por INCIBE y amenaza de publicación en 72 h en nombre de la Policía (§5.4).",
+    "fuente": "contexto.md §4.4",
+    "sintetico": true,
+    "canal": "email",
+    "etiqueta_origen": "no_oficial"
+  },
+  {
+    "id": "dev-14",
+    "texto": "Asunto: Nota: Llegada de su paquete ES/XXXXXXXXXX. Buenos dias, Correos le informa que su envío N° ES/XXXXXXXXXXXX aún está esperando instrucciones de usted. Honorarios a pagar: 4.50 Euros. Fecha: 10/05/2026. Haga clic https://rastreo.correos-seguro.example/confirmar Necesitas ayuda? Contacta con nosotros soporte.cliente@correo-seguro.example",
+    "esperado": "no_oficial",
+    "motivo_esperado": "Pago por enlace en nombre de Correos a un dominio que no es correos.es (§5.4).",
+    "fuente": "spaphish:c7729c228fe4398c9fe79a1d087989715de1bf790232043adccb3bdbd192d5d6",
+    "sintetico": false,
+    "canal": "email",
+    "etiqueta_origen": "phishing"
+  },
+  {
+    "id": "dev-15",
+    "texto": "AEAT: Tiene una nueva notificación disponible. Puede consultarla accediendo por sus propios medios a la Sede electrónica de la Agencia Tributaria (sede.agenciatributaria.gob.es) o a la DEHú. Este mensaje es solo informativo.",
+    "esperado": "no_determinable",
+    "motivo_esperado": "Aviso sin enlace que remite a la sede; el remitente no se puede comprobar.",
+    "fuente": "repo:mensajes-ejemplo:L01",
+    "sintetico": false,
+    "canal": "sms",
+    "etiqueta_origen": "no_determinable"
+  },
+  {
+    "id": "dev-16",
+    "texto": "Asunto: Dirección Electrónica Vial – Tiene una nueva notificación. Le informamos de que tiene una nueva notificación en su Dirección Electrónica Vial (DEV). Para consultarla, acceda a la Sede electrónica de la DGT (sede.dgt.gob.es) e identifíquese con DNI electrónico, certificado digital o Cl@ve.",
+    "esperado": "no_determinable",
+    "motivo_esperado": "Aviso de la DEV sin enlace ni pago; el remitente no se puede comprobar.",
+    "fuente": "repo:mensajes-ejemplo:L02",
+    "sintetico": false,
+    "canal": "email",
+    "etiqueta_origen": "no_determinable"
+  },
+  {
+    "id": "dev-17",
+    "texto": "De: correos@correos.com. Asunto: Tu envío está en camino. Hola, tu envío con referencia PQ00000000000000000000 está en reparto. Puedes seguirlo en el Localizador de Envíos de www.correos.es o en la app de Correos. Código seguro: XXXX-XXXX (recuadro amarillo al final del mensaje).",
+    "esperado": "no_determinable",
+    "motivo_esperado": "Aviso de envío sin pago; el remitente oficial se puede falsificar.",
+    "fuente": "repo:mensajes-ejemplo:L03",
+    "sintetico": false,
+    "canal": "email",
+    "etiqueta_origen": "no_determinable"
+  },
+  {
+    "id": "dev-18",
+    "texto": "Asunto: DEHú – Aviso de nueva notificación. Le informamos de que tiene a su disposición una nueva notificación de la Agencia Estatal de Administración Tributaria en la Dirección Electrónica Habilitada única. Puede acceder a ella en dehu.redsara.es identificándose con Cl@ve, certificado o DNIe. Este es un aviso de cortesía.",
+    "esperado": "no_determinable",
+    "motivo_esperado": "Aviso de cortesía de la DEHú sin enlace; el remitente no se puede comprobar.",
+    "fuente": "repo:mensajes-ejemplo:L04",
+    "sintetico": false,
+    "canal": "email",
+    "etiqueta_origen": "no_determinable"
+  },
+  {
+    "id": "dev-19",
+    "texto": "Ajuntament: su certificado de empadronamiento ya está disponible en https://zzqx-nonexistent-test1.sedelectronica.es/",
+    "esperado": "no_determinable",
+    "motivo_esperado": "Plataforma compartida con DNS comodín; el inquilino no está en ninguna lista.",
+    "fuente": "contexto.md §5.3",
+    "sintetico": true,
+    "canal": "sms",
+    "etiqueta_origen": "no_determinable"
+  },
+  {
+    "id": "dev-20",
+    "texto": "Asunto: Información sobre su permiso de conducir. Puede consultar su saldo de puntos en https://www.dgt.gob.es/",
+    "esperado": "no_determinable",
+    "motivo_esperado": "Host .gob.es que no está en la allowlist; no se deduce que sea de la DGT.",
+    "fuente": "contexto.md §5.3",
+    "sintetico": true,
+    "canal": "email",
+    "etiqueta_origen": "no_determinable"
+  },
+  {
+    "id": "dev-21",
+    "texto": "Su trámite está listo. Descargue el justificante en https://qwerty-zz91.sede.gob.es/",
+    "esperado": "no_determinable",
+    "motivo_esperado": "Comodín de sede.gob.es; el inquilino no está listado.",
+    "fuente": "contexto.md §5.3",
+    "sintetico": true,
+    "canal": "sms",
+    "etiqueta_origen": "no_determinable"
+  },
+  {
+    "id": "dev-22",
+    "texto": "Ayto. informa: corte de agua el jueves de 9 a 14 h en la zona centro. Más información en https://mi-pueblo-ejemplo.example/avisos",
+    "esperado": "no_determinable",
+    "motivo_esperado": "Puede ser el ayuntamiento, pero el dominio no está en ninguna lista.",
+    "fuente": "contexto.md §5.3",
+    "sintetico": true,
+    "canal": "sms",
+    "etiqueta_origen": "no_determinable"
+  },
+  {
+    "id": "dev-23",
+    "texto": "Tu paquete esta listo para ser recogido. Elige día y hora: https://bit.ly/3xEjemplo",
+    "esperado": "no_determinable",
+    "motivo_esperado": "Acortador sin resolver y sin organismo nombrado: no hay señal concluyente.",
+    "fuente": "hf:spam_ham_spanish:train:26",
+    "sintetico": true,
+    "canal": "sms",
+    "etiqueta_origen": "spam"
+  },
+  {
+    "id": "dev-24",
+    "texto": "Asunto: Urgente: ¡Tu cuenta de Netflix vencerá hoy! ⚠️ ¡Su cuenta será suspendida! Por favor actualice sus detalles de pago. Estimada [NOMBRE], estamos teniendo algunos problemas con su información de facturación actual. ACTUALIZAR CUENTA AHORA: https://storage.example/rzstzpcp5wuyz5.html En caso de desconocimiento, sus servicios quedarán suspendidos dentro de las 24 horas siguientes.",
+    "esperado": "no_determinable",
+    "motivo_esperado": "Empresa privada sin regla publicada; urgencia y enlace no bastan (§5.4, última fila).",
+    "fuente": "spaphish:187f544bbc37c3cf844e87a1ad2f4170bc186e22fe8dab840c30797c2513f531",
+    "sintetico": false,
+    "canal": "email",
+    "etiqueta_origen": "phishing"
+  },
+  {
+    "id": "dev-25",
+    "texto": "Asunto: Acto admin XXXXXXXX enviado al buzon XXXXXXXX. HACIENDA Secretaría de Hacienda y Crédito Público. Se te ha enviado el acto administrativo identificado con el folio XXXXXXXXXXXX. Este documento está disponible para su consulta en tu Buzón Tributario en sat.gob.mx. Consultar acto administrativo: https://buzon-sat.example/consultar El SAT no solicita información personal, claves o contraseñas a través de correo electrónico.",
+    "esperado": "no_determinable",
+    "motivo_esperado": "Organismo mexicano, fuera de la allowlist y de las reglas de §4.2; no pide pago ni datos.",
+    "fuente": "spaphish:42e9d7de1eb0088544dc2ddff43e7aacde92e3e37a9f413be279b049e7f468c3",
+    "sintetico": false,
+    "canal": "email",
+    "etiqueta_origen": "phishing"
+  },
+  {
+    "id": "dev-26",
+    "texto": "Asunto: Tu cuenta de amazon.com. ¡Gracias por visitar amazon.com! Conforme a tu petición, has cambiado tu contraseña correctamente. Visita Tu Cuenta en amazon.com para ver tus pedidos y actualizar tus suscripciones.",
+    "esperado": "no_determinable",
+    "motivo_esperado": "Mensaje legítimo de una empresa privada; ningún dominio de la allowlist.",
+    "fuente": "spaphish:51c653cf615a5faf3e60e749043873a6abf5a0b815fb3449a496756a2252ebee",
+    "sintetico": false,
+    "canal": "email",
+    "etiqueta_origen": "legitimo"
+  },
+  {
+    "id": "dev-27",
+    "texto": "Este es un recordatorio de tu cita medica",
+    "esperado": "no_determinable",
+    "motivo_esperado": "Recordatorio sin enlace, sin remitente y sin organismo: nada que verificar.",
+    "fuente": "hf:spam_ham_spanish:train:56",
+    "sintetico": false,
+    "canal": "sms",
+    "etiqueta_origen": "ham"
+  },
+  {
+    "id": "dev-28",
+    "texto": "Necesitamos verificar tu cuenta bancaria",
+    "esperado": "no_determinable",
+    "motivo_esperado": "Pide verificar la cuenta pero no nombra a ninguno de los cinco organismos de §4.2.",
+    "fuente": "hf:spam_ham_spanish:train:14",
+    "sintetico": false,
+    "canal": "sms",
+    "etiqueta_origen": "spam"
+  },
+  {
+    "id": "dev-29",
+    "texto": "Asunto: [NOMBRE], consigue gratis tu Kit Medicare. Tu kit de SegurCaixa Adeslas te espera. ¿Tienes un minuto? ¡Responda una encuesta rápida para tener la oportunidad de ganar! ¡RECLAMA TU PREMIO AHORA! https://premio-kit.example/encuesta",
+    "esperado": "no_determinable",
+    "motivo_esperado": "Sorteo a nombre de una aseguradora privada; sin regla publicada ni dominio en lista.",
+    "fuente": "spaphish:2de3a4995989d34df19beaa4ca547b67a51a4beacac3982d1319e763b20060d4",
+    "sintetico": false,
+    "canal": "email",
+    "etiqueta_origen": "phishing"
+  },
+  {
+    "id": "dev-30",
+    "texto": "Página 'Ayuda Solicitud de Cita en Atención Primaria – Portal del Paciente – Conselleria de Sanidad'. Para pedir cita con tu médico o enfermería de atención primaria, introduce tu número SIP y tu fecha de nacimiento y elige día y hora. https://www.san.gva.es/es/web/portal-del-paciente/ayuda-solicitud-de-cita-en-atencion-primaria",
+    "esperado": "oficial_verificado",
+    "motivo_esperado": "URL exacta de san.gva.es, en la allowlist.",
+    "fuente": "repo:mensajes-ejemplo:L05",
+    "sintetico": false,
+    "canal": "web",
+    "etiqueta_origen": "oficial_verificado"
+  },
+  {
+    "id": "dev-31",
+    "texto": "Asunto: Aviso sobre correos fraudulentos. La Agencia Tributaria recuerda que nunca pide datos de tarjeta por correo ni por SMS. Más información: https://sede.agenciatributaria.gob.es/Sede/ayuda/Phishing.html",
+    "esperado": "oficial_verificado",
+    "motivo_esperado": "Enlace a sede.agenciatributaria.gob.es, en la allowlist.",
+    "fuente": "contexto.md §5.3",
+    "sintetico": true,
+    "canal": "email",
+    "etiqueta_origen": "oficial_verificado"
+  },
+  {
+    "id": "dev-32",
+    "texto": "AEAT: Ya puede consultar el calendario de la campaña de la renta en http://www.agenciatributaria.es",
+    "esperado": "oficial_verificado",
+    "motivo_esperado": "Dominio legado agenciatributaria.es en la allowlist (aviso: sin cifrado).",
+    "fuente": "contexto.md §5.3",
+    "sintetico": true,
+    "canal": "sms",
+    "etiqueta_origen": "oficial_verificado"
+  },
+  {
+    "id": "dev-33",
+    "texto": "DGT: Antes de viajar, revise su vehículo. Consejos en https://www.dgt.es/",
+    "esperado": "oficial_verificado",
+    "motivo_esperado": "Dominio legado dgt.es en la allowlist.",
+    "fuente": "contexto.md §5.3",
+    "sintetico": true,
+    "canal": "sms",
+    "etiqueta_origen": "oficial_verificado"
+  },
+  {
+    "id": "dev-34",
+    "texto": "Asunto: Nueva notificación disponible. Tiene una notificación a su disposición. Acceda identificándose con Cl@ve en https://dehu.redsara.es/",
+    "esperado": "oficial_verificado",
+    "motivo_esperado": "Enlace a dehu.redsara.es, en la allowlist aunque no es gob.es.",
+    "fuente": "contexto.md §5.3",
+    "sintetico": true,
+    "canal": "email",
+    "etiqueta_origen": "oficial_verificado"
+  },
+  {
+    "id": "dev-35",
+    "texto": "Policía Nacional: ya puede pedir cita para renovar el DNI en https://www.citapreviadnie.es/citaPreviaDni/",
+    "esperado": "oficial_verificado",
+    "motivo_esperado": "Enlace a citapreviadnie.es, en la allowlist (Policía).",
+    "fuente": "contexto.md §5.3",
+    "sintetico": true,
+    "canal": "sms",
+    "etiqueta_origen": "oficial_verificado"
+  }
+]
