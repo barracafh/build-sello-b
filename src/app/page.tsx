@@ -1,7 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { AnalizarMensaje } from "@/components/AnalizarMensaje";
-import { buttonVariants } from "@/components/ui/button";
-import { site } from "@/config/sitio";
+import { BotonAviso } from "@/components/BotonAviso";
 import { cn } from "@/lib/utils";
 import { mostrarCasosTest } from "@/lib/casos-test";
 import { avisosIncibe, linea017 } from "@/datos/incibe";
@@ -159,15 +158,10 @@ export default async function Home({
             <p className="mt-3 text-(--text-secondary)">
               No guardamos lo que pegas ni abrimos sus enlaces.
             </p>
-            <a
-              href={site.feedbackUrl}
-              className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "mt-4 h-auto min-h-12 px-5 py-2 text-base whitespace-normal",
-              )}
-            >
-              ¿Algo está mal? Avísanos
-            </a>
+            <BotonAviso
+              variant="outline"
+              className="mt-4 h-auto min-h-12 px-5 py-2 text-base whitespace-normal"
+            />
           </section>
         </div>
 
