@@ -110,27 +110,33 @@ export function AnalizarMensaje() {
   const [respuesta, setRespuesta] = useState<Respuesta | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
-  const resultado = useRef<HTMLDivElement>(null);
+  // Lo que oye el lector de pantalla mientras comprueba o al cargar un ejemplo.
+  const [aviso, setAviso] = useState("");
+  const campo = useRef<HTMLTextAreaElement>(null);
 
+  // El foco va al titular del resultado: se lee el veredicto y se sigue desde ahí.
   useEffect(() => {
-    if (respuesta) resultado.current?.focus();
-  }, [respuesta]);
+    if (respuesta) document.getElementById(`${id}-resultado`)?.focus();
+  }, [respuesta, id]);
 
   async function analizar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setRespuesta(null);
     if (mensaje.trim().length === 0) {
       setError("Escribe o pega un mensaje antes de comprobar.");
+      campo.current?.focus();
       return;
     }
     if (mensaje.length > LIMITE) {
       setError(
         `El mensaje es demasiado largo: ${mensaje.length} de ${LIMITE} caracteres como máximo.`,
       );
+      campo.current?.focus();
       return;
     }
     setError(null);
     setEnviando(true);
+    setAviso("Comprobando el mensaje…");
     try {
       const res = await fetch(ruta("/api/verificar"), {
         method: "POST",
@@ -142,6 +148,7 @@ export function AnalizarMensaje() {
       setError("No hemos podido comprobarlo. Inténtalo de nuevo.");
     } finally {
       setEnviando(false);
+      setAviso("");
     }
   }
 
@@ -162,6 +169,7 @@ export function AnalizarMensaje() {
           enlace.
         </p>
         <Textarea
+          ref={campo}
           id={`${id}-mensaje`}
           name="mensaje"
           aria-describedby={cn(
@@ -205,6 +213,8 @@ export function AnalizarMensaje() {
             variant="sunset"
             size="lg"
             disabled={enviando}
+            // Sin esto el foco salta al <body> al deshabilitarse mientras comprueba.
+            focusableWhenDisabled
             className="h-11 px-5 text-base max-sm:w-full"
           >
             Comprobar
@@ -243,17 +253,18 @@ export function AnalizarMensaje() {
         </div>
       </section>
 
-      <section aria-live="polite" aria-labelledby={`${id}-resultado`}>
-        {respuesta && (
-          <div
-            ref={resultado}
-            tabIndex={-1}
-            className="text-lg outline-none [&>*+*]:mt-8"
-          >
-            <Resultado respuesta={respuesta} titleId={`${id}-resultado`} />
-          </div>
-        )}
-      </section>
+      <p role="status" className="sr-only">
+        {aviso}
+      </p>
+
+      {respuesta && (
+        <section
+          aria-labelledby={`${id}-resultado`}
+          className="text-lg [&>*+*]:mt-8"
+        >
+          <Resultado respuesta={respuesta} titleId={`${id}-resultado`} />
+        </section>
+      )}
     </div>
   );
 }
@@ -302,8 +313,9 @@ function Resultado({
         </div>
         <h2
           id={titleId}
+          tabIndex={-1}
           className={cn(
-            "mt-3 text-[clamp(30px,5vw,44px)] leading-[1.08] tracking-[-0.03em]",
+            "mt-3 text-[clamp(30px,5vw,44px)] leading-[1.08] tracking-[-0.03em] outline-none",
             veredicto === "no_oficial" && "text-destructive",
           )}
         >
