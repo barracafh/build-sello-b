@@ -9,10 +9,11 @@
   "scripts": {
     "dev": "bun scripts/dev.ts",
     "lint:tema": "bun scripts/lint-tema.ts",
-    "prebuild": "bun run lint:tema",
+    "prebuild": "bun run lint:tema && bun scripts/eval-build.ts",
     "build": "next build --webpack",
     "typecheck": "tsc --noEmit",
-    "test": "bun test scripts/ src/"
+    "test": "bun test scripts/ src/",
+    "eval": "bun scripts/eval.ts"
   },
   "dependencies": {
     "@base-ui/react": "1.8.0",

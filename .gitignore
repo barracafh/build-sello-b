@@ -7,3 +7,8 @@ out/
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store
+
+# Evals: los informes por modelo no se suben; evals/ULTIMO.md sí
+evals/resultados/
+# Informe del eval de preview (lo escribe scripts/eval-build.ts)
+public/evals.json
