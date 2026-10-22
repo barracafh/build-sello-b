@@ -75,3 +75,17 @@ No se ha vuelto a medir `main` aparte: la referencia es la línea base de 95/105
 Iteración 3: corrige dev-24 y dev-25, y no hay ningún veredicto equivocado. Los 2 fallos son tiempos agotados de 8 s (dev-17 es un ejemplo, de ahí el 9/10). Como sube la latencia, las reservas pasan de 1 a 2 y eso dispara la parada de Edu. No hubo ningún 402.
 
 **Bucle parado.** Llamadas gastadas desde los límites: 70 de 210, más ≈ 8 de la pasada cortada. No se ha hecho la medición final con `--repeticiones 3`. El candidato en la rama es el de la pasada 1, medido en una sola pasada.
+
+## Medición final (decisión de Edu, opción 1)
+
+`bun run eval --modelo deepseek-v4-flash --repeticiones 3` sobre `97e94ed`: el candidato de la pasada 1, con `main` mergeado. Dev tiene ahora 41 casos (LAB-63).
+
+| Llamadas | Accuracy media | Por pasada | Falsos OV | Recall no_oficial | Ejemplos | Reservas | Latencia media (respondidas) | Tokens por caso |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 123 | 89.4 % (110/123) | 36 · 36 · 38 de 41 | 0 ✅ | 100 % ✅ | **26/30 ❌** | **8** (3 · 3 · 2), todas por los 8 s; ningún 402 | 3.6 s | 2 670 |
+
+- **Ejemplos:** dev-17 (un ejemplo) agota los 8 s en las 3 pasadas y dev-04 en una. Por eso el 26/30. No hay ningún veredicto equivocado en los ejemplos: todos sus fallos son reservas.
+- **Veredictos equivocados:** dev-24 (las 3 pasadas) y dev-25 (2 de 3), los dos `no_determinable` → `no_oficial`. La iteración 3 los corregía, pero se revirtió por las reservas.
+- **Parada:** las reservas por pasada (3 · 3 · 2) son más que en la pasada 1 (1 de 35), así que se aplica la regla de Edu: se para, sin reintentos. El candidato **no pasa la puerta de ejemplos** y se entrega así, como pidió el Senior Engineer.
+- **Total de llamadas desde los límites:** 70 + ≈ 8 + 123 ≈ 201 de 210.
+- **Lectura:** el techo es la latencia de deepseek frente al tiempo fijo de 8 s en unos pocos casos largos (dev-17, dev-21, dev-25), no la calidad del veredicto.
