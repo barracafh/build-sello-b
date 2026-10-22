@@ -50,6 +50,9 @@
    equipo ha pedido para el pie. Está fuera de Sol: AGENTS.md no permite añadir
    colores. Para volver a Sol, borra este bloque y el pie de page.tsx. */
 :root {
-  --azul-importass: #0129ae; /* tema-ok: azul de Import@ss pedido por el equipo para el pie */
-  --azul-importass-oscuro: #011865; /* tema-ok: hover y foco del azul de Import@ss */
+  /* Rebranding: azul más suave para los enlaces. Es el más claro que
+     mantiene AA sobre blanco (4.7:1); un pastel de verdad no llegaría a 4.5:1. */
+  --azul-importass: #4a6fd1; /* tema-ok: azul suave de los enlaces (antes #0129ae de Import@ss) */
+  --azul-importass-oscuro: #2f4fa8; /* tema-ok: hover y foco del azul de los enlaces */
+  --azul-pastel: #e3edfc; /* tema-ok: fondo pastel del bloque de fuentes, texto en foreground 16:1 */
 }
