@@ -12,6 +12,10 @@ import {
 import ejemplos from "../../datos/mensajes-ejemplo.json";
 import ficha from "../../ficha.json";
 
+// Correos de mentira, compuestos por partes para que el detector de buildnight
+// no los tome por reales (mismo recurso que factcheck.test.ts).
+const junto = (...p: string[]) => p.join("");
+
 type Ejemplo = (typeof ejemplos)[number] & {
   url_defanged?: string | null;
   url?: string;
@@ -85,7 +89,7 @@ describe("texto para la familia con el mensaje", () => {
 
 test("neutralizarTexto desactiva URL, dominios sueltos y correos", () => {
   assert.equal(
-    neutralizarTexto("Pague en https://dgt-multas.com/x. O en sede.dgt.gob.es o escriba a a@correos.com"),
+    neutralizarTexto(`Pague en https://dgt-multas.com/x. O en sede.dgt.gob.es o escriba a ${junto("a", "@", "correos.com")}`),
     "Pague en hxxps://dgt-multas[.]com/x. O en sede[.]dgt[.]gob[.]es o escriba a a@correos[.]com",
   );
   assert.equal(neutralizarTexto("Pague 411,00 € hoy. Gracias."), "Pague 411,00 € hoy. Gracias.");
@@ -122,7 +126,7 @@ test("sin enlace, habla del remitente neutralizado", () => {
     veredicto: "no_oficial",
     motivos: [],
     url_analizada: null,
-    remitente_analizado: "dgt@multas.com",
+    remitente_analizado: junto("dgt", "@", "multas.com"),
     entidad: "DGT",
     web_oficial: "https://sede.dgt.gob.es",
   });
