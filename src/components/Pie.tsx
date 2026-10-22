@@ -115,7 +115,8 @@ export function Pie() {
             </span>
             {ficha.nombre}
           </span>
-          <ul className="flex flex-wrap items-center gap-y-2 text-(--text-secondary) [&>li+li]:border-l [&>li+li]:border-border [&>li+li]:pl-4 [&>li]:pr-4">
+          {/* En el móvil, en columna y sin separadores: si no, las rayas quedan sueltas al partir la fila. */}
+          <ul className="flex flex-col gap-y-2 text-(--text-secondary) sm:flex-row sm:flex-wrap sm:items-center sm:[&>li+li]:border-l sm:[&>li+li]:border-border sm:[&>li+li]:pl-4 sm:[&>li]:pr-4">
             <li>
               Squad <span className="font-mono">{ficha.equipo}</span>
             </li>

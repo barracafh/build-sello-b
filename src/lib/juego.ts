@@ -2,6 +2,7 @@
 // tarjetas. Los F son fraudes publicados por INCIBE; los L, avisos legítimos.
 import { neutralizar } from "@/lib/url";
 import { webOficial } from "@/lib/veredicto";
+import { NOMBRES_EJEMPLOS } from "@/datos/ejemplos";
 import ejemplos from "../../datos/mensajes-ejemplo.json";
 
 type Caso = (typeof ejemplos)[number] & {
@@ -25,11 +26,12 @@ export type Ronda = {
 
 const TIPOS: Record<string, Ronda["tipo"]> = { sms: "SMS", email: "Correo", web: "Web" };
 
+// Los avisos de INCIBE se distinguen por el caso: si no, en la lista final
+// saldrían cinco «Aviso de INCIBE» iguales.
 const fuenteDe = (caso: Caso) => {
-  const url = new URL(caso.fuente);
-  const nombre = url.hostname.endsWith("incibe.es")
-    ? "Aviso de INCIBE"
-    : `${caso.entidad ?? "Web oficial"}`;
+  const nombre = new URL(caso.fuente).hostname.endsWith("incibe.es")
+    ? `INCIBE · ${NOMBRES_EJEMPLOS[caso.id] ?? "Aviso"}`
+    : (caso.entidad ?? "Web oficial");
   return { nombre, url: caso.fuente };
 };
 

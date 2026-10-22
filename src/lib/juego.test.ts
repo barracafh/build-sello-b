@@ -24,7 +24,7 @@ describe("RONDAS", () => {
 
   test("las estafas citan el aviso de INCIBE", () => {
     for (const r of RONDAS.filter((x) => x.esEstafa)) {
-      assert.equal(r.fuente.nombre, "Aviso de INCIBE", r.id);
+      assert.match(r.fuente.nombre, /^INCIBE · /, r.id);
     }
   });
 });

@@ -9,9 +9,19 @@ import { Card } from "@/components/ui/card";
 import { Fuentes } from "@/components/Fuentes";
 import { avisosIncibe } from "@/datos/incibe";
 import { NOMBRES_EJEMPLOS } from "@/datos/ejemplos";
-import { RONDAS, barajar, respuestaDeArrastre, valoracion, type Ronda } from "@/lib/juego";
+import {
+  RONDAS,
+  UMBRAL_DESLIZAR,
+  barajar,
+  respuestaDeArrastre,
+  valoracion,
+  type Ronda,
+} from "@/lib/juego";
 
 type Respuesta = { id: string; dijoEstafa: boolean; acierto: boolean };
+
+// Una línea a 320 px: icono de 24 px, «De verdad» a 18 px y 8 px de margen.
+const botonRespuesta = "h-14 gap-1.5 px-2 text-lg whitespace-nowrap";
 
 // Lo que tarda la tarjeta en salir volando antes de enseñar la solución.
 const SALIDA_MS = 220;
@@ -196,8 +206,8 @@ export function JuegoEstafas() {
   if (!ronda) return null;
 
   // Cuánto se ve cada etiqueta mientras se arrastra (0 a 1).
-  const haciaEstafa = Math.min(1, Math.max(0, -dx / 110));
-  const haciaVerdad = Math.min(1, Math.max(0, dx / 110));
+  const haciaEstafa = Math.min(1, Math.max(0, -dx / UMBRAL_DESLIZAR));
+  const haciaVerdad = Math.min(1, Math.max(0, dx / UMBRAL_DESLIZAR));
   const desplazamiento = saliendo ? saliendo * 600 : dx;
   const siguienteRonda = rondas[indice + 1];
 
@@ -224,13 +234,14 @@ export function JuegoEstafas() {
 
       {!respuesta ? (
         <>
-          {/* La pila: la siguiente tarjeta asoma por detrás. */}
-          {/* Oculta hasta barajar, para que no cambie la tarjeta ya a la vista. */}
-          <div className={cn("relative mt-6 overflow-x-clip pb-3", !barajado && "invisible")}>
+          {/* La pila: la siguiente tarjeta asoma por detrás, en gris. Oculta hasta
+              barajar, para que no cambie la tarjeta ya a la vista. Sin recorte aquí:
+              la página recorta a lo ancho para que la tarjeta pueda salir volando. */}
+          <div className={cn("relative mt-6 pb-3", !barajado && "invisible")}>
             {siguienteRonda && (
               <div
                 aria-hidden="true"
-                className="absolute inset-x-3 top-3 bottom-0 rounded-xl bg-card ring-1 ring-foreground/10"
+                className="absolute inset-x-4 top-3 bottom-0 rounded-xl bg-muted ring-1 ring-foreground/10"
               />
             )}
             <div
@@ -251,13 +262,15 @@ export function JuegoEstafas() {
                 arrastrando ? "cursor-grabbing" : "motion-safe:transition-transform motion-safe:duration-200",
               )}
             >
-              <Card className="min-h-80 gap-0 px-6 py-6 text-lg md:px-8 md:py-8">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="font-mono text-sm tracking-[0.06em] text-(--text-secondary) uppercase">
-                    {ronda.tipo}
-                  </span>
-                </div>
-                <p className="mt-4 text-xl leading-relaxed [overflow-wrap:anywhere]">{ronda.texto}</p>
+              <Card className="min-h-64 gap-0 px-6 py-6 text-lg md:px-8 md:py-8">
+                {/* Se apaga mientras aparece el sello, que va encima. */}
+                <span
+                  style={{ opacity: 1 - Math.max(haciaEstafa, haciaVerdad) }}
+                  className="font-mono text-sm tracking-[0.06em] text-(--text-secondary) uppercase"
+                >
+                  {ronda.tipo}
+                </span>
+                <p className="mt-4 text-lg leading-relaxed [overflow-wrap:anywhere] md:text-xl">{ronda.texto}</p>
                 {ronda.direccion && (
                   // Neutralizada y como texto: nunca un enlace.
                   <p className="mt-4">
@@ -286,32 +299,41 @@ export function JuegoEstafas() {
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              onClick={() => responder(true)}
-              className="h-auto min-h-14 gap-2 px-2 text-lg whitespace-normal"
-            >
-              <X aria-hidden="true" className="size-6 text-destructive" />
-              Estafa
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              onClick={() => responder(false)}
-              className="h-auto min-h-14 gap-2 px-2 text-lg whitespace-normal"
-            >
-              <Check aria-hidden="true" className="size-6 text-iss-success-700" />
-              De verdad
-            </Button>
+          {/* En el móvil, los botones se quedan pegados abajo: la tarjeta y la
+              respuesta siempre a la vista, aunque el mensaje sea largo. */}
+          <div className="mt-6 max-md:sticky max-md:bottom-0 max-md:z-10 max-md:-mx-(--page-gutter) max-md:border-t max-md:border-border max-md:bg-background max-md:px-(--page-gutter) max-md:pt-3 max-md:pb-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={() => responder(true)}
+                className={botonRespuesta}
+              >
+                <X aria-hidden="true" className="size-6 text-destructive" />
+                Estafa
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={() => responder(false)}
+                className={botonRespuesta}
+              >
+                <Check aria-hidden="true" className="size-6 text-iss-success-700" />
+                De verdad
+              </Button>
+            </div>
+            {/* Con dedo no hay teclado: solo se habla de deslizar. */}
+            <p className="mt-2 text-center text-base text-(--text-secondary) md:mt-3">
+              Desliza la tarjeta
+              <span className="pointer-coarse:hidden">
+                {" "}o usa las flechas <kbd className="font-mono">←</kbd> y{" "}
+                <kbd className="font-mono">→</kbd> del teclado
+              </span>
+              .
+            </p>
           </div>
-          <p className="mt-3 text-center text-base text-(--text-secondary)">
-            Desliza la tarjeta o usa las flechas{" "}
-            <kbd className="font-mono">←</kbd> y <kbd className="font-mono">→</kbd> del teclado.
-          </p>
         </>
       ) : (
         <Solucion
