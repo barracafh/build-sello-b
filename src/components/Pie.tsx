@@ -1,5 +1,6 @@
 import { ExternalLink, Phone } from "lucide-react";
 import { BotonAviso } from "@/components/BotonAviso";
+import { Marca } from "@/components/Marca";
 import { avisosIncibe, linea017 } from "@/datos/incibe";
 import { cn } from "@/lib/utils";
 import ficha from "../../ficha.json";
@@ -42,14 +43,9 @@ export function Pie({ idioma = "es" }: { idioma?: Idioma }) {
     <footer className="mt-8 bg-muted text-base">
       <div className="mx-auto grid max-w-5xl gap-10 px-(--page-gutter) py-14 md:px-8 md:grid-cols-2 lg:grid-cols-[1fr_1.05fr_1.05fr_0.95fr] lg:gap-0">
         <div className="lg:pr-6">
-          <span className="inline-flex items-center gap-4 border-l-4 border-brand-yellow pl-4">
-            <span
-              aria-hidden="true"
-              className="grid size-12 shrink-0 place-items-center rounded-xl bg-brand font-mono text-2xl text-white" /* tema-ok: icono de la plantilla sobre brand */
-            >
-              {ficha.icono}
-            </span>
-            <span className="text-lg leading-tight font-semibold">
+          <span className="inline-flex items-center gap-3 border-l-4 border-brand-yellow pl-4">
+            <Marca className="size-11 shrink-0" />
+            <span className="text-[22px] leading-none font-semibold tracking-[-0.02em]">
               {ficha.nombre}
             </span>
           </span>
@@ -101,13 +97,8 @@ export function Pie({ idioma = "es" }: { idioma?: Idioma }) {
 
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-(--page-gutter) md:px-8 py-6">
-          <span className="inline-flex items-center gap-3 font-semibold">
-            <span
-              aria-hidden="true"
-              className="grid size-8 shrink-0 place-items-center rounded-lg bg-brand font-mono text-lg text-white" /* tema-ok: icono de la plantilla sobre brand */
-            >
-              {ficha.icono}
-            </span>
+          <span className="inline-flex items-center gap-2.5 font-semibold tracking-[-0.01em]">
+            <Marca className="size-8 shrink-0" />
             {ficha.nombre}
           </span>
           {/* En el móvil, en columna y sin separadores: si no, las rayas quedan sueltas al partir la fila. */}

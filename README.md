@@ -81,7 +81,9 @@ Referencias: [basePath de Next.js](https://nextjs.org/docs/app/api-reference/con
 
 Hello! 👋
 
-## Verificador de enlaces (sello-b)
+## Everdá, verificador de mensajes (sello-b)
+
+**Marca.** «Everdá» es «¿es verdad?» dicho deprisa. La marca es su «E» en Geist Black, blanca sobre la caja roja. Logotipos y uso, en [`docs/marca/`](docs/marca/).
 
 **Problema.** Llegan SMS y correos que suplantan a la DGT, Hacienda, la Seguridad Social o Correos. **Usuario:** cualquier persona que duda antes de pulsar un enlace.
 

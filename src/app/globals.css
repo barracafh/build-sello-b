@@ -24,11 +24,18 @@
     @apply font-heading font-normal;
   }
 
+  /* Los titulares, un punto más cerrados que el texto corrido. Los que fijan su
+     propio tracking (el h1 de la portada, el del resultado) mandan sobre este. */
+  :is(h1, h2, h3, h4) {
+    letter-spacing: -0.01em;
+  }
+
   :is(h1, h2, h3, h4, dt) {
     text-wrap: balance;
   }
 
-  :is(p, li, dd, figcaption, small) {
+  /* `label` también: la etiqueta de la caja es una frase entera. */
+  :is(p, li, dd, figcaption, small, label) {
     text-wrap: pretty;
   }
 

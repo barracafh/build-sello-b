@@ -2,6 +2,7 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import ficha from "../../ficha.json";
+import { Marca } from "@/components/Marca";
 import { SelectorIdioma } from "@/components/SelectorIdioma";
 import { diccionario, type Idioma } from "@/i18n";
 
@@ -13,7 +14,7 @@ const SECCIONES: { id: Seccion; href: string }[] = [
   { id: "juego", href: "/juego" },
 ];
 
-// Cabecera común: icono y nombre de ficha.json, la frase en el idioma elegido y el menú de secciones.
+// Cabecera común: marca y nombre de ficha.json, la frase en el idioma elegido y el menú de secciones.
 export function Cabecera({ activa, idioma = "es" }: { activa: Seccion; idioma?: Idioma }) {
   const t = diccionario(idioma);
   return (
@@ -21,21 +22,21 @@ export function Cabecera({ activa, idioma = "es" }: { activa: Seccion; idioma?: 
       {/* gap-x-2, el mismo hueco que entre los botones del menú: así botones y
           selector quedan a 8 px unos de otros. Entre filas (móvil), 16 px. */}
       <div className="mx-auto flex min-h-24 max-w-5xl flex-wrap items-center justify-between gap-x-2 gap-y-4 px-(--page-gutter) py-4 md:px-8">
-        {/* Icono y nombre de ficha.json: sin logotipos de la Administración. */}
-        <span className="inline-flex items-center gap-4">
-          <span
-            aria-hidden="true"
-            className="grid size-14 shrink-0 place-items-center rounded-xl bg-brand font-mono text-3xl text-white" /* tema-ok: icono de la plantilla sobre brand */
-          >
-            {ficha.icono}
-          </span>
-          <span className="flex flex-col">
-            <span className="text-2xl leading-tight font-semibold tracking-tight">
+        {/* Marca y nombre de ficha.json, sin logotipos de la Administración. Llevan al inicio. */}
+        <Link
+          href={{ pathname: "/", query: { lang: idioma } }}
+          className="-m-1.5 inline-flex items-center gap-3 rounded-2xl p-1.5 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:gap-4"
+        >
+          <Marca className="size-12 shrink-0 sm:size-14" />
+          <span className="flex flex-col gap-1.5">
+            {/* El nombre hace de logotipo: seminegrita, más cerrada y sin interlineado. El
+                espacio de detrás lo separa de la frase en el nombre accesible del enlace. */}
+            <span className="text-[26px] leading-none font-semibold tracking-[-0.025em] sm:text-[28px]">
               {ficha.nombre}
-            </span>
-            <span className="text-base text-(--text-secondary)">{t.cabecera.frase}</span>
+            </span>{" "}
+            <span className="text-base leading-snug text-(--text-secondary)">{t.cabecera.frase}</span>
           </span>
-        </span>
+        </Link>
         <span className="lg:order-last">
           <SelectorIdioma idioma={idioma} etiqueta={t.selector.etiqueta} />
         </span>

@@ -151,7 +151,7 @@ export const eu = {
     enlaceCopiado: "Esteka kopiatu da. Irekitzen duenak mezu hau eta bere emaitza ikusiko ditu.",
     enlaceNoCopiado:
       "Ezin izan dugu kopiatu. Esteka helbide-barran dago jada: kopiatu hortik.",
-    criterios: (apartados: string) => `Sello-ren irizpideak (contexto.md${apartados})`,
+    criterios: (apartados: string) => `Everdá-ren irizpideak (contexto.md${apartados})`,
     avisosIncibe: "INCIBE · Herritarrentzako abisuak",
     sinClasificadorOficial:
       "Helbidea gure webgune ofizialen zerrendan dago. Oraingoz ezin izan dugu testuaren gainerakoa aztertu.",

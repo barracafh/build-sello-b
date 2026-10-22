@@ -147,7 +147,7 @@ export const gl = {
     enlaceCopiado: "Ligazón copiada. Quen a abra verá esta mensaxe e o seu resultado.",
     enlaceNoCopiado:
       "Non puidemos copiala. A ligazón xa está na barra de enderezos: cópiaa desde aí.",
-    criterios: (apartados: string) => `Criterios de Sello (contexto.md${apartados})`,
+    criterios: (apartados: string) => `Criterios de Everdá (contexto.md${apartados})`,
     avisosIncibe: "INCIBE · Avisos á cidadanía",
     sinClasificadorOficial:
       "O enderezo está na nosa lista de webs oficiais. Agora mesmo non puidemos analizar o resto do texto.",

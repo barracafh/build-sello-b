@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
-import { ExternalLink, ImageUp, Link2, Phone } from "lucide-react";
+import { ExternalLink, ImageUp, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ruta } from "@/config/sitio";
 import { Badge } from "@/components/ui/badge";
@@ -34,8 +34,9 @@ import ejemplos from "../../datos/mensajes-ejemplo.json";
 // que no lo guarda ni lo registra. Una captura va a /api/imagen, que devuelve
 // su texto para comprobarlo; la imagen tampoco se guarda.
 //
-// Enlace para compartir: el mensaje va en el fragmento (#mensaje=…), que el
-// navegador nunca envía al servidor, así que no acaba en ningún log.
+// Los enlaces que ya se compartieron con el mensaje en el fragmento
+// (#mensaje=…) se siguen abriendo: el navegador nunca envía el fragmento al
+// servidor, así que no acaba en ningún log. El botón para copiarlos ya no está.
 const CLAVE_ENLACE = "mensaje";
 
 const mensajeDelEnlace = () => {
@@ -104,7 +105,6 @@ export function AnalizarMensaje({
   // Solo los errores del mensaje marcan el campo como no válido; los de red, no.
   const [error, setError] = useState<{ texto: string; delCampo: boolean } | null>(null);
   const [enviando, setEnviando] = useState(false);
-  const [avisoEnlace, setAvisoEnlace] = useState<string | null>(null);
   // El esqueleto sale solo si tarda más de RETRASO_MS; aquí, cuándo apareció.
   const [inicioCarga, setInicioCarga] = useState<number | null>(null);
   const inicioCargaRef = useRef<number | null>(null);
@@ -151,14 +151,6 @@ export function AnalizarMensaje({
     setRespuesta(null);
     setError(null);
     setEnviando(false);
-    setAvisoEnlace(null);
-  }
-
-  // Al empezar de nuevo, el foco vuelve al campo y el enlace deja de llevar el mensaje.
-  function cargar(texto: string) {
-    cambiar(texto);
-    quitarDelEnlace();
-    campoRef.current?.focus();
   }
 
   // Con un ejemplo, el foco va al botón de comprobar, justo debajo del texto
@@ -192,7 +184,6 @@ export function AnalizarMensaje({
 
   async function comprobar(texto: string) {
     setRespuesta(null);
-    setAvisoEnlace(null);
     if (texto.trim().length === 0) {
       setError({ texto: t.errores.vacio, delCampo: true });
       return;
@@ -255,22 +246,6 @@ export function AnalizarMensaje({
     return () => window.removeEventListener("hashchange", desdeEnlace);
   }, []);
 
-  async function copiarEnlace() {
-    const params = new URLSearchParams({ [CLAVE_ENLACE]: mensaje });
-    // El enlace lleva ?lang: quien lo abra ve el resultado en el mismo idioma.
-    const busqueda = new URLSearchParams(window.location.search);
-    busqueda.set("lang", idioma);
-    const enlace = `${window.location.origin}${window.location.pathname}?${busqueda}#${params}`;
-    // También en la barra de direcciones, por si el portapapeles no deja copiar.
-    history.replaceState(null, "", enlace);
-    try {
-      await navigator.clipboard.writeText(enlace);
-      setAvisoEnlace(a.enlaceCopiado);
-    } catch {
-      setAvisoEnlace(a.enlaceNoCopiado);
-    }
-  }
-
   const ficha = respuesta ? fichaDe(respuesta.veredicto) : null;
   const textos = ficha && t.veredictos[ficha.veredicto];
   const web = webOficial(respuesta?.web_oficial);
@@ -331,10 +306,11 @@ export function AnalizarMensaje({
     >
       <div className="lg:col-start-1 lg:row-start-1">
         <form onSubmit={analizar} aria-describedby={`${id}-privacidad`}>
-          {/* Una sola frase: qué pegar, que no se pulse el enlace y qué hacemos. */}
-          <label htmlFor={`${id}-mensaje`} className="block max-w-[760px] text-base">
+          {/* Una sola frase: qué pegar, que no se pulse el enlace y qué hacemos.
+              A 600 px y con la negrita sin partir, en escritorio corta justo antes de ella. */}
+          <label htmlFor={`${id}-mensaje`} className="block max-w-[600px] text-base">
             {a.campo.antes}
-            <strong className="font-semibold">{a.campo.negrita}</strong>
+            <strong className="font-semibold whitespace-nowrap">{a.campo.negrita}</strong>
             {a.campo.despues}
           </label>
           <Textarea
@@ -765,36 +741,6 @@ export function AnalizarMensaje({
               </li>
             </ul>
           </section>
-
-          <div>
-            <div className="flex flex-wrap gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                onClick={copiarEnlace}
-                className="h-auto min-h-12 gap-2 px-5 py-2 text-lg whitespace-normal max-sm:w-full"
-              >
-                <Link2 aria-hidden="true" className="size-5" />
-                {a.copiarEnlace}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                onClick={() => cargar("")}
-                className="h-auto min-h-12 px-5 py-2 text-lg whitespace-normal max-sm:w-full"
-              >
-                {a.otroMensaje}
-              </Button>
-            </div>
-            <p className="mt-3 text-base text-(--text-secondary)">
-              {a.avisoEnlace}
-            </p>
-            <p role="status" className="mt-2 text-base font-medium empty:mt-0">
-              {avisoEnlace}
-            </p>
-          </div>
         </section>
       )}
       </div>

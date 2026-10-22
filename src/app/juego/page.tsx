@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cabecera } from "@/components/Cabecera";
 import { JuegoEstafas } from "@/components/JuegoEstafas";
+import { Pregunta } from "@/components/Marca";
 import { Pie } from "@/components/Pie";
 import ficha from "../../../ficha.json";
 import { idiomaDePeticion } from "@/i18n/servidor";
@@ -30,8 +31,9 @@ export default async function Juego() {
           <p className="font-mono text-sm tracking-[0.06em] text-(--text-secondary) uppercase">
             {t.juego.antetitulo}
           </p>
-          <h1 className="mt-4 font-heading text-[clamp(36px,4.5vw,60px)] leading-[1.1] tracking-[-0.02em]">
-            {t.juego.titulo}
+          {/* El mismo titular que la portada: tamaño y «¿» en el rojo de la marca. */}
+          <h1 className="mt-4 font-heading text-[clamp(34px,calc(4.5vw_-_2px),58px)] leading-[1.1] tracking-[-0.02em]">
+            <Pregunta>{t.juego.titulo}</Pregunta>
           </h1>
           <span aria-hidden="true" className="mt-6 block h-1 w-16 rounded-full bg-brand" />
           <p className="mt-6 text-lg text-(--text-secondary)">
