@@ -1,5 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { AnalizarMensaje } from "@/components/AnalizarMensaje";
+import { CompartirFamilia } from "@/components/CompartirFamilia";
+import { invitacionParaFamilia } from "@/lib/compartir";
 import { buttonVariants } from "@/components/ui/button";
 import { site } from "@/config/sitio";
 import { cn } from "@/lib/utils";
@@ -99,6 +101,16 @@ export default async function Home({
                 Hacienda u otro organismo y te decimos si podemos confirmarlo.
               </p>
             }
+          />
+        </div>
+
+        {/* Al revés: quien ya la conoce se la pasa a su familia antes de que llegue el SMS. */}
+        <div className="mt-16 max-w-[760px]">
+          <CompartirFamilia
+            encabezado="h2"
+            titulo="Pásaselo a tu familia"
+            explicacion="Que la tengan a mano antes de que les llegue un SMS de la DGT o de Hacienda."
+            texto={invitacionParaFamilia()}
           />
         </div>
       </main>

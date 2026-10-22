@@ -9,7 +9,9 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { CompartirFamilia } from "@/components/CompartirFamilia";
 import { Fuentes } from "@/components/Fuentes";
+import { resumenParaFamilia } from "@/lib/compartir";
 import { avisosIncibe, horario017, linea017 } from "@/datos/incibe";
 import { NOMBRES_EJEMPLOS, tipoDeEjemplo } from "@/datos/ejemplos";
 import {
@@ -735,6 +737,12 @@ export function AnalizarMensaje({
               </li>
             </ul>
           </section>
+
+          <CompartirFamilia
+            titulo="Mándaselo a tu familia"
+            explicacion="Solo va el resultado y la web oficial. El texto de tu mensaje no se envía."
+            texto={resumenParaFamilia(respuesta)}
+          />
 
           <div>
             <div className="flex flex-wrap gap-3">
