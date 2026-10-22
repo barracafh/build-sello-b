@@ -1,11 +1,11 @@
-import { extraerPrimeraUrl, neutralizar } from "@/lib/url";
+import { verificar } from "@/lib/verificar";
 
 const LIMITE = 2000;
 
 const error = (mensaje: string) =>
   Response.json({ error: mensaje }, { status: 400 });
 
-// V1: valida la entrada y responde con la duda. No guarda ni registra el texto.
+// Valida la entrada y verifica la URL. No guarda ni registra el texto.
 export async function POST(request: Request) {
   let cuerpo: unknown;
   try {
@@ -20,10 +20,10 @@ export async function POST(request: Request) {
   if (texto.trim().length === 0) return error("«texto» está vacío");
   if (texto.length > LIMITE) return error("«texto» supera los 2.000 caracteres");
 
-  const url = extraerPrimeraUrl(texto);
+  // Marcadores hasta que existan Safe Browsing y RDAP.
   return Response.json({
-    veredicto: "no_determinable",
-    motivo: "Análisis pendiente",
-    url_analizada: url ? neutralizar(url) : null,
+    ...verificar(texto),
+    reputacion: "no_consultada",
+    rdap: "no_disponible",
   });
 }
