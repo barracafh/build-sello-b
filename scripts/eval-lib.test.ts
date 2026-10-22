@@ -26,7 +26,7 @@ const ejemplos = CASOS.filter((c) => c.fuente.startsWith("repo:mensajes-ejemplo:
 
 describe("conjunto", () => {
   test("usa el dev de LAB-47, con los 10 mensajes de ejemplo", () => {
-    assert.equal(CASOS.length, 35);
+    assert.equal(CASOS.length, 41);
     assert.equal(ejemplos.length, 10);
   });
 });

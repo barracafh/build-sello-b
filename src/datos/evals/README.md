@@ -1,6 +1,6 @@
 ## Conjunto de evaluación del clasificador
 
-50 casos curados a mano para evaluar el veredicto de Sello: 35 de desarrollo (`dev.json`, en el repo) y 15 de prueba que no se suben nunca. `bun run eval` (LAB-39) carga solo `dev.json`, a través de `dev.ts`. `dev.test.ts` comprueba el esquema, el reparto, que no haya datos personales con aspecto real y que los casos `oficial_verificado` pasen el verificador determinista.
+56 casos curados a mano para evaluar el veredicto de Sello: 41 de desarrollo (`dev.json`, en el repo) y 15 de prueba que no se suben nunca. `bun run eval` (LAB-39) carga solo `dev.json`, a través de `dev.ts`. `dev.test.ts` comprueba el esquema, el reparto, que no haya datos personales con aspecto real y que los casos `oficial_verificado` pasen el verificador determinista.
 
 ## Formato
 
@@ -19,7 +19,7 @@ Una lista de objetos con estos campos:
 
 Las filas de spam_ham_spanish se cuentan desde 1 sin la cabecera.
 
-Los remitentes de correo que son fraudes publicados o direcciones oficiales (dev-12, dev-13, dev-17) llevan `[@]` en lugar de `@`, para que `buildnight revisar` no los tome por datos personales. Cargad siempre los casos con `dev.ts`, que devuelve el texto con la arroba real; no importéis `dev.json` directamente. `dev.test.ts` comprueba que no quede ningún `[@]` en lo que ve el clasificador.
+Los remitentes de correo que son fraudes publicados, direcciones oficiales o dominios reservados (dev-12, dev-13, dev-17, dev-39) llevan `[@]` en lugar de `@`, para que `buildnight revisar` no los tome por datos personales. Cargad siempre los casos con `dev.ts`, que devuelve el texto con la arroba real; no importéis `dev.json` directamente. `dev.test.ts` comprueba que no quede ningún `[@]` en lo que ve el clasificador.
 
 ## Fuentes y licencias
 
@@ -45,17 +45,17 @@ Se etiqueta según `contexto.md`, no según la etiqueta de origen. Ante la duda,
 - Las URL inventadas para este conjunto usan dominios reservados (`.example`, RFC 2606).
 - Las filas «ilustrativo» de §5.3 pasan también a `.example`, con la misma trampa (`https://dgt.es@ejemplo.example/pago`).
 - Se conservan tal cual las del repo: las `url_prueba_sintetica` de `mensajes-ejemplo.json`, los hosts no ilustrativos de §5.3 y los dominios fraudulentos publicados en §4.4 y §4.5 (`src/datos/indicadores.ts`). Ninguna de las `url_prueba_sintetica` resolvía en DNS el 22/10/2026.
-- Excepción: un caso de acortador usa `bit.ly` con una ruta inventada, porque el verificador reconoce el acortador por su dominio real.
+- Excepción: los casos de acortador (dev-23, dev-40) usan `bit.ly` con una ruta inventada, porque el verificador reconoce el acortador por su dominio real.
 - Nombres, números de envío, folios y códigos se sustituyen por `[NOMBRE]` o `XXXX`. El test rechaza correos fuera de dominios reservados, oficiales o publicados, teléfonos españoles salvo los verificados de §5.6, IBAN, DNI y NIE.
 
 ## Reparto
 
 | Conjunto | `no_oficial` | `no_determinable` | `oficial_verificado` | Total | SMS / correo / web |
 | -------- | -----------: | ----------------: | -------------------: | ----: | ------------------ |
-| dev      |           14 |                15 |                    6 |    35 | 19 / 15 / 1        |
+| dev      |           17 |                18 |                    6 |    41 | 24 / 16 / 1        |
 | test     |            6 |                 7 |                    2 |    15 | 9 / 6 / 0          |
 
-dev incluye los 10 mensajes de ejemplo del repo (5 / 4 / 1). test sale solo de SpaPhish, spam_ham_spanish y variantes nuevas; sus 2 `oficial_verificado` llevan URL de la allowlist que no aparecen en dev. Ningún texto de test se parece a uno de dev (Jaccard de tokens normalizados < 0,6).
+dev incluye los 10 mensajes de ejemplo del repo (5 / 4 / 1) y 24 casos sintéticos (LAB-39 pide al menos 20): fraudes reformulados, avisos legítimos sin enlace, remitente que no cuadra, marca como subdominio, acortadores, QR y urgencia sin enlace. test sale solo de SpaPhish, spam_ham_spanish y variantes nuevas; sus 2 `oficial_verificado` llevan URL de la allowlist que no aparecen en dev. Ningún texto de test se parece a uno de dev (Jaccard de tokens normalizados < 0,6).
 
 ## Casos difíciles de dev
 
