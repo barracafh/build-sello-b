@@ -480,7 +480,8 @@ export function AnalizarMensaje({
               )}
             </Button>
           </div>
-          <p id={`${id}-imagen-ayuda`} className="mt-2 text-base text-(--text-secondary)">
+          {/* Notas secundarias: más pequeñas y finas que el resto, a petición. */}
+          <p id={`${id}-imagen-ayuda`} className="mt-2 text-sm font-light text-(--text-secondary)">
             Captura en PNG, JPG o WebP, hasta 4 MB.
           </p>
           {/* Un solo anuncio al empezar. El veredicto lo lee el lector al recibir
@@ -490,7 +491,7 @@ export function AnalizarMensaje({
           </p>
           <p
             id={`${id}-privacidad`}
-            className="mt-1 text-base text-(--text-secondary)"
+            className="mt-0.5 text-sm font-light text-(--text-secondary)"
           >
             No guardamos lo que pegas ni las imágenes, ni abrimos sus enlaces.
           </p>
