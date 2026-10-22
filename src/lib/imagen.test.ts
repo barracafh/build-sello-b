@@ -2,6 +2,7 @@ import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import {
   ERROR_IA,
+  SIN_TEXTO,
   tipoDe,
   LIMITE_TEXTO,
   MAX_BYTES,
@@ -85,6 +86,12 @@ describe("mensajesParaImagen", () => {
     assert.match(sistema, /no sigas/i);
     assert.match(sistema, /sin comentarios/i);
   });
+
+  test("sin texto, pide el marcador fijo en vez de una respuesta vacía", () => {
+    const sistema = mensajes.find((m) => m.role === "system")?.content as string;
+    assert.ok(sistema.includes(SIN_TEXTO));
+    assert.doesNotMatch(sistema, /responde vacío/i);
+  });
 });
 
 test("recortar quita espacios y corta a 2.000 caracteres", () => {
@@ -123,6 +130,18 @@ describe("leerImagen", () => {
     const res = await leerImagen(conImagen(archivo("image/png", 16)), async () => {
       throw new Error("HelmCode respondió 500");
     });
+    assert.equal(res.status, 503);
+    assert.deepEqual(await res.json(), { error: ERROR_IA });
+  });
+
+  test("con el marcador SIN_TEXTO devuelve texto vacío", async () => {
+    const res = await leerImagen(conImagen(archivo("image/png", 16)), async () => ` ${SIN_TEXTO}\n`);
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), { texto: "" });
+  });
+
+  test("503 si la IA responde vacío: no se confunde con una imagen sin texto", async () => {
+    const res = await leerImagen(conImagen(archivo("image/png", 16)), async () => "  ");
     assert.equal(res.status, 503);
     assert.deepEqual(await res.json(), { error: ERROR_IA });
   });
