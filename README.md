@@ -1,6 +1,6 @@
 > **Build night BARRACA x SOTI** · 22 de octubre de 2026, Flywire, València.
 >
-> **Everdá**, de flywire-salsing 2 (track Sello + estafas). Comprueba antes de confiar. Publicada en https://build.barraca.house/sello-b; la IA funciona hasta el 30 de noviembre de 2026.
+> **Everdá**, de flywire-salsing 2 (track Sello + estafas). Comprueba antes de confiar. Publicada en https://build.barraca.house/punto-atencion-ciudadana/sello-b; la IA funciona hasta el 30 de noviembre de 2026.
 >
 > Repo archivado: es el código tal como quedó tras la noche. Si quieres seguir con él, haz un fork. El CLI del evento y su registro ya no existen, así que las instrucciones de `buildnight` que haya más abajo ya no sirven.
 
@@ -19,7 +19,7 @@ bun install --frozen-lockfile
 bun run dev
 ```
 
-`bun run dev` imprime la URL en la que sirve, por ejemplo `http://localhost:3142/sello-b`, con el `equipo` de `ficha.json`. Cambia el ejemplo en `src/app/page.tsx`; los metadatos salen de `ficha.json`.
+`bun run dev` imprime la URL en la que sirve, por ejemplo `http://localhost:3142/punto-atencion-ciudadana/sello-b`, con el `equipo` de `ficha.json`. Cambia el ejemplo en `src/app/page.tsx`; los metadatos salen de `ficha.json`.
 
 - Pon `<Fuentes fuentes={[{ nombre: "Fuente oficial", url: "https://www.boe.es/" }]} />` debajo de **cada respuesta**. Cita la página concreta que sostiene la respuesta.
 - Conserva el aviso de no oficial y `<BotonAviso />`, que abre un issue en vuestro repo.

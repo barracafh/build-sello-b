@@ -5,7 +5,7 @@ Este repo es la herramienta de un equipo para la plataforma de atención ciudada
 ## Cómo está montado
 
 - Next.js (App Router) y Tailwind, con Bun: `bun install`, `bun run dev`, `bun run build`.
-- La app vive en `/<equipo>`, el campo `equipo` de `ficha.json`: en local, `http://localhost:3000/<equipo>`; publicada, `https://build.barraca.house/<equipo>`. No cambies `equipo`: de él salen la ruta y el sitio en la plataforma.
+- La app vive en `/punto-atencion-ciudadana/<equipo>`, con el campo `equipo` de `ficha.json`: en local, `http://localhost:3000/punto-atencion-ciudadana/<equipo>`; publicada, `https://build.barraca.house/punto-atencion-ciudadana/<equipo>`. No cambies `equipo`: de él salen la ruta y el sitio en la plataforma.
 - `<Link>` añade esa ruta solo. Para `fetch` e imágenes de `public/`, también con `next/image`, usa `ruta()` de `src/config/sitio.ts`: `fetch(ruta("/api/ia"))` y `<Image src={ruta("/foto.png")} ... />`.
 - Cada push a `main` se publica solo. Trabajad sobre `main`, con `git pull --rebase` antes de cada push: las ramas no tienen vista previa en build.barraca.house. Los worktrees del Mac mini sí tienen un preview en la tailnet (`bun run dev` imprime `Preview: <url>`).
 - `bun run build` tiene que pasar antes de cada push. Si falla, no se publica.

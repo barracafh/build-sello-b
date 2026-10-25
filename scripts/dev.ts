@@ -18,7 +18,7 @@ const responde = (p: number) =>
 const raiz = resolve(import.meta.dirname, "..");
 const puerto = await elegirPuerto(raiz);
 
-console.log(`\n  sello · http://localhost:${puerto}/${ficha.equipo}`);
+console.log(`\n  sello · http://localhost:${puerto}/punto-atencion-ciudadana/${ficha.equipo}`);
 
 const base = resolverBase(process.env);
 console.log("");
@@ -34,7 +34,7 @@ async function publicarCuandoEscuche(base: string) {
   for (let i = 0; i < 240 && next.exitCode === null; i++) {
     if (await responde(puerto)) {
       if (publicar(puerto)) {
-        console.log(`\n  Preview: ${urlPreview(base, puerto, ficha.equipo)}\n`);
+        console.log(`\n  Preview: ${urlPreview(base, puerto, `punto-atencion-ciudadana/${ficha.equipo}`)}\n`);
       } else {
         console.warn("\n  Preview no disponible: tailscale serve falló; sigo sin preview.\n");
       }
