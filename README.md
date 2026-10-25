@@ -1,3 +1,9 @@
+> **Build night BARRACA x SOTI** · 22 de octubre de 2026, Flywire, València.
+>
+> **Everdá**, de flywire-salsing 2 (track Sello + estafas). Comprueba antes de confiar. Publicada en https://build.barraca.house/sello-b; la IA funciona hasta el 30 de noviembre de 2026.
+>
+> Repo archivado: es el código tal como quedó tras la noche. Si quieres seguir con él, haz un fork. El CLI del evento y su registro ya no existen, así que las instrucciones de `buildnight` que haya más abajo ya no sirven.
+
 # Tu herramienta, lista para empezar
 
 Plantilla de cada equipo: Next.js y Tailwind, con rutas de servidor para llamar a la IA. La organización crea un repo por equipo a partir de esta carpeta, con los datos de su track, y lo conecta a su proyecto de Vercel. Este directorio tiene su propio `package.json` y `bun.lock`; no depende del workspace del evento.
